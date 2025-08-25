@@ -1,0 +1,1465 @@
+/*==========ESTILO GERAL==========*/
+html,
+body {
+    height: 100% !important;
+    font-family: 'Century Gothic', sans-serif;
+    font-family: 'Avenir Next LT Pro', sans-serif;
+    background-color: #ffff;
+    margin: 0;
+    padding: 0;
+}
+html{
+    overflow: hidden;
+}
+body{
+    overflow-y: scroll !important;
+    overflow-x: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.container{
+    position: relative;
+    margin: 50px 50px 50px 50px;
+    min-width: calc(84% - 100px);
+    height: fit-content;
+    width: fit-content;
+    padding: 2% 8% 2% 8%;
+    border-radius: 10px;
+    /*box-shadow: 4px 4px 5px #00000040;
+    background-color: #d3d3d342;*/
+}
+
+.section:not(:first-child) {
+    padding-bottom: 40px;
+}
+
+.section-final
+{
+    padding-bottom: 20px;
+}
+
+.tab-cot-container {
+    width: 80%;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(215, 142, 142, 0.1);
+}
+
+.titulos {
+    font-size: 100%;
+    color: #333;
+    margin-bottom: 0px;
+    
+    text-align: center;
+}
+
+/* CSS */
+select option[disabled] {
+    color: #999999; /* ou qualquer outra cor que desejar */
+}
+
+/*==========SECAO DADOS DO PDC==========*/
+.form-compra, .form-pagamento, .form-dados-nf {
+    font-family: Arial, sans-serif;
+    color: #333;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+}
+
+.form-container {
+    min-width: 550px;
+    border: 1px solid #ddd;
+    padding: 3.5%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 1%;
+    margin-bottom: 1%;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.entidade, .tipo {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.vencimento {
+    padding: 5px;
+}
+
+#container-campos-texto {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.campos-texto-mais-largos {
+    grid-column-start: 1;
+    grid-column-end: 3;
+}
+
+.check-pag-antecipado
+{
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 350px;
+}
+
+.form-compra label, 
+.form-pagamento label, 
+.form-classificacao label,
+.form-dados-nf label,
+.campos-retencao-nf label,
+.form-dados-nf-label,
+#campos-assinatura label{
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 100%;
+}
+
+.form-pagamento .label-pag-antecipado
+{
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.check-pag-antecipado:has(input[type="checkbox"]:checked)::after {
+    content: "(A primeira parcela será enviada para pagamento assim que a compra for confirmada.)";
+    display: block;
+    width:100%;
+}
+
+.form-compra textarea,
+#campos-assinatura input,
+.form-compra input,
+.form-dados-nf input,
+.form-pagamento textarea,
+.form-pagamento input[type="text"] 
+{
+    font-family: Arial, sans-serif;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    border-radius: 4px;
+    font-size: 11pt;
+    padding: 5px;
+    color: #333;
+    width: 100%;    
+}
+
+.form-compra textarea, 
+.form-pagamento textarea{
+    min-width: 250px;
+    min-height: 100px;
+    max-height: 200px;
+}
+
+.form-compra input[type="radio"] {
+    
+    margin-right: 5px;
+}
+
+.form-compra .radio-group label {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.radio-group {
+    display: flex;
+    align-items: flex-start;
+}
+
+#campos-deposito,
+#campos-pix {
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+/**/
+#campos-deposito {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    /* Duas colunas de igual largura */
+}
+
+/* Ocupa a primeira linha inteira */
+#campos-deposito .campo:nth-child(1) {
+    grid-column: 1 / -1;
+}
+
+/* Colocando os campos de Agência e Número da Conta lado a lado */
+#campos-deposito .campo:nth-child(2) {
+    grid-column: 1;
+    /* Primeira coluna para Agência */
+}
+
+#campos-deposito .campo:nth-child(3) {
+    grid-column: 2;
+    /* Segunda coluna para Número da Conta */
+}
+
+/* Ocupa a última linha inteira */
+#campos-deposito .campo:nth-child(4) {
+    grid-column: 1 / -1;
+}
+
+/*==========SECAO 02==========*/
+#priceTable,
+#otherDataTable {
+
+    border-collapse: collapse;
+    margin: 10px auto 0px auto;
+    min-width: 550px;
+}
+
+.tabela th,
+.tabela td
+{
+    max-width: 300px;
+    border: 1px solid #0000003d;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#priceTable th,
+#otherDataTable th {
+    background-color: #8294b4;
+}
+
+#priceTable .forn-aprovado
+{
+    background-color: #586f99;
+}
+
+th {
+    position: relative;
+    line-height: 12pt;
+}
+
+.supplier-name-container {
+    display: flex;
+}
+
+
+[contenteditable="true"] {
+    background-color: #f9f9f9;
+    cursor: text;
+}
+
+[contenteditable="true"]:hover,
+[contenteditable="true"]:focus {
+    filter: brightness(1.05);
+    outline: none;
+}
+
+.action-buttons {
+    width: 20px;
+}
+
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    width: 20px;
+    height: 21px;
+    font-size: 18px;
+    padding: 0;
+    margin: 0;
+    transition: color 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(0.9);
+}
+
+.remove-btn,
+.add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    transition: color 0.3s ease;
+    font-size: 30px;
+}
+.add-btn{
+    color: #187124;
+    margin: 0px 0px 0px 10px;
+}
+
+.add-product-btn
+{
+    margin-left: 3%;
+}
+
+.remove-product-btn {
+    margin-right: -1px;
+    margin-top: 2px;
+}
+
+.linhas-totalizadoras td
+{
+    font-weight: bold;
+    background-color: #D2D6D8;
+}
+
+.linhas-totalizadoras td:first-child
+{
+    text-align: left;
+}
+
+.borda-oculta
+{
+    border: none !important;
+    text-align: left !important;
+}
+
+.save-btn-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.save-btn {
+    width: fit-content;
+    height: fit-content;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+
+}
+
+.save-btn:hover {
+    background-color: #45a049;
+}
+/*==========SECAO 05==========*/
+
+.campos-retencao-nf {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.campos-retencao-nf th, .campos-retencao-nf td {
+    /*border: 1px solid #000;*/
+    padding: 8px;
+}
+
+.campos-retencao-nf th
+{
+    text-align: center;
+}
+
+.campos-retencao-nf td
+{
+    text-align: left;
+}
+
+/*==========SECAO 06==========*/
+
+
+
+/*========================BOTÕES EDIÇÃO=================*/
+.approve-btn,
+.adjust-btn,
+.archive-btn {
+    width: fit-content;
+    height: fit-content;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 0px 10px 0px 10px;
+}
+
+.approve-btn:hover,
+.adjust-btn:hover,
+.archive-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(0.9);
+}
+
+.approve-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.adjust-btn {
+    background-color: #2a8add;
+    color: white;
+}
+
+.archive-btn {
+    background-color: #ce1010;
+    color: white;
+}
+
+/*========================ÍCONES========================*/
+.icons {
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
+    background-repeat: no-repeat;
+    display: inline-block;
+}
+
+.x-icon {
+    display: none;
+}
+
+.trash-icon {
+
+    background-image: url("../imagens/icons/trash-can-solid-red.svg");
+}
+
+.plus-icon {
+    background-image: url("../imagens/icons/plus-solid-green.svg");
+}
+
+/*======================TESTE==========================*/
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    width: 100%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    max-height: 30vh;
+    overflow-y: auto;
+    border-radius: 5px;
+    margin-top: 5px;
+    padding-top: 60px;
+}
+
+
+/*======================ESTILOS DE CAMPO DE DROPDOWN GENÊRICO==========================*/
+.dropdown-btn {
+    background-color: #fff;
+    padding: 12px 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+    height: 100%;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.3s;
+}
+.dp-field-sel-btn
+{
+    background-color: #fff;
+    padding: 12px 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+    height: 100%;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.3s;
+}
+
+.dp-field-opt-container
+{
+    background-color: #fff;
+    max-width: 100%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    max-height: 25vh;
+    overflow-y: auto;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+/*======================FIM ESTILOS DE CAMPO DE DROPDOWN GENÊRICO==========================*/
+
+.opcoes-container {
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.campo-pesquisa-fornecedor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+
+}
+
+.dropdown-opcao {
+    padding: 12px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s;
+    text-align: left;
+}
+
+.dropdown-opcao:hover {
+    background-color: #f1f1f1;
+}
+
+.popup-fornecedor {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    border-radius: 10px;
+    width: fit-content;
+    height: fit-content;
+    text-align: center;
+}
+
+.cabecalho-popup {
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+/*========================JANELA DE CONFIRMAÇÃO========================*/
+.customConfirm-overlay-div {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.customConfirm-div {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.customConfirm-title {
+    position: relative;
+    top: 0px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0px;
+    margin-bottom: 15%;
+    height: fit-content;
+}
+
+.customConfirm-message {
+    margin-bottom: 20px;
+    width: 100%;
+    height: fit-content;
+}
+
+.customConfirm-confirmButton {
+    margin-right: 10px;
+    padding: 8px 16px;
+    width: fit-content;
+    height: fit-content;
+    border: none;
+    background-color: #28a745;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.customConfirm-cancelButton {
+    padding: 8px 16px;
+    width: fit-content;
+    height: fit-content;
+    border: none;
+    background-color: #921414;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.customConfirm-loading {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    font-size: 18px;
+    color: #333;
+}
+
+.customConfirm-loading-spinner {
+    margin-right: 10px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #333;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+}
+
+
+
+
+
+
+/*==========Botões de mudar de seção==========*/
+/* Estilos para os botões flutuantes */
+.button-up,
+.button-down {
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    background-color: rgb(0 0 0 / 30%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    /* Mantém os botões acima do conteúdo */
+}
+
+.button-up:hover,
+.button-down:hover {
+    background-color: rgb(0 0 0 / 50%);
+}
+
+.button-up {
+    bottom: 100px;
+    /* Distância do fundo da tela */
+    right: 30px;
+    /* Centraliza horizontalmente */
+}
+
+.button-down {
+    bottom: 30px;
+    /* Distância do fundo da tela */
+    right: 30px;
+    /* Centraliza horizontalmente */
+}
+
+/*==========BARRA DE ROLAGEM==========*/
+::-webkit-scrollbar {
+    width: 12px; /* Largura da barra vertical */
+    height: 12px; /* Altura da barra horizontal */
+}
+
+::-webkit-scrollbar-track {
+    background: #f0f0f0; /* Cor do fundo da barra */
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888; /* Cor da barra de rolagem */
+    border-radius: 6px;
+    border: 3px solid #f0f0f0; /* Dá um efeito de borda */
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Cor ao passar o mouse */
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Indicador de seção */
+.section-indicator {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #ddd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #999;
+}
+
+.dot:hover {
+    transform: scale(1.2);
+}
+
+.dot.active {
+    background-color: #666;
+    border-color: #666;
+}
+
+/* Estilização dos campos de data */
+#camposData, #linhas-nf {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.parcela,
+.linha-nf,
+.titulos-parcela,
+.campos-iniciais-nf{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.parcela label{
+    font-weight: bold;
+    font-size: 90%;
+    min-width: 85px;
+    color: #666;
+    margin: 0;
+}
+
+.parcela input,
+.campos-iniciais-nf input,
+.campos-retencao-nf input {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 90%;
+    color: #333;
+    margin: 0;
+    flex: 1;
+}
+
+.add-parcela {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.add-icon::before {
+    content: "+";
+}
+
+.add-supplier-btn,
+.add-product-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+/* Remover estilos antigos que não são mais necessários */
+.add-product-btn {
+    margin-left: 3%;
+}
+
+/* Estilização do formulário de classificação contábil */
+.form-classificacao .form-container {
+    border: 1px solid #ddd;
+    padding: 3.5%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 1%;
+    margin-bottom: 1%;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+/* Novo estilo para os cabeçalhos das colunas */
+.form-classificacao .campo-headers {
+    display: flex;
+    gap: 15px;
+    padding: 10px 0;
+    border-bottom: 2px solid #8294b4;
+    margin-bottom: 10px;
+}
+
+.form-classificacao .campo-header {
+    flex: 1;
+    font-weight: bold;
+    color: #333;
+    font-size: 90%;
+}
+
+.nomes-campos-nf, .linha-nf {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 15px;
+    padding: 4px 0;
+    align-items: start;
+}
+
+/* Ajuste na classificação para remover labels repetidos */
+.linha-classificacao, .nomes-campos-classificacao {
+    display: grid;
+    grid-template-columns: 0.5fr 1fr 1fr 0.5fr auto;
+    gap: 15px;
+    padding: 4px 0;
+    align-items: start;
+}
+
+.linha-classificacao .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Unificando estilos de labels */
+.linha-classificacao .campo label,
+.linha-classificacao:first-child .campo label {
+    font-weight: bold;
+    color: #333;
+    font-size: 90%;
+    margin-bottom: 15px;
+}
+
+/* Unificando estilos de inputs e selects */
+.linha-classificacao select,
+.linha-classificacao input {
+    width: 100%;
+    max-width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 90%;
+    background-color: #fff;
+    box-sizing: border-box;
+    height: 35px;
+}
+
+/* Unificando estilos dos botões de remover e adicionar */
+.add-classificacao {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    height: 35px;
+}
+
+.add-classificacao {
+    margin-top: 8px;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #666;
+}
+
+/* Estilo unificado para ícones de fechar/remover */
+.close-icon {
+    background: none;
+    color: #921414;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.close-icon:hover {
+    transform: translateY(-1px);
+}
+
+.transl-because-title{
+    transform: translateY(8px);
+}
+.transl-because-title:hover{
+    transform: translateY(7px);
+    filter: brightness(0.9);
+}
+
+.close-icon::before {
+    content: "⨯";
+}
+
+/* Ajustes no popup de fornecedor */
+.btn-fechar {
+    position: relative;
+    margin-left: auto;
+    margin-right: 3px;
+    margin-top: 3px;
+}
+
+.popup-content {
+    margin: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cabecalho-popup {
+    justify-content: space-between;
+}
+
+/* Overlay do popup */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Ajuste na posição do popup */
+.popup-fornecedor {
+    position: relative;
+    transform: none;
+    top: auto;
+    left: auto;
+}
+
+/* Estilos para o estado de carregamento */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    gap: 15px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #8294b4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    color: #666;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilo unificado para campos de depósito e PIX */
+#campos-deposito
+{
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+/* Campos que ocupam linha inteira */
+#campos-deposito .campo:nth-child(1),
+#campos-deposito .campo:nth-child(4)
+{
+    grid-column: 1 / -1;
+}
+
+#campos-pix
+{
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 0.5fr 1.5fr;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+#campos-pix .campo:nth-child(1)
+{
+    grid-column: 1 / 2;
+
+}
+#campos-pix .campo:nth-child(2)
+{
+    grid-column: 2 / 3;
+}
+
+
+/* Ajuste apenas da altura dos campos PIX */
+#campos-pix select,
+#campos-pix input {
+    height: 35px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 90%;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.invalid {
+    border-color: red !important;
+    background-color: #fff0f0;
+}
+
+.error-message {
+    margin-top: 4px;
+    display: block;
+}
+
+.section-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    cursor: pointer;
+    width: 100%;
+    padding-top: 10px;
+    padding-right: 3px;
+    padding-bottom: 3px;
+    padding-left: 3px;
+    user-select: none;
+    border-top: 1px solid #eaeaea;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.section-header:hover {
+    background-color: transparent;
+}
+
+.section-header .titulos {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+    margin: 0;
+    z-index: 1;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #2c3e50;
+    letter-spacing: 0.5px;
+}
+
+.section-header .toggle-section {
+    grid-column: 2;
+    grid-row: 1;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    position: relative;
+    cursor: pointer;
+    margin-right: 5px;
+    z-index: 2;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-section:hover {
+    background-color: rgba(44, 62, 80, 0.08);
+}
+
+.toggle-section::before,
+.toggle-section::after {
+    content: '';
+    position: absolute;
+    background: #2c3e50;
+    width: 2px;
+    height: 10px;
+    top: 50%;
+    left: 50%;
+    transition: all 0.5s ease-in-out;
+}
+
+/* Seta apontando para cima (padrão) */
+.toggle-section::before {
+    transform: translate(-3px, -50%) rotate(45deg);
+}
+
+.toggle-section::after {
+    transform: translate(3px, -50%) rotate(-45deg);
+}
+
+/* Estado colapsado - seta apontando para baixo */
+.section-header.collapsed .toggle-section::before {
+    transform: translate(3px, -50%) rotate(45deg);
+}
+
+.section-header.collapsed .toggle-section::after {
+    transform: translate(-3px, -50%) rotate(-45deg);
+}
+
+/* Animação do collapse */
+.section {
+    transition: all 0.25s ease-in-out;
+    opacity: 1;
+    transform-origin: top center;
+    transform: rotateX(0deg);
+    max-height: 2000px;
+    overflow: hidden;
+    margin-top: 8px;
+    max-height: 999999px;
+}
+
+.section.collapsed {
+    opacity: 0;
+    transform: rotateX(-90deg);
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#botoes-e-totalizadores_parcelas, #botoes-e-totalizadores-classificacoes {
+    display: flex;
+    justify-content: space-between; /* Alinha os itens nas extremidades */
+    align-items: center; /* Centraliza verticalmente */
+    margin-top: 8px;
+}
+
+#totalizadores_parcelas, #totalizadores-classificacoes {
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+}
+
+#valor-total-parcelas, #valor-total-classificacoes {
+    min-width: 120px; /* Define uma largura mínima para acomodar o valor */
+    text-align: right; /* Alinha o texto à direita */
+}
+
+.valor-igual {
+    color: green; /* Cor verde para indicar que os valores são iguais */
+    font-weight: bold; /* Deixa o texto em negrito */
+}
+
+.valor-diferente {
+    color: red; /* Cor vermelha para indicar que os valores são diferentes */
+    font-weight: bold; /* Deixa o texto em negrito */
+}
+
+/* Estilo para o campo de texto do modal */
+#numeroPDC {
+    width: 100%; /* Largura total */
+    padding: 8px; /* Espaçamento interno */
+    border: 1px solid #ccc; /* Borda */
+    border-radius: 4px; /* Bordas arredondadas */
+    font-size: 90%; /* Tamanho da fonte */
+    box-sizing: border-box; /* Inclui padding e border na largura total */
+    height: 35px; /* Altura do campo */
+    margin-bottom: 15px; /* Espaçamento inferior */
+}
+
+/* Estilo para os botões do modal */
+.customConfirm-confirmButton,
+.customConfirm-cancelButton {
+    padding: 8px 16px; /* Espaçamento interno */
+    border: 1px solid #ddd; /* Borda */
+    border-radius: 4px; /* Bordas arredondadas */
+    cursor: pointer; /* Cursor de ponteiro */
+    transition: background-color 0.3s; /* Transição suave para a cor de fundo */
+}
+
+.customConfirm-confirmButton:hover,
+.customConfirm-cancelButton:hover {
+    background-color: #f1f1f1; /* Cor de fundo ao passar o mouse */
+}
+
+.disabled {
+    opacity: 0.5; /* Torna o botão semi-transparente */
+    pointer-events: none; /* Desabilita interações com o botão */
+    cursor: not-allowed; /* Muda o cursor para indicar que o botão está desabilitado */
+}
+
+.hidden {
+    display: none;
+}
+
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgb(0,0,0); 
+    background-color: rgba(0,0,0,0.9); 
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%; 
+    max-width: 700px; 
+}
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.popup-cadastrar-fornecedor {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 400px; /* Ajuste conforme necessário */
+}
+
+.cabecalho-popup {
+    font-size: 20px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.modal-cadastro-fornecedor {
+    background-color: #fff; /* Cor de fundo */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
+    width: 650px; /* Largura do modal aumentada */
+    max-width: 90%; /* Largura máxima */
+    text-align: left; /* Alinhamento do texto à esquerda */
+}
+
+.cadastro-fornecedor-titulo
+{
+    text-align: center;
+    margin-top: 0px;
+}
+
+.modal-cadastro-fornecedor .campo {
+    display: flex; /* Usar flexbox para alinhar label e input */
+    align-items: center; /* Alinha verticalmente ao centro */
+    margin-bottom: 15px; /* Margem inferior entre os campos */
+}
+
+.modal-cadastro-fornecedor label {
+    margin-right: 10px; /* Margem à direita da label */
+    font-weight: bold; /* Negrito */
+    color: #333; /* Cor do texto */
+    flex: 0 0 80px; /* Largura fixa para a label */
+}
+
+.modal-cadastro-fornecedor input,
+.modal-cadastro-fornecedor select {
+    flex: 1; /* Faz o input ocupar o restante do espaço */
+    padding: 8px; /* Espaçamento interno */
+    border: 1px solid #ccc; /* Borda */
+    border-radius: 4px; /* Bordas arredondadas */
+    font-size: 90%; /* Tamanho da fonte */
+}
+
+.modal-cadastro-fornecedor .botao-salvar {
+    display: block; /* Exibe o botão como bloco */
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+}
+
+.form-colunas {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Cria 2 colunas de igual largura */
+    gap: 15px; /* Espaçamento entre os campos */
+    padding: 20px; /* Espaçamento interno */
+}
+
+.gallery
+{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gallery img {
+    max-width: 100px;
+    max-height: 100px;
+    margin: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.gallery img:hover {
+    transform: scale(1.1);
+}
+
+.fancybox-button--play {
+    display: none !important; /* Força a ocultação do botão de slideshow */
+}
+.fancybox-button--zoom {
+    display: none !important; /* Força a ocultação do botão de slideshow */
+}
+.fancybox-button--download {
+    display: block !important; /* Força a ocultação do botão de slideshow */
+}
+.fancybox-toolbar
+{
+    display: flex;
+}
+.botao-adicionar
+{
+    width:auto;
+    height: auto;
+}
+
+#campos-assinatura
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    
+}
+
+#labels-assinatura
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+
+}
+.label-assinante
+{
+    width: 100%;
+    text-align: center;
+}
+
+.assinantes
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+}
+
+.assinante
+{
+    display: flex;
+    flex-direction: row;
+}
+
+.input-assinante
+{
+    margin: 10px 3px;
+}
+.input-assinante:first-child
+{
+    margin-left: 0px;
+}
+.input-assinante:last-child
+{
+    margin-right: 0px;
+}
+
+.placeholder-container {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .placeholder-text {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+  }
+
+  .error-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .error-modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .close-modal {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .close-modal:hover {
+    background-color: #3e8e41;
+  }
