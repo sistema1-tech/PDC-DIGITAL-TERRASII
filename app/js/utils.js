@@ -1,6 +1,8 @@
 import { saveTableData_V2, enviarParaPaybox } from './save_utils.js';
 import { globais } from './main.js';
 
+const url = 'https://guillaumon8.zohocreatorportal.com/';
+
 /**
  * Executa requisições para a API do Zoho Creator
  * 
@@ -33,31 +35,21 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
     try {
         nomeR = nomeR ? nomeR : globais.nomeRelCot;
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
-        await ZOHO.CREATOR.init();
-        let recOps = await ZOHO.CREATOR.API;
-
-        // Função de buscar registro
-        async function busc_reg(nomeR, criterio, numPag) {
-            const config = {
-                appName: globais.nomeApp,
-                reportName: nomeR,
-                criteria: criterio,
-                page: numPag,
-                pageSize: 200
-            };
-            return recOps.getAllRecords(config);
-        }
+        let recOps = await ZOHO.CREATOR.DATA;
 
         // Função de criar registro
         async function criar_reg(ddsCriacao) {
 
             ddsCriacao = { "data": ddsCriacao };
             const config = {
-                appName: globais.nomeApp,
-                formName: nomeF,
-                data: ddsCriacao
+                app_name: globais.nomeApp,
+                form_name: nomeF,
+                payload: ddsCriacao
             };
-            return recOps.addRecord(config);
+
+            const resp = await recOps.addRecords(config);
+
+            return resp;
         }
 
         // Função de atualizar registro
@@ -71,39 +63,36 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
             });
         }
 
-        async function buscarRecursivamente(nomeR, criterio) {
+        async function buscar_reg(nomeR, criterio) {
             let baseApoio = new Map();
-            let paginaAtual = 1;
+            let cursor = null
 
-            try {
-                while (true) {
-                    const resp = await busc_reg(nomeR, criterio, paginaAtual);
-
-                    // Verifica se é a resposta de "nenhum registro encontrado" (código 3100)
-                    if (resp && resp.code === 3100) {
-                        break;
-                    }
-
-                    // Verifica outras condições de parada
-                    if (!resp || resp.code !== 3000 || !Array.isArray(resp.data) || resp.data.length === 0) {
-                        break;
-                    }
-
-                    // Processa os dados recebidos
-                    resp.data.forEach((item) => {
-                        const id = item.ID || item.C_digo_da_classe_operacional;
-                        baseApoio.set(id, item);
-                    });
-
-                    paginaAtual++;
+            do{
+                const config = {
+                    app_name: globais.nomeApp,
+                    report_name: nomeR,
+                    criteria: criterio,
+                    record_cursor: cursor,
+                    max_records: 1000
+                };
+                console.log("Config buscar_reg => ", config);
+                const resp  = await recOps.getRecords(config);
+                console.log("Resp buscar_reg => ", resp);
+                //Verifica possíveis erros
+                if (!resp || resp.code !== 3000 || !Array.isArray(resp.data) || resp.data.length === 0) {
+                    break;
                 }
-            } catch (err) {
-                // Loga apenas erros que não sejam do tipo "nenhum registro encontrado"
-                if (!err.responseText?.includes('"code":3100')) {
-                    console.error("Erro ao buscar dados:", err);
-                }
-            }
 
+                cursor = resp.record_cursor??null;
+
+                // Processa os dados recebidos
+                resp.data.forEach((item) => {
+                    const id = item.ID || item.C_digo_da_classe_operacional;
+                    baseApoio.set(id, item);
+                });
+
+            } while(cursor!=null)
+            
             return Array.from(baseApoio.values());
         }
 
@@ -128,14 +117,16 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
             return await atualizar_reg(nomeR, ID, corpo);
         } else if (tipo === "busc_reg") {
 
-            return await busc_reg(nomeR, criterios, 1);
+            return await buscar_reg(nomeR, criterios);
         } else if (tipo === "busc_reg_recursivo") {
 
-            return await buscarRecursivamente(nomeR, criterios);
+            return await buscar_reg(nomeR, criterios);
         } else if (tipo === "subir_arq") {
             return await subirArquivos();
         }
+        
     } catch (err) {
+        console.log("Erro na API do Zoho => ", err);
         return err;
     }
 }
@@ -649,7 +640,6 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
             return;
         }
 
-        const url = 'https://guillaumon.zohocreatorportal.com/';
         toggleElements(false);
 
         // Determina o payload baseado no tipo de ação
@@ -806,13 +796,13 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
                     let link_layout;
                     // [LAYOUT]
                     if (entidadeSelecionada == "3938561000066182591") {
-                        link_layout = `${url}guillaumon/app-envio-de-notas-boletos-guillaumon/pdf/Laranj_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Laranjeiras`;
+                        link_layout = `${url}guillaumon8/${globais.nomeApp}/pdf/Laranj_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Laranjeiras`;
                     }
                     else if (entidadeSelecionada == "3938561000066182595") {
-                        link_layout = `${url}guillaumon/app-envio-de-notas-boletos-guillaumon/pdf/AssociacaoServir_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Ass_Servir`;
+                        link_layout = `${url}guillaumon8/${globais.nomeApp}/pdf/AssociacaoServir_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Ass_Servir`;
                     }
                     else if(entidadeSelecionada == "3938561000096117305"){
-                        link_layout = `${url}guillaumon/app-envio-de-notas-boletos-guillaumon/pdf/Asa_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Asa_Laranj`;
+                        link_layout = `${url}guillaumon8/${globais.nomeApp}/pdf/Asa_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Asa_Laranj`;
                     }
 
                     window.open(`${link_layout}`, '_blank', 'noopener,noreferrer');
@@ -1111,7 +1101,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         }
         
         const paramExtra = {};
-        const url = 'https://guillaumon.zohocreatorportal.com/';
         const pgtoAnt = document.getElementById('pag_antecipado').checked;
     
         let stats_salvarCot = "Propostas criadas";
@@ -1360,7 +1349,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
                 const layoutName = layoutMap[entidadeSelecionada];
                 if (layoutName) {
-                    const link_layout = `${url}guillaumon/app-envio-de-notas-boletos-guillaumon/pdf/${layoutName}?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
+                    const link_layout = `${url}guillaumon/${globais.nomeApp}/pdf/${layoutName}?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
                     window.open(link_layout, '_blank', 'noopener,noreferrer');
                 }
             } else if (acao === 'confirmar_recebimento') {

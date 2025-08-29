@@ -1,9 +1,9 @@
 import { executar_apiZoho } from "./utils.js";
 import { globais } from "./main.js";
 
-const nomeRelFornecedores = "Base_de_fornecedores_Laranjeiras_Report";
-const nomeRelCentroCusto = "Laranj_Centros_de_custo";
-const nomeRelClasseOperacional = "Laranj_bse_Classes_op_API";
+const nomeRelFornecedores = "Fornecedores_API";
+const nomeRelCentroCusto = "Centros_custo_API";
+const nomeRelClasseOperacional = "Classes_Operacionais_API";
 
 /**
  * Busca e armazena todos os fornecedores na base de dados
@@ -31,10 +31,14 @@ const nomeRelClasseOperacional = "Laranj_bse_Classes_op_API";
  * // ["Empresa ABC", "12.345.678/0001-90", "100.00", "30 dias", "Obs..."]
  */
 export async function buscarFornecedores() {
+    const log = true;
+    if (log) console.log("++++++++++BUSCANDO FORNECEDORES++++++++++");
     let cFornecedores = `(Tipo!="DEPARTAMENTO PESSOAL")`;
     if (globais.pag.includes('_DP')) {
         cFornecedores = `(Tipo=="DEPARTAMENTO PESSOAL")`;
     }
+    
+    if(log) console.log("Criterio fornecedores: ", cFornecedores);
 
     try {
         const resp = await executar_apiZoho({
@@ -42,18 +46,21 @@ export async function buscarFornecedores() {
             criterios: cFornecedores, 
             nomeR: nomeRelFornecedores
         });
-        
+
+        if (log) console.log("Resposta fornecedores: ", resp);
         let baseFornecedores = new Map();
         resp.forEach((item) => {
             baseFornecedores.set(item.ID, [
-                item["Numero_do_fornecedor"],
-                item["Nome_do_fornecedor"],
-                item["Cpf_Cnpj_do_fornecedor"], 
+                item["Numero"],
+                item["Nome"],
+                item["Cpf_Cnpj"], 
                 item["Telefone"], 
                 item["E_mail"],
                 item["Dados_bancarios"]
             ]);
         });
+        if (log) console.log("Fornecedores carregados: ", baseFornecedores);
+        if (log) console.log("----------FIM BUSCA FORNECEDORES----------");
         return baseFornecedores;
     } catch (error) {
         console.error("Erro ao buscar fornecedores:", error);
@@ -88,14 +95,14 @@ export async function buscarCentrosCusto() {
             criterios: crit, 
             nomeR: nomeRelCentroCusto
         });
-        
+
         // Mapeia os centros de custo
         const centrosCustoMap = new Map();
         
         resp.forEach((item) => {
             // Monta o par centro de custo
-            const codigoCentro = item.Cod_do_centro_de_custo;
-            const nomeCentro = item.Nome_do_centro_de_custo;
+            const codigoCentro = item.Codigo;
+            const nomeCentro = item.Nome;
             centrosCustoMap.set(item.ID, {codigoCentro, nomeCentro});
         });
 
@@ -133,7 +140,7 @@ export async function buscarClassesOperacionais() {
             criterios: crit, 
             nomeR: nomeRelClasseOperacional
         });
-        
+
         // Mapeia apenas as classificações
         const classificacoesMap = new Map();
         
@@ -141,7 +148,7 @@ export async function buscarClassesOperacionais() {
             // Monta o par classe operacional
             const codigoClasse = item.Codigo;
             const nomeClasse = item.Nome;
-            const contaReduzida = item.Conta_reduzida;
+            const contaReduzida = item.Codigo_conta_reduzida;
             classificacoesMap.set(item.ID, {codigoClasse, nomeClasse, contaReduzida});
         });
 

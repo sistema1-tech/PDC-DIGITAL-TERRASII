@@ -680,7 +680,7 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                     if(log) console.log("É CRIAÇÃO DE PDC!");
                     if(log) console.log("DADOS DO PDC ===> ", JSON.stringify(dadosPDC, null, 2));
                     respPDC = await executar_apiZoho({ tipo: "add_reg", corpo: JSON.stringify(dadosPDC, null, 2), nomeF: globais.nomeFormPDC });
-                    console.log("respPDC => ", respPDC);
+                    console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
 
                     //Verifica se a resposta foi bem-sucedida e se globais.idPDC é null
                     if (respPDC.code === 3000) {

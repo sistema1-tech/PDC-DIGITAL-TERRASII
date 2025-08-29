@@ -1232,7 +1232,6 @@ export async function preencherListaAnexosV2(anexos) {
         "vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
         ".vnd.ms-excel": "xls",
     };
-    await ZOHO.CREATOR.init();
     const galleryElement = document.getElementById('gallery');
 
     if (!galleryElement) {

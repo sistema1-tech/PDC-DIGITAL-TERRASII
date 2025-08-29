@@ -1,10 +1,10 @@
 // Novo arquivo para configurações
 export const CONFIG = {
     APPS: {
-        nomeApp: "app-envio-de-notas-boletos-guillaumon",
-        nomeRelPDC: "Laranj_PDC_Digital_ADM",
-        nomeFormCot: "cotacao_Laranjeiras",
-        nomeRelCot: "Laranj_cotacoes_ADM",
+        nomeApp: "condominio-laranjeiras",
+        nomeRelPDC: "PDC_Digital_API",
+        nomeFormCot: "Cotacoes",
+        nomeRelCot: "Cotacoes_API",
         nomeFormPDC: "PDC_Digital"
     },
     INITIAL_STATE: {
@@ -26,3 +26,4 @@ export const CONFIG = {
         entidades_permitidas: null,
     }
 }; 
+//https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/form/Cotacoes

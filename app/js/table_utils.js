@@ -240,13 +240,13 @@ export async function addSupplierColumn() {
                     executar_apiZoho({
                         tipo: "busc_reg_recursivo",
                         criterios: cFornecedores,
-                        nomeR: "Base_de_fornecedores_Laranjeiras_Report"
+                        nomeR: "Fornecedores_API"
                     }).then((resp) => {
                         resp.forEach((item) => {
                             globais.baseFornecedores.set(item.ID, [
-                                item["Numero_do_fornecedor"],
-                                item["Nome_do_fornecedor"],
-                                item["Cpf_Cnpj_do_fornecedor"],
+                                item["Numero"],
+                                item["Nome"],
+                                item["Cpf_Cnpj"],
                                 item["Telefone"],
                                 item["E_mail"],
                                 item["Dados_bancarios"]
@@ -416,7 +416,7 @@ export async function addSupplierColumn() {
                 }
             }
         });
-
+        console.log("Globais.baseFornecedores => ", globais.baseFornecedores);
         // Popula o dropdown com os fornecedores
         globais.baseFornecedores.forEach((dadosFornecedor) => {
             const opcao = document.createElement('div');
@@ -1586,8 +1586,8 @@ async function abrirModalCadastroFornecedor() {
     // Campos do formulário
     const campos = [
         { label: 'Tipo', name: 'Tipo', display: 'none', initialContent: tipo },
-        { label: 'Nome:', name: 'Nome_do_fornecedor' },
-        { label: 'Cpf/Cnpj:', name: 'Cpf_Cnpj_do_fornecedor' },
+        { label: 'Nome:', name: 'Nome' },
+        { label: 'Cpf/Cnpj:', name: 'Cpf_Cnpj' },
         { label: 'Serviços prestados:', name: 'Servicos_prestados' },
         { label: 'Dados bancários:', name: 'Dados_bancarios' },
         { label: 'E-mail:', name: 'E_mail' },
@@ -1625,7 +1625,7 @@ async function abrirModalCadastroFornecedor() {
                         input.value = `(${input.value.slice(0, 2)}) ${input.value.slice(2)}`;
                     }
                     break;
-                case 'Cpf_Cnpj_do_fornecedor':
+                case 'Cpf_Cnpj':
                     // Permite apenas números e formata CPF ou CNPJ
                     input.value = input.value.replace(/\D/g, ''); // Remove caracteres não numéricos
                     if (input.value.length > 14) {
@@ -1688,9 +1688,9 @@ async function abrirModalCadastroFornecedor() {
             });
 
             // Validação dos campos
-            const requiredFields = ['Nome_do_fornecedor'];
+            const requiredFields = ['Nome'];
             if (formularioData['Tipo'] !== 'DEPARTAMENTO PESSOAL') {
-                requiredFields.push('Cpf_Cnpj_do_fornecedor');
+                requiredFields.push('Cpf_Cnpj');
 
             }
 
@@ -1703,17 +1703,17 @@ async function abrirModalCadastroFornecedor() {
             }
 
             // Verifica se o CNPJ do fornecedor já existe na base de fornecedores
-            const cnpjFornecedor = formularioData['Cpf_Cnpj_do_fornecedor'].replace(/\D/g, '');
+            const cnpjFornecedor = formularioData['Cpf_Cnpj'].replace(/\D/g, '');
             const fornecedorExistente = Array.from(globais.baseFornecedores.values()).find(fornecedor => fornecedor[2].replace(/\D/g, '') === cnpjFornecedor);
 
             if (fornecedorExistente && formularioData['Tipo'] !== 'DEPARTAMENTO PESSOAL') {
-                alert(`O CNPJ ${formularioData['Cpf_Cnpj_do_fornecedor']} do fornecedor ${formularioData['Nome_do_fornecedor']} já existe na base de fornecedores.\n\nDados do fornecedor já existente:\n\n${Object.entries(fornecedorExistente).map(([key, value]) => `* ${key}: ${value}`).join('\n')}`);
+                alert(`O CNPJ ${formularioData['Cpf_Cnpj']} do fornecedor ${formularioData['Nome']} já existe na base de fornecedores.\n\nDados do fornecedor já existente:\n\n${Object.entries(fornecedorExistente).map(([key, value]) => `* ${key}: ${value}`).join('\n')}`);
                 return;
 
             }
 
             // Adiciona o fornecedor na base de fornecedores
-            executar_apiZoho({ tipo: "add_reg", corpo: formularioData, nomeF: "Base_de_fornecedores_Laranjeiras" }).then((resp) => {
+            executar_apiZoho({ tipo: "add_reg", corpo: formularioData, nomeF: "Fornecedores" }).then((resp) => {
                 if (resp.code === 3000) {
                     document.body.removeChild(overlay); // Fecha o modal
                     resolve(resp.data.ID); // Resolve a Promise com o ID
