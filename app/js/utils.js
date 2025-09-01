@@ -41,6 +41,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         async function criar_reg(ddsCriacao) {
 
             ddsCriacao = { "data": ddsCriacao };
+            console.log("Dados para criação => ", JSON.stringify(ddsCriacao));
             const config = {
                 app_name: globais.nomeApp,
                 form_name: nomeF,

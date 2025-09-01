@@ -2,7 +2,7 @@
 export const CONFIG = {
     APPS: {
         nomeApp: "condominio-laranjeiras",
-        nomeRelPDC: "PDC_Digital_API",
+        nomeRelPDC: "Laranj_PDC_Digital_ADM",
         nomeFormCot: "Cotacoes",
         nomeRelCot: "Cotacoes_API",
         nomeFormPDC: "PDC_Digital"
