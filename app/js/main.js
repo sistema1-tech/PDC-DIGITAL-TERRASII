@@ -80,7 +80,7 @@ async function initGenericItems() {
 
 
         // 2.1 Busca as entidades permitidas
-        const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas.map(BigInt).join(",")}])`, nomeR: "Lista_cond_laranjeiras_Report" });
+        const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Lista_cond_laranjeiras_Report" });
 
         const entidades_aplicaveis = condominios.reduce((acc, cond) => {
             acc[cond.ID] = [

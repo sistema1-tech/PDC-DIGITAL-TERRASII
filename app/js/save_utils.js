@@ -174,10 +174,8 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         }
         if (dataInput?.value) {
             const [ano, mes, dia] = dataInput.value.split('-');
-            const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
+            const meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             vencimentoObj["Vencimento_previsto"] = `${dia}-${meses[parseInt(mes) - 1]}-${ano}`;
-
         }
         if (valorInput?.value) {
             vencimentoObj["Valor"] = converterStringParaDecimal(valorInput.value, qtdCssDecimais);
