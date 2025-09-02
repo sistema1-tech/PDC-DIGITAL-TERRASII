@@ -78,7 +78,6 @@ async function initGenericItems() {
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
 
-
         // 2.1 Busca as entidades permitidas
         const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Lista_cond_laranjeiras_Report" });
 
@@ -91,18 +90,14 @@ async function initGenericItems() {
             return acc;
         }, {});
 
-        console.log("Entidades aplicáveis: ", entidades_aplicaveis);
-
         const campo_entidades = document.querySelector('select[name="Entidade"]');
         if (campo_entidades) {
             campo_entidades.innerHTML = `
         <option value="" disabled selected class="invalid">Selecione uma entidade...</option>
         ${Object.entries(entidades_aplicaveis).map(([key, value]) =>
                 `<option value="${key}" data-cnpj_ent="${value[2]}" data-cod_cond_ahreas="${value[0]}">${value[1]}</option>`
-            ).join('')}
-    `;
+            ).join('')}`;
         }
-
         // 3. Cria a Promise que busca todas as bases
         const basesPromise = Promise.allSettled([
             buscarFornecedores().then(result => { globais.baseFornecedores = result; }),
@@ -515,7 +510,7 @@ function setupSectionToggle() {
 
 // Adicionar esta nova função
 export function handleEnterKeyNavigation(event) {
-    const log = true;
+    const log = false;
 
     if (event.key === 'Enter') {
         if (log) console.log("++++++++++PULANDO PARA A CELULA DE BAIXO OU DE CIMA++++++++++");

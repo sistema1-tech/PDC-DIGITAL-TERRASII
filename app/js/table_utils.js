@@ -36,7 +36,7 @@ const vlrTolerancia = 1;
  * - Atualiza os listeners da tab
  */
 export function addProductRow() {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++ADICIONANDO NOVA LINHA DE PRODUTO++++++++++");
     // Flag para verificar se a célula deve ser ímpar ou par
 
@@ -742,7 +742,7 @@ function criarPopupBase(conteudo) {
  * - Formata o valor total em BRL e exibe na célula correspondente
  */
 export function calculateTotalPrices(rowIndex) {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++CALCULANDO TOTAL DA LINHA++++++++++");
     const table = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
     const row = table.rows[rowIndex]; //Linha a ser calculada
@@ -825,7 +825,7 @@ function calcularTotais() {
  * - Recalcula os totais das linhas e da tab
  */
 export function handlePasteEventPriceTable(event) {
-    const log = true;
+    const log = false;
 
     if(log) console.log("++++++++++MANIPULANDO EVENTO DE COLAR (PASTE) NA TABELA DE PREÇOS++++++++++");
     event.preventDefault();

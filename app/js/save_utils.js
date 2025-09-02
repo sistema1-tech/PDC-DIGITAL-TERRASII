@@ -9,7 +9,7 @@ const qtdCssDecimais = 2; //Quantidade de casas decimais dos campos decimais (At
 //===========================MESCLA OS DADOS DO PDC, TOTAL OU POR PARCELA===========================//
 //==================================================================================================//
 async function splitDataByInstallments(status = null) {
-    const log = true;
+    const log = false;
     const reqType = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     const pgtoAnt = document.getElementById('pag_antecipado').checked;
 
@@ -257,7 +257,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
  * Esta função busca os dados de classificação a partir de um formulário e os organiza em um objeto.
  */
 function pegarDadosClassificacao_V2(qtdParc = 1) {
-    const log = true;
+    const log = false;
 
     if(log) console.log("++++++++++BUSCANDO DADOS DE CLASSIFICAÇÃO CONTÁBIL++++++++++");
 
@@ -326,7 +326,7 @@ function pegarDadosClassificacao_V2(qtdParc = 1) {
  * Esta função busca os dados do formulário de Nota Fiscal e os organiza em um objeto.
  */
 function pegarDadosNF_V2() {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++BUSCANDO DADOS DA NOTA FISCAL++++++++++");
     const formDdsNF = document.querySelector('#dados-nf');
     const dadosNF = {};
@@ -547,7 +547,7 @@ function getItemType(base64String) {
     */
 
 function getItemType(base64String) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PEGANDO TIPO DO ARQUIVO++++++++++");
     const match = base64String.match(/^data:([^;]+);base64,/);
     if(log) console.log("match => ", match);
@@ -565,7 +565,7 @@ function getItemType(base64String) {
 }
 
 function getItemData(base64String) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
     const fileType = getItemType(base64String);
     const fileContent = atob(base64String.replace(`data:${base64String.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
@@ -604,7 +604,7 @@ function getItemData(base64String) {
  */
 export async function saveTableData_V2({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
-        const log = true;
+        const log = false;
         if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);

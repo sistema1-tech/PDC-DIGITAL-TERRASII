@@ -31,7 +31,7 @@ const nomeRelClasseOperacional = "Classes_Operacionais_API";
  * // ["Empresa ABC", "12.345.678/0001-90", "100.00", "30 dias", "Obs..."]
  */
 export async function buscarFornecedores() {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++BUSCANDO FORNECEDORES++++++++++");
     let cFornecedores = `(Tipo!="DEPARTAMENTO PESSOAL")`;
     if (globais.pag.includes('_DP')) {

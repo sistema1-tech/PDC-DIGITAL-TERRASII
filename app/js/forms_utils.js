@@ -62,7 +62,7 @@ export function mostrarCamposPagamento() {
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
 export function preencherDadosPDC(resp) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if(log) console.log("resp => ", JSON.stringify(resp));
     globais.cotacaoExiste = true;
