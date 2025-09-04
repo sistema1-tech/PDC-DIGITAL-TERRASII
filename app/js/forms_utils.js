@@ -62,7 +62,7 @@ export function mostrarCamposPagamento() {
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
 export function preencherDadosPDC(data) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if(log) console.log("data => ", JSON.stringify(data));
     if(log) console.log("Classificacao_contabil => ", data.Classificacao_contabil);
@@ -77,6 +77,9 @@ export function preencherDadosPDC(data) {
     }
     
     //==========SESSÃO 1==========//
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de cabeçalho|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||");
     const formDadosPDC = document.querySelector('#dados-PDC');
 
     // Select da Entidade
@@ -125,6 +128,9 @@ export function preencherDadosPDC(data) {
     }
 
     // =====[SESSÃO DE FORMAS DE PAGAMENTO]=====//
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de formas de pagamento|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||||||||");
     const formPagamento = document.querySelector('#form-pagamento');
 
     // Forma de Pagamento
@@ -159,7 +165,12 @@ export function preencherDadosPDC(data) {
     }
 
     // =====[LINHAS DE PARCELAS]=====//
+
     if (data.Datas && Array.isArray(data.Datas)) {
+        if (log) console.log("|||||||||||||||||||||||||||||||||||||||");
+        if (log) console.log("|||||Preenchendo dados de parcelas|||||");
+        if (log) console.log("|||||||||||||||||||||||||||||||||||||||");
+        if (log) console.log("Preenchendo datas de vencimento...");
         const camposData = document.getElementById('camposData');
 
         // Remove campos existentes
@@ -177,20 +188,39 @@ export function preencherDadosPDC(data) {
         const qtdParcelas = data.Datas ? data.Datas.length : 0;
 
         data.Datas.forEach((dataObj, index) => {
-            if (!dataObj.display_value) {
-                return;
-            }
+            console.log("dataObj => ", dataObj);
+            const dataStr = dataObj.Vencimento_previsto || "";
+            const valor = dataObj.Valor || "0.0";
+            const numPDC = dataObj.Num_PDC_parcela || "";
+            const parcCriada = dataObj.parcela_criada || "false";
+            const numParc = dataObj.Numero_da_parcela || "";
+            
 
-            const [dataStr, valor, numPDC, parcCriada, numParc] = dataObj.display_value.split('|SPLITKEY|');
-
-            const [dia, mes, ano] = dataStr.split('/') ;
-            const dataFormatada = dataStr !== ""? `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`: "";
+            const [dia, mes, ano] = dataStr.split('-') ;
+            const meses = {
+                'Jan': '01',
+                'Feb': '02',
+                'Mar': '03',
+                'Apr': '04',
+                'May': '05',
+                'Jun': '06',
+                'Jul': '07',
+                'Aug': '08',
+                'Sep': '09',
+                'Oct': '10',
+                'Nov': '11',
+                'Dec': '12'
+            };
+            const dataFormatada = dataStr !== ""? `${ano}-${meses[mes]}-${dia.padStart(2, '0')}`: "";
             adicionarCampoVenc(dataFormatada, valor, numPDC, parcCriada, numParc);
 
         });
     }
 
     // =====[LINHAS DE NOTAS FISCAIS]=====//
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de notas fiscais|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
     const camposNF = document.querySelector('#linhas-nf');
     if(data.Dados_da_nota_fiscal1)
     {
@@ -215,6 +245,9 @@ export function preencherDadosPDC(data) {
     }
 
     // =====[SESSÃO DE RETENÇÕES]=====//
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de retenções|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||");
     const inputInss = document.querySelector('#inss');
     const inputIss = document.querySelector('#iss');
     const inputPisConfinsCssl = document.querySelector('#pis-confins-cssl');
@@ -241,6 +274,9 @@ export function preencherDadosPDC(data) {
     }
 
     //=====[SESSÃO DE ASSINANTES]=====//
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de assinaturas|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||");
     const assinantes = data.Assinaturas ? data.Assinaturas : [];
 
     function criarAssinante(assinante) {
@@ -335,12 +371,17 @@ export function preencherDadosPDC(data) {
 
     //====================CAMPO DE APOIO, VALOR ORÇADO====================//
     globais.valor_orcado = data.Valor_orcado;
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de classificação|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
     if(data.Classificacao_contabil)
     {
         preencherDadosClassificacao(data.Classificacao_contabil);
 
     }
-        
+    if (log) console.log("||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Calculando todos os totais|||||");
+    if (log) console.log("||||||||||||||||||||||||||||||||||||");
     atualizarValorOriginal();
     calcularValorTotalPagar();
     atualizarValorOrcado();
@@ -710,7 +751,7 @@ export function removerLinhaClassificacao(botao) {
 //====================PREENCHE OS DADOS DE CLASSIFICAÇÃO CONTÁBIL====================//
 //===================================================================================//
 function preencherDadosClassificacao(classificacoes) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PREENCHENDO DADOS DE CLASSIFICAÇÃO++++++++++");
     if(log) console.log("classificacoes => ", JSON.stringify(classificacoes));
     const formClassificacao = document.querySelector('#form-classificacao');

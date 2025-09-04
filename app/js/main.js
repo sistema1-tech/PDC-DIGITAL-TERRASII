@@ -74,7 +74,7 @@ initGenericItems().catch(error => {
 
 async function initGenericItems() {
     try {
-        const log = true;
+        const log = false;
         if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
@@ -372,7 +372,7 @@ async function executarProcessosParalelos() {
 
 async function processarDadosPDC() {
     //https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(num_pdc_temp%3D%3D%222025_09_02_11_45_40%22%20%26%26%20Ativo%3D%3Dtrue%20%26%26%20Aprovado%3D%3Dtrue)&max_records=1000
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
     //const cPDC = "(" + (globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ? `id_temp=="${globais.numPDC_temp}"` : "ID==0")) + ")";
     const cPDC = "(" + globais.numPDC_temp ? `id_temp=="${globais.numPDC_temp}"&&Status_geral!="Separado em parcelas")` : "ID==0)";
@@ -471,7 +471,7 @@ function addNavDots() {
 }
 
 async function searchPageParams() {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++BUSCANDO OS PARÂMETROS DA PÁGINA++++++++++");
     const params = await ZOHO.CREATOR.UTIL.getQueryParams();
     if (params) {

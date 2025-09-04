@@ -33,7 +33,7 @@ const url = 'https://guillaumon8.zohocreatorportal.com/';
  */
 export async function executar_apiZoho({ tipo = null, criterios = null, ID = null, corpo = null, nomeR = null, nomeF = null } = {}) {
     try {
-        const log = true;
+        const log = false;
         nomeR = nomeR ? nomeR : globais.nomeRelCot;
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
         let recOps = await ZOHO.CREATOR.DATA;
@@ -858,7 +858,7 @@ export async function customModal_V2({
 }) {
 
     try {
-        const log = true;
+        const log = false;
         if (log) console.log("++++++++++CRIANDO MODAL CUSTOMIZADO++++++++++");
         if (log) console.log("+++ACAO => ", acao);
         if (log) console.log("+++TIPO DE ACAO => ", tipoAcao);
@@ -1068,7 +1068,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 async function prepararParaSalvar(acao, infoInserida = null) {
 
     try {
-        const log = true;
+        const log = false;
     
         if (log) console.log("++++++++++PREPARANDO PARA SALVAR++++++++++");
         if (log) console.log("acao => ", acao);
