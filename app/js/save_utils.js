@@ -480,7 +480,7 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
                     Condicoes_de_pagamento: condicaoPagamento,
                     Observacoes: observacao,
                     numero_de_PDC: currPDC ? currPDC : globais.numPDC,
-                    num_PDC_temp: currTempPDC ? currTempPDC : globais.numPDC_temp,
+                    num_pdc_temp: currTempPDC ? currTempPDC : globais.numPDC_temp,
                     Aprovado: fornecedorAprovado,
                     Versao: 1,
                     Ativo: true
@@ -494,7 +494,7 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
                 Quantidade: quantidade,
                 Unidade: unidade,
                 numero_de_PDC: currPDC ? currPDC : globais.numPDC,
-                num_PDC_temp: currTempPDC ? currTempPDC : globais.numPDC_temp,
+                num_pdc_temp: currTempPDC ? currTempPDC : globais.numPDC_temp,
                 Versao: 1,
                 Ativo: true,
             };
