@@ -61,12 +61,12 @@ export function mostrarCamposPagamento() {
  * - Preenche as datas de vencimento, recriando os campos necessários
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
-export function preencherDadosPDC(resp) {
+export function preencherDadosPDC(data) {
     const log = true;
     if(log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
-    if(log) console.log("resp => ", JSON.stringify(resp));
+    if(log) console.log("data => ", JSON.stringify(data));
+    if(log) console.log("Classificacao_contabil => ", data.Classificacao_contabil);
     globais.cotacaoExiste = true;
-    const data = resp.data[0];
     globais.idPDC = data.ID;
     globais.numPDC = data.Numero_do_PDC;
     globais.perfilResponsavel = data.Perfil_responsavel;
@@ -144,8 +144,6 @@ export function preencherDadosPDC(resp) {
         const inputFavorecidoDeposito = formPagamento.querySelector('#favorecido-deposito');
         const inputCPF_CNPJ_favorecido = formPagamento.querySelector('#cpf_cnpj_favorecido');
         
-        
-
         if (data.Banco) inputBanco.value = data.Banco;
         if (data.AG) inputAgencia.value = data.AG;
         if (data.N_Conta) inputConta.value = data.N_Conta;
@@ -189,9 +187,6 @@ export function preencherDadosPDC(resp) {
             const dataFormatada = dataStr !== ""? `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`: "";
             adicionarCampoVenc(dataFormatada, valor, numPDC, parcCriada, numParc);
 
-
-
-            
         });
     }
 
@@ -340,9 +335,12 @@ export function preencherDadosPDC(resp) {
 
     //====================CAMPO DE APOIO, VALOR ORÇADO====================//
     globais.valor_orcado = data.Valor_orcado;
+    if(data.Classificacao_contabil)
+    {
+        preencherDadosClassificacao(data.Classificacao_contabil);
 
-    preencherDadosClassificacao(data.Classificacao_contabil);
-
+    }
+        
     atualizarValorOriginal();
     calcularValorTotalPagar();
     atualizarValorOrcado();
@@ -712,7 +710,7 @@ export function removerLinhaClassificacao(botao) {
 //====================PREENCHE OS DADOS DE CLASSIFICAÇÃO CONTÁBIL====================//
 //===================================================================================//
 function preencherDadosClassificacao(classificacoes) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PREENCHENDO DADOS DE CLASSIFICAÇÃO++++++++++");
     if(log) console.log("classificacoes => ", JSON.stringify(classificacoes));
     const formClassificacao = document.querySelector('#form-classificacao');
@@ -725,7 +723,19 @@ function preencherDadosClassificacao(classificacoes) {
     // Para cada classificação, cria uma nova linha
     classificacoes.forEach(classificacao => {
         // Extrai os valores do display_value
-        const [conta, centro, classe, valor, id] = classificacao.display_value.split('|SPLITKEY|');
+        if(log) console.log("classificacao => ", classificacao);
+        const conta = classificacao.Conta_a_debitar || "";
+        const centro = classificacao.Centro_de_custo.Codigo || "";
+        const classe = classificacao.Classe_operacional.Codigo || "";
+        const valor = classificacao.Valor || "";
+        const id = classificacao.ID || "";
+
+        if(log) console.log("conta => ", conta);
+        if(log) console.log("centro => ", centro);
+        if(log) console.log("classe => ", classe);
+        if(log) console.log("valor => ", valor);
+        if(log) console.log("id => ", id);
+        //const [conta, centro, classe, valor, id] = classificacao.display_value.split('|SPLITKEY|');
 
         // Adiciona uma nova linha
         adicionarLinhaClassificacao();

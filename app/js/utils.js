@@ -33,6 +33,7 @@ const url = 'https://guillaumon8.zohocreatorportal.com/';
  */
 export async function executar_apiZoho({ tipo = null, criterios = null, ID = null, corpo = null, nomeR = null, nomeF = null } = {}) {
     try {
+        const log = true;
         nomeR = nomeR ? nomeR : globais.nomeRelCot;
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
         let recOps = await ZOHO.CREATOR.DATA;
@@ -55,7 +56,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 
         // Função de atualizar registro
         async function atualizar_reg(nomeR, ID, corpo) {
-
+            if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", corpo);
             return await recOps.updateRecord({
                 appName: globais.nomeApp,
                 reportName: nomeR,
@@ -76,9 +77,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                     record_cursor: cursor,
                     max_records: 1000
                 };
-                console.log("Config buscar_reg => ", config);
                 const resp  = await recOps.getRecords(config);
-                console.log("Resp buscar_reg => ", resp);
                 //Verifica possíveis erros
                 if (!resp || resp.code !== 3000 || !Array.isArray(resp.data) || resp.data.length === 0) {
                     break;

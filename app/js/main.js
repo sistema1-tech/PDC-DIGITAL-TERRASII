@@ -73,14 +73,14 @@ initGenericItems().catch(error => {
 });
 
 async function initGenericItems() {
-
     try {
+        const log = true;
+        if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
 
         // 2.1 Busca as entidades permitidas
         const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Lista_cond_laranjeiras_Report" });
-
         const entidades_aplicaveis = condominios.reduce((acc, cond) => {
             acc[cond.ID] = [
                 cond.Cod_cond_ahreas,
@@ -89,6 +89,7 @@ async function initGenericItems() {
             ];
             return acc;
         }, {});
+        if (log) console.log("Entidades aplicáveis mapeadas: ", entidades_aplicaveis);
 
         const campo_entidades = document.querySelector('select[name="Entidade"]');
         if (campo_entidades) {
@@ -370,6 +371,9 @@ async function executarProcessosParalelos() {
 }
 
 async function processarDadosPDC() {
+    //https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(num_pdc_temp%3D%3D%222025_09_02_11_45_40%22%20%26%26%20Ativo%3D%3Dtrue%20%26%26%20Aprovado%3D%3Dtrue)&max_records=1000
+    const log = true;
+    if (log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
     //const cPDC = "(" + (globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ? `id_temp=="${globais.numPDC_temp}"` : "ID==0")) + ")";
     const cPDC = "(" + globais.numPDC_temp ? `id_temp=="${globais.numPDC_temp}"&&Status_geral!="Separado em parcelas")` : "ID==0)";
     const respPDC = await executar_apiZoho({
@@ -378,13 +382,13 @@ async function processarDadosPDC() {
         nomeR: globais.nomeRelPDC
     });
 
-    if (respPDC.code == 3000) {
-        globais.tipo = 'editar_pdc';
-        preencherDadosPDC(respPDC);
-    }
+    globais.tipo = 'editar_pdc';
+    preencherDadosPDC(respPDC[0]);
+       
 }
 
 async function processarDadosCotacao() {
+    
     //const idCriterio = globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ?`num_pdc_temp=="${globais.numPDC_temp}"` :"ID==0");
     const idCriterio = globais.numPDC_temp ? `num_pdc_temp=="${globais.numPDC_temp}"` : "ID==0";
 
@@ -398,14 +402,10 @@ async function processarDadosCotacao() {
         nomeR: globais.nomeRelCot
     });
 
-    if (respCot.code == 3000) {
-
-        prenchTabCot(respCot);
-        atualizarValorOriginal();
-        calcularValorTotalPagar();
-    } else {
-        console.log("Não tem Cotação");
-    }
+    prenchTabCot(respCot);
+    atualizarValorOriginal();
+    calcularValorTotalPagar();
+        
 }
 
 /**
@@ -471,6 +471,8 @@ function addNavDots() {
 }
 
 async function searchPageParams() {
+    const log = true;
+    if (log) console.log("++++++++++BUSCANDO OS PARÂMETROS DA PÁGINA++++++++++");
     const params = await ZOHO.CREATOR.UTIL.getQueryParams();
     if (params) {
         console.log("Parâmetros da URL recebidos:", params);
@@ -482,7 +484,16 @@ async function searchPageParams() {
         globais.entidades_permitidas = params.ent_perm ? params.ent_perm.split(",") : globais.entidades_permitidas;
         globais.usuario_logado = params.user ?? globais.usuarioLogado;
     }
-
+    if (log) console.log("Parâmetros da página definidos:", {
+        numPDC: globais.numPDC,
+        numPDC_temp: globais.numPDC_temp,
+        pag: globais.pag,
+        userIP: globais.userIP, // Adicionado
+        novoPerfilResponsavel: globais.novoPerfilResponsavel, // Adicionado
+        entidades_permitidas: globais.entidades_permitidas, // Adicionado    
+        usuario_logado: globais.usuario_logado, // Adicionado
+    });
+    if (log) console.log("----------PARÂMETROS DA PÁGINA DEFINIDOS----------");
 }
 
 /**

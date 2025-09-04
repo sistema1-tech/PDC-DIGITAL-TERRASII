@@ -1166,8 +1166,8 @@ export function atualizarOuvintesTabDetlhesForn() {
  *   - Condi��ões de pagamento
  *   - Observações
  */
-export async function prenchTabCot(resp) {
-    if (resp && resp.code === 3000 && Array.isArray(resp.data) && resp.data.length > 0) {
+export async function prenchTabCot(data) {
+    if (data.length > 0) {
 
         globais.cotacaoExiste = true;
         const table = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
@@ -1177,7 +1177,6 @@ export async function prenchTabCot(resp) {
         }
 
         //=====Preparando dados da cotação (Fornecedores, produtos, valores e etc...)=====//
-        const data = resp.data;
 
         const idProdutos = [...new Set(data.map(item => item.id_produto))].sort((a, b) => a - b);
         globais.idProduto = Math.max(...idProdutos) + 1;
