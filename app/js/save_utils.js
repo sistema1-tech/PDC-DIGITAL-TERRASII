@@ -697,6 +697,9 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                 if(log) console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
     
                 //====================CRIA O REGISTRO DOS ARQUIVOS GALERIA================\\
+                if(log) console.log("|||||||||||||||||||||||||||||||||||||");
+                if(log) console.log("|||||SUBINDO ARQUIVOS DA GALERIA|||||");
+                if(log) console.log("|||||||||||||||||||||||||||||||||||||"); 
                 //ACRESCENTA ARQUIVOS DA GALERIA NOS ARQUIVOS JÁ EXISTENTES//
                 let qtdFiles = globais.arquivosGaleria.length;
                 
@@ -710,20 +713,22 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                     qtdFiles = Object.keys(arquivos).length;
                     
                 }
-    
+                if(log) console.log("Quantidade de arquivos => ", qtdFiles);
                 if (qtdFiles > 0) {
                     const dataList = [];
     
                     for (let i = 0; i < qtdFiles; i++) {
                         dataList.push({ PDC_Digital: idNovoPDC !== null ? idNovoPDC : globais.idPDC });
                     }
+                    if(log) console.log("dataList => ", JSON.stringify(dataList, null, 2));
     
-                    const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: dataList, nomeF: "laranj_arquivos_pdc" });
+                    const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: dataList, nomeF: "Documentos" });
                     if(log) console.log("respFilesRec => ", JSON.stringify(respFilesRec, null, 2));
+
                     if (respFilesRec.result.every(item => item.code === 3000)) {
     
                         const idArquivos = respFilesRec.result.map(item => item.data.ID);
-    
+                        if(log) console.log("idArquivos => ", idArquivos);
                         let indexFile = 0;
                         for (const id of idArquivos) {
                             let blob;
@@ -732,9 +737,8 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                             } else {
                                 blob = globais.arquivosGaleria[indexFile++];
                             }
-                            console.log("blob => ", blob);
-                            const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "laranj_arquivos_pdc_Report", ID: id, corpo: blob });
-                            console.log("respFileUpload => ", respFileUpload);
+                            const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
+                            if(log) console.log("respFileUpload => ", respFileUpload);
                             if (respFileUpload.code !== 3000) {
                                 console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
                             }
@@ -869,7 +873,7 @@ export async function enviarParaPaybox(){
         globais.arquivospPaybox.forEach((arquivo)=>{
             const filepathIndex = arquivo.display_value.indexOf("filepath=");
             const filepathValue = arquivo.display_value.substring(filepathIndex + "filepath=".length);
-            const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/laranj_arquivos_pdc_Report/Arquivos/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
+            const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/Documentos_API/Arquivos/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
             urls.push({url: url});
     
         } );

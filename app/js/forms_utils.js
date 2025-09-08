@@ -62,7 +62,7 @@ export function mostrarCamposPagamento() {
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
 export function preencherDadosPDC(data) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if(log) console.log("data => ", JSON.stringify(data));
     if(log) console.log("Classificacao_contabil => ", data.Classificacao_contabil);
@@ -265,10 +265,14 @@ export function preencherDadosPDC(data) {
     if (formaPagamentoSelecionada) {
         mostrarCamposPagamento();
     }
+    if (log) console.log("|||||||||||||||||||||||||||||||||||||||||");
+    if (log) console.log("|||||Preenchendo dados de documentos|||||");
+    if (log) console.log("|||||||||||||||||||||||||||||||||||||||||");
 
-    if (data.anexo_arquivos && data.anexo_arquivos.length > 0) {
-        globais.arquivospPaybox.push(...data.anexo_arquivos);
-        preencherListaAnexosV2(data.anexo_arquivos);
+    if (log) console.log("Anexos encontrados => ", data);
+    if (data.Documentos && data.Documentos.length > 0) {
+        globais.arquivospPaybox.push(...data.Documentos);
+        preencherListaAnexosV2(data.Documentos);
     } else {
         preencherListaAnexosV2();
     }
@@ -1276,15 +1280,19 @@ export function calcularValorTotalPagar() {
 //====================ANEXOS====================//
 //==============================================//
 export async function preencherListaAnexosV2(anexos) {
+    const log = true;
+    if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
+    
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF'];
     const convertTypes = {
         "vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", 
         "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx", 
         "vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
         ".vnd.ms-excel": "xls",
+        "plain": "txt",
     };
     const galleryElement = document.getElementById('gallery');
-
+    
     if (!galleryElement) {
         console.error('Elemento gallery não encontrado');
         return;
@@ -1327,16 +1335,19 @@ export async function preencherListaAnexosV2(anexos) {
     }
 
     galleryElement.innerHTML = '';
-
+    if(log) console.log("anexos => ", anexos);
     if (anexos && anexos.length > 0) {
         const promises = [];
         for (const anexo of anexos) {
             promises.push(new Promise((resolve) => {
                 //==========VARIÁVEIS DE APOIO==========//
-                const newAnexo = anexo.display_value;
+                if(log) console.log("anexo => ", anexo);
+                const newAnexo = anexo.Arquivo;
                 const fileType = convertTypes[newAnexo.split('.').pop().toLowerCase()] || newAnexo.split('.').pop().toUpperCase() || '';
+                if(log) console.log("fileType => ", fileType);
                 //const fileType = newAnexo.split('.').pop().toUpperCase();
                 const fileName = newAnexo.split('?filepath=')[1];
+                if(log) console.log("fileName => ", fileName);
 
                 //==========BUSCANDO O ARQUIVO NO ZOHO==========//
                 const imgEl = document.createElement('img');
@@ -1364,7 +1375,7 @@ export async function preencherListaAnexosV2(anexos) {
                 const checkSrcInterval = setInterval(() => {
                     if (imgEl && imgEl.src && imgEl.src !== "") {
                         //==========ADICIONANDO ARQUIVOS EM SEUS RESPECTIVOS FORMATOS==========//
-                        const initUrl = 'https://guillaumon.zohocreatorportal.com';
+                        const initUrl = 'https://guillaumon8.zohocreatorportal.com';
                         if (typesToView.includes(fileType)) {
                             fileElement.src = imgEl.src;
                             fileElement.setAttribute('data-download-src', imgEl.src);

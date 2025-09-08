@@ -42,6 +42,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         async function criar_reg(ddsCriacao) {
 
             ddsCriacao = { "data": ddsCriacao };
+            if (log) console.log("Criando registro com dados => ", JSON.stringify(ddsCriacao, null, 2));
             const config = {
                 app_name: globais.nomeApp,
                 form_name: nomeF,
@@ -95,11 +96,12 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         }
 
         async function subirArquivos() {
+            recOps = ZOHO.CREATOR.FILE;
             const config = {
-                appName: globais.nomeApp,
-                reportName: nomeR,
+                app_name: globais.nomeApp,
+                report_name: nomeR,
                 id: ID,
-                fieldName: 'Arquivos',
+                field_name: 'Arquivo',
                 file: corpo
             }
 
@@ -768,7 +770,7 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
                 input.value = '';
             });
 
-            await saveTableData_V2("Propostas criadas");
+            await saveTableData_V2("Prop. criada");
             window.open(`${url}#Report:Laranj_sol_em_andamento`, '_top');
             return;
         }
@@ -1101,7 +1103,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const paramExtra = {};
         const pgtoAnt = document.getElementById('pag_antecipado').checked;
     
-        let stats_salvarCot = "Propostas criadas";
+        let stats_salvarCot = "Prop. criada";
         if (globais.pag === "criar_numero_de_PDC") {
             stats_salvarCot = null;
 
@@ -1232,9 +1234,9 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             salvar_cot: {
                 status: stats_salvarCot
             },
-            criar_cotacao: { status: globais.pag === "criar_numero_de_PDC" ? null : "Propostas criadas" },
-            editar_cot: { status: globais.pag === "criar_numero_de_PDC" ? null : "Propostas criadas" },
-            corrigir_erros: { status: globais.pag === "criar_numero_de_PDC" ? null : "Propostas criadas" },
+            criar_cotacao: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
+            editar_cot: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
+            corrigir_erros: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
             solicitar_aprovacao_sindico: { status: "Aguardando aprovação de uma proposta" },
             ajustar_cot: { status: "Ajuste solicitado", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida } },
             aprov_cot: {
@@ -1327,7 +1329,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     });
                     document.getElementById('pag_antecipado').removeAttribute('checked');
     
-                    await saveTableData_V2({ status: "Propostas criadas", sepPorParc: true, paramExtra: { pag_antecipado: false } });
+                    await saveTableData_V2({ status: "Prop. criada", sepPorParc: true, paramExtra: { pag_antecipado: false } });
     
                 }
             } else if (acao === 'confirmar_compra') {
@@ -1413,7 +1415,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 input.value = '';
             });
     
-            await saveTableData_V2("Propostas criadas");
+            await saveTableData_V2("Prop. criada");
     
             window.parent.location.href = `${url}#Report:Laranj_sol_em_andamento`;
             setTimeout(function () {
