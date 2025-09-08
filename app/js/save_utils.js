@@ -674,7 +674,7 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                     };
     
                     respPDC = await executar_apiZoho({ tipo: "atualizar_reg", ID: globais.idPDC, corpo: payload, nomeR: globais.nomeRelPDC });
-                    console.log("respPDC => ", respPDC);
+                    console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
     
                 } else {
                     if(log) console.log("É CRIAÇÃO DE PDC!");

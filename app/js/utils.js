@@ -56,11 +56,11 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         // Função de atualizar registro
         async function atualizar_reg(nomeR, ID, corpo) {
             if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", corpo);
-            return await recOps.updateRecord({
-                appName: globais.nomeApp,
-                reportName: nomeR,
+            return await recOps.updateRecordById({
+                app_name: globais.nomeApp,
+                report_name: nomeR,
                 id: ID,
-                data: corpo
+                payload: corpo
             });
         }
 
@@ -1237,8 +1237,8 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             criar_cotacao: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
             editar_cot: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
             corrigir_erros: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
-            solicitar_aprovacao_sindico: { status: "Aguardando aprovação de uma proposta" },
-            ajustar_cot: { status: "Ajuste solicitado", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida } },
+            solicitar_aprovacao_sindico: { status: "Aguard. aprov. prop." },
+            ajustar_cot: { status: "Ajuste sol.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida } },
             aprov_cot: {
                 status:
                     globais.perfilResponsavel.includes("Depto. Pessoal") &&
@@ -1857,4 +1857,19 @@ function printErrorModal(erro) {
     closeModalButton.addEventListener('click', () => {
       modal.remove();
     });
-  }
+}
+
+export function base64Size(base64String) {
+    // Remove prefixo (ex: "data:image/png;base64,")
+    let cleaned = base64String.split(',')[1] || base64String;
+    
+    // Comprimento da string em base64
+    let len = cleaned.length;
+
+    // Cada caractere em base64 representa 6 bits
+    // Fórmula: (tamanho_base64 * 3 / 4) - padding
+    let padding = (cleaned.endsWith("==") ? 2 : cleaned.endsWith("=") ? 1 : 0);
+    let sizeInBytes = (len * 3) / 4 - padding;
+
+    return sizeInBytes;
+}

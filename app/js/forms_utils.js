@@ -1,5 +1,5 @@
 import { globais } from './main.js';
-import { formatToBRL_V2, converterStringParaDecimal } from './utils.js';
+import { formatToBRL_V2, converterStringParaDecimal, base64Size} from './utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
 
@@ -75,7 +75,8 @@ export function preencherDadosPDC(data) {
     {
         globais.perfilResponsavel = data.Perfil_responsavel;
     }
-    
+    //https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(ID%3D%3D0%20%26%26%20Ativo%3D%3Dtrue)&max_records=1000
+    //https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/PDC_Digital_API?criteria=id_temp%3D%3D%22null%22%26%26Status_geral!%3D%22Separado%20em%20parcelas%22)&max_records=1000
     //==========SESSÃO 1==========//
     if (log) console.log("||||||||||||||||||||||||||||||||||||||||");
     if (log) console.log("|||||Preenchendo dados de cabeçalho|||||");
@@ -1283,7 +1284,7 @@ export async function preencherListaAnexosV2(anexos) {
     const log = true;
     if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
     
-    const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF'];
+    const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
     const convertTypes = {
         "vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", 
         "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx", 
@@ -1374,9 +1375,10 @@ export async function preencherListaAnexosV2(anexos) {
 
                 const checkSrcInterval = setInterval(() => {
                     if (imgEl && imgEl.src && imgEl.src !== "") {
+                        const fileSize = (base64Size(imgEl.src) / (1024 * 1024)).toFixed(2);
                         //==========ADICIONANDO ARQUIVOS EM SEUS RESPECTIVOS FORMATOS==========//
                         const initUrl = 'https://guillaumon8.zohocreatorportal.com';
-                        if (typesToView.includes(fileType)) {
+                        if (typesToView.includes(fileType) && fileSize < 20) {
                             fileElement.src = imgEl.src;
                             fileElement.setAttribute('data-download-src', imgEl.src);
                             if (fileType === 'PDF') {
@@ -1534,7 +1536,6 @@ export async function preencherListaAnexosV2(anexos) {
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
 }
-
 //=================================================//
 //====================LINHAS NF====================//
 //=================================================//
