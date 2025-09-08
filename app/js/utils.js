@@ -647,7 +647,7 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
         // Mapeia os tipos de ação   para os payloads correspondentes
         const payloadMap = {
             'enviar_p_checagem_final': {
-                Status_geral: 'Enviado para checagem final'
+                Status_geral: 'Chec. final'
             },
             'enviar_p_assinatura':
             {
@@ -685,11 +685,11 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
             if (Object.keys(tiposValidos).includes(tipo)) {
                 let status = null;
                 if (tipo === "confirmar_recebimento") {
-                    status = "Recebimento confirmado";
+                    status = "Rec. confirmado";
                 } else if (tipo === "criar_cotacao_controladoria" || tipo === "editar_cotacao_controladoria") {
                     status = "Propostas criadas controladoria";
                 } else if (tipo === "confirmar_compra") {
-                    status = "Enviado para checagem final";
+                    status = "Chec. final";
                 }
                 await saveTableData_V2(status, tiposValidos[tipo]);
             }
@@ -1111,7 +1111,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             stats_salvarCot = "Recebimento confirmado";
 
         } else if (globais.pag === "checagem_final") {
-            stats_salvarCot = "Enviado para checagem final";
+            stats_salvarCot = "Chec. final";
 
         }
     
@@ -1242,24 +1242,24 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             aprov_cot: {
                 status:
                     globais.perfilResponsavel.includes("Depto. Pessoal") &&
-                        parcelaCriada ? "Enviado para checagem final" :
-                        "Proposta aprovada"
+                        parcelaCriada ? "Chec. final" :
+                        "Prop. aprov."
             },
-            arquivar_cot: { status: "Proposta arquivada" },
+            arquivar_cot: { status: "Prop. arquivada" },
             finalizar_provisionamento: {
                 status:
                     globais.perfilResponsavel.includes("Depto. Pessoal") &&
                         !parcelaCriada ? "Separado em parcelas" :
-                        "Lançado no orçamento"
+                        "Aguard. compra"
             },
             confirmar_compra: {
-                status: globais.perfilResponsavel.includes("Controladoria")? 'Enviado para checagem final': tipoSolicitacao === 'SERVIÇO' || pgtoAnt?'Recebimento confirmado' : 'Compra realizada',
+                status: globais.perfilResponsavel.includes("Controladoria")? 'Chec. final': tipoSolicitacao === 'SERVIÇO' || pgtoAnt?'Rec. confirmado' : 'Compra real.',
                 sepPorParc: tipoSolicitacao === 'SERVIÇO' || pgtoAnt || globais.perfilResponsavel.includes("Controladoria"),
                 paramsExtraPDC: {pag_antecipado: false}
             },
-            confirmar_recebimento: { status: "Recebimento confirmado", sepPorParc: true },
-            solicitar_ajuste_ao_compras: { status: "Ajuste solicitado pós checagem", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }},
-            enviar_p_checagem_final: { status: "Enviado para checagem final" },
+            confirmar_recebimento: { status: "Rec. confirmado", sepPorParc: true },
+            solicitar_ajuste_ao_compras: { status: "Ajuste sol. control.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }},
+            enviar_p_checagem_final: { status: "Chec. final" },
             tratar_control: { paramsExtraPDC: { Status_controladoria: "Tratado" } },
             enviar_p_assinatura: {
                 status: "Assinatura Confirmada Controladoria",
@@ -1290,7 +1290,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             if (acao.includes("finalizar_provisionamento")) {
                 if (globais.perfilResponsavel.includes("Depto. Pessoal")) {
                     document.getElementById('pag_antecipado').setAttribute('checked', 'checked');
-                    await saveTableData_V2({ status: "Enviado para checagem final", sepPorParc: true });
+                    await saveTableData_V2({ status: "Chec. final", sepPorParc: true });
                     //=====REMOVE ALGUNS DADOS DO PDC E FAZ A COPIA DAS PARCELAS=====\\
                     //CRIA UM NOVO ID TEMPORÁRIO PARA A CÓPIA E LIMPA O NUMERO DO PDC
                     const now = new Date();
@@ -1337,7 +1337,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     await saveTableData_V2({ status: "Separado em parcelas" });
 
                 } else if (pgtoAnt) {
-                    await saveTableData_V2({ status: "Compra realizada", paramExtra: { pag_antecipado: false } });
+                    await saveTableData_V2({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
                     
                 }
     
