@@ -651,16 +651,16 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
             },
             'enviar_p_assinatura':
             {
-                Status_geral: 'Assinatura Confirmada Controladoria'
+                Status_geral: 'Ass. control.'
             },
             'autorizar_pagamento_sindico': {
-                Status_geral: 'Assinatura Confirmada Sindico'
+                Status_geral: 'Ass. sindico'
             },
             'autorizar_pagamento_subsindico': {
-                Status_geral: 'Assinatura Confirmada Sub Sindico'
+                Status_geral: 'Ass. subsindico'
             },
             'confirmar_todas_as_assinaturas': {
-                Status_geral: 'Autorizado para pagamento'
+                Status_geral: 'Aut. pag.'
             }
         };
 
@@ -1079,24 +1079,27 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const parcelaCriada = parcelaCriadaElement ? parcelaCriadaElement.checked : false;
         const data_atual = moment();
         const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
+        // Nova constante no formato 'aa-mmm-dd' com mês em inglês
+        const data_atual_formatada_en = data_atual.format('DD-MMM-YYYY HH:mm:ss');
         let alcada_temp = null;
         let ap_status_subsindico;
         
         if(acao === "autorizar_pagamento_subsindico")
         {
             let crit = `(Inicio <="${data_atual_formatada}" && Fim>="${data_atual_formatada}")`;
-            
+            ap_status_subsindico = "Ass. subsindico";
+            /*
             const resp = await executar_apiZoho({
                 tipo: "busc_reg", 
                 criterios: crit, 
                 nomeR: "ADM_Alcadas_temporarias_cadastradas"
             });
-            ap_status_subsindico = "Assinatura Confirmada Sub Sindico";
             if(resp.code == 3000)
             {
-                ap_status_subsindico = "Autorizado para pagamento";
+                ap_status_subsindico = "Aut. pag.";
             }
             console.log("ap_status_subsindico => ", ap_status_subsindico);
+            */
             //{status: 404, statusText: 'error', responseText: '{"code":3100,"message":"No records found for the given criteria."}'}
         }
         
@@ -1135,7 +1138,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Usuario: "Patrick",
                     E_mail_usuario: "patrick_kum@hotmail.com",
                     IP: globais.userIP,
-                    Data_da_assinatura: data_atual_formatada,
+                    Data_da_assinatura: data_atual_formatada_en,
                     Assinado: true
                 }
             }:
@@ -1146,7 +1149,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Usuario: "Leatríce Rezende Motta",
                     E_mail_usuario: "leatrice.rezende@gmail.com",
                     IP: globais.userIP,
-                    Data_da_assinatura: data_atual_formatada,
+                    Data_da_assinatura: data_atual_formatada_en,
                     Assinado: true
                 }
             }
@@ -1172,9 +1175,9 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Assinado: false
                 }
             }
-            console.log("assinaturasIniciais => ", assinaturasIniciais);
+            if(log) console.log("assinaturasIniciais => ", JSON.stringify(assinaturasIniciais));
             function buscarAssinaturas() {
-                const log = false;
+                const log = true;
                 if (log) console.log("++++++++++BUSCANDO ASSINATURAS++++++++++");
     
                 const assinantes = document.querySelectorAll('.assinantes .assinante');
@@ -1216,18 +1219,18 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 console.log("assinaturas já criadas", apoio_paramExtras.Assinaturas);
                 if (acao === "autorizar_pagamento_subsindico") {
                     apoio_paramExtras.Assinaturas[1].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[1].Data_da_assinatura = data_atual_formatada;
+                    apoio_paramExtras.Assinaturas[1].Data_da_assinatura = data_atual_formatada_en;
                     apoio_paramExtras.Assinaturas[1].Assinado = true;
 
                 } else if (acao === "autorizar_pagamento_sindico") {
                     apoio_paramExtras.Assinaturas[2].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[2].Data_da_assinatura = data_atual_formatada;
+                    apoio_paramExtras.Assinaturas[2].Data_da_assinatura = data_atual_formatada_en;
                     apoio_paramExtras.Assinaturas[2].Assinado = true;
 
                 }
             }
             tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
-            ap_status_subsindico = tudoAssinado ? "Autorizado para pagamento" : ap_status_subsindico;
+            ap_status_subsindico = tudoAssinado ? "Aut. pag." : ap_status_subsindico;
         }
     
         const statusMap = {
@@ -1262,23 +1265,23 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             enviar_p_checagem_final: { status: "Chec. final" },
             tratar_control: { paramsExtraPDC: { Status_controladoria: "Tratado" } },
             enviar_p_assinatura: {
-                status: "Assinatura Confirmada Controladoria",
+                status: "Ass. control.",
                 paramsExtraPDC: apoio_paramExtras
             },
             autorizar_pagamento_subsindico: {
-                status: ap_status_subsindico,//status: tudoAssinado ? "Autorizado para pagamento" : "Assinatura Confirmada Sub Sindico",
+                status: ap_status_subsindico,//status: tudoAssinado ? "Aut. pag." : "Ass. subsindico",
                 paramsExtraPDC: apoio_paramExtras
             },
             autorizar_pagamento_sindico: {
-                status: tudoAssinado ? "Autorizado para pagamento" : "Assinatura Confirmada Sindico",
+                status: tudoAssinado ? "Aut. pag." : "Ass. sindico",
                 paramsExtraPDC: apoio_paramExtras
             },
             confirmar_todas_as_assinaturas: {
-                status: "Autorizado para pagamento",
+                status: "Aut. pag.",
                 paramsExtraPDC: apoio_paramExtras
             },
             lancar_pdc_ahreas: { status: "Lançado no ERP", paramsExtraPDC: { Status_Guillaumon: "Lançado no ahreas", num_lanc_ahreas: infoInserida } },
-            confirmar_pag_ahreas: { status: "Pagamento realizado", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada} },
+            confirmar_pag_ahreas: { status: "Pagamento realizado", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada_en} },
             suspender_pagamento: { status: "Pagamento suspenso" }
         };
     
@@ -1355,7 +1358,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             } else if (acao === 'confirmar_recebimento') {
                 await saveTableData_V2({ status: "Separado em parcelas" });
             }
-            if(params.status == "Autorizado para pagamento")
+            if(params.status == "Aut. pag.")
             {
                 await enviarParaPaybox()
             }

@@ -90,7 +90,7 @@ async function initGenericItems() {
             return acc;
         }, {});
         if (log) console.log("Entidades aplicáveis mapeadas: ", entidades_aplicaveis);
-
+        console.log("globais.pag => ", globais.pag);
         const campo_entidades = document.querySelector('select[name="Entidade"]');
         if (campo_entidades) {
             campo_entidades.innerHTML = `

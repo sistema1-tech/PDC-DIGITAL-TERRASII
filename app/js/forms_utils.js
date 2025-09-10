@@ -285,7 +285,14 @@ export function preencherDadosPDC(data) {
     const assinantes = data.Assinaturas ? data.Assinaturas : [];
 
     function criarAssinante(assinante) {
-        const [cargo, funcao, usuario, email, ip ,dataAssinatura, assinado] = assinante?.display_value?.split('|SPLITKEY|') || [];
+        const cargo = assinante.Cargo;
+        const funcao = assinante.Funcao;
+        const usuario = assinante.Usuario;
+        const email = assinante.E_mail_usuario;
+        const ip = assinante.IP;
+        const dataAssinatura = assinante.Data_da_assinatura;
+        const assinado = assinante.Assinado;
+
         const elementAssinante = document.createElement('div');
         elementAssinante.classList.add('assinante');
 
@@ -1281,7 +1288,7 @@ export function calcularValorTotalPagar() {
 //====================ANEXOS====================//
 //==============================================//
 export async function preencherListaAnexosV2(anexos) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
     
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
