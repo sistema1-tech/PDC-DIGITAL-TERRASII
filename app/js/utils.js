@@ -1,7 +1,7 @@
 import { saveTableData_V2, enviarParaPaybox } from './save_utils.js';
 import { globais } from './main.js';
 
-const url = 'https://guillaumon8.zohocreatorportal.com/';
+const url = 'https://terrasii.zohocreatorportal.com/';
 
 /**
  * Executa requisições para a API do Zoho Creator
@@ -660,7 +660,7 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
                 Status_geral: 'Ass. subsindico'
             },
             'confirmar_todas_as_assinaturas': {
-                Status_geral: 'Aut. pag.'
+                Status_geral: 'Pag. aut.'
             }
         };
 
@@ -771,7 +771,7 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
             });
 
             await saveTableData_V2("Prop. criada");
-            window.open(`${url}#Report:Laranj_sol_em_andamento`, '_top');
+            window.open(`${url}#Report:Solicitacoes_em_andamento`, '_top');
             return;
         }
 
@@ -796,13 +796,13 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
                     let link_layout;
                     // [LAYOUT]
                     if (entidadeSelecionada == "3938561000066182591") {
-                        link_layout = `${url}guillaumon8/${globais.nomeApp}/pdf/Laranj_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Laranjeiras`;
+                        link_layout = `${url}terrasii/${globais.nomeApp}/pdf/Laranj_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Laranjeiras`;
                     }
                     else if (entidadeSelecionada == "3938561000066182595") {
-                        link_layout = `${url}guillaumon8/${globais.nomeApp}/pdf/AssociacaoServir_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Ass_Servir`;
+                        link_layout = `${url}terrasii/${globais.nomeApp}/pdf/AssociacaoServir_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Ass_Servir`;
                     }
                     else if(entidadeSelecionada == "3938561000096117305"){
-                        link_layout = `${url}guillaumon8/${globais.nomeApp}/pdf/Asa_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Asa_Laranj`;
+                        link_layout = `${url}terrasii/${globais.nomeApp}/pdf/Asa_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Asa_Laranj`;
                     }
 
                     window.open(`${link_layout}`, '_blank', 'noopener,noreferrer');
@@ -1096,7 +1096,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             });
             if(resp.code == 3000)
             {
-                ap_status_subsindico = "Aut. pag.";
+                ap_status_subsindico = "Pag. aut.";
             }
             console.log("ap_status_subsindico => ", ap_status_subsindico);
             */
@@ -1143,11 +1143,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 }
             }:
             {
-                "Leatríce Rezende Motta": {
+                "Financeiro": {
                     Cargo: "Controladoria",
                     Funcao: "Auxiliar controladoria",
-                    Usuario: "Leatríce Rezende Motta",
-                    E_mail_usuario: "leatrice.rezende@gmail.com",
+                    Usuario: "Maiara",
+                    E_mail_usuario: "Controladoriatsj2@gmail.com",
                     IP: globais.userIP,
                     Data_da_assinatura: data_atual_formatada_en,
                     Assinado: true
@@ -1156,20 +1156,20 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             //
             const assinaturasIniciais = {
                 ...apoio_assin_inic,
-                "Igor Vieira Negri": {
+                "Gilson": {
                     Cargo: "Administrativo",
-                    Funcao: "Subsíndico",
-                    Usuario: "Igor Vieira Negri",
-                    E_mail_usuario: "igorvn81@gmail.com",
+                    Funcao: "Gerente operacional",
+                    Usuario: "Gilson",
+                    E_mail_usuario: "gerente.operacional@tsj2.com.br",
                     IP: "",
                     Data_da_assinatura: "",
                     Assinado: false
                 },
-                "Rodrigo Meirelles": {
+                "Joana": {
                     Cargo: "Administrativo",
                     Funcao: "Síndico",
-                    Usuario: "Rodrigo Meirelles",
-                    E_mail_usuario: "rl.meirelles@uol.com.br",
+                    Usuario: "Joana",
+                    E_mail_usuario: "sindico@tsj2.com.br",
                     IP: "",
                     Data_da_assinatura: "",
                     Assinado: false
@@ -1230,7 +1230,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 }
             }
             tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
-            ap_status_subsindico = tudoAssinado ? "Aut. pag." : ap_status_subsindico;
+            ap_status_subsindico = tudoAssinado ? "Pag. aut." : ap_status_subsindico;
         }
     
         const statusMap = {
@@ -1269,19 +1269,19 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 paramsExtraPDC: apoio_paramExtras
             },
             autorizar_pagamento_subsindico: {
-                status: ap_status_subsindico,//status: tudoAssinado ? "Aut. pag." : "Ass. subsindico",
+                status: ap_status_subsindico,//status: tudoAssinado ? "Pag. aut." : "Ass. subsindico",
                 paramsExtraPDC: apoio_paramExtras
             },
             autorizar_pagamento_sindico: {
-                status: tudoAssinado ? "Aut. pag." : "Ass. sindico",
+                status: tudoAssinado ? "Pag. aut." : "Ass. sindico",
                 paramsExtraPDC: apoio_paramExtras
             },
             confirmar_todas_as_assinaturas: {
-                status: "Aut. pag.",
+                status: "Pag. aut.",
                 paramsExtraPDC: apoio_paramExtras
             },
-            lancar_pdc_ahreas: { status: "Lançado no ERP", paramsExtraPDC: { Status_Guillaumon: "Lançado no ahreas", num_lanc_ahreas: infoInserida } },
-            confirmar_pag_ahreas: { status: "Pagamento realizado", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada_en} },
+            lancar_pdc_ahreas: { status: "Lanç ERP", paramsExtraPDC: { Status_Guillaumon: "Lançado no ahreas", num_lanc_ahreas: infoInserida } },
+            confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada_en} },
             suspender_pagamento: { status: "Pagamento suspenso" }
         };
     
@@ -1358,10 +1358,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             } else if (acao === 'confirmar_recebimento') {
                 await saveTableData_V2({ status: "Separado em parcelas" });
             }
-            if(params.status == "Aut. pag.")
+            /*
+            if(params.status == "Pag. aut.")
             {
                 await enviarParaPaybox()
             }
+            */
             window.open(`${url}#Script:page.refresh`, '_top');
 
         } else if (acao === 'duplicar_pdc') {
@@ -1420,7 +1422,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
             await saveTableData_V2("Prop. criada");
     
-            window.parent.location.href = `${url}#Report:Laranj_sol_em_andamento`;
+            window.parent.location.href = `${url}#Report:Solicitacoes_em_andamento`;
             setTimeout(function () {
                 window.open(`${url}#Script:page.refresh`, '_top');
     

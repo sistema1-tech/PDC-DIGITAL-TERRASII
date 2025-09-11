@@ -217,7 +217,7 @@ export function criarBotao({page = null, removeExistingButtons = false})
 
             case "receber_compra":
                 configurarBotao('confirm-purchase-btn approve-btn', 'Confirmar recebimento', "confirmar_recebimento", null, "Deseja confirmar o RECEBIMENTO dessa compra?");
-                setTimeout(() => criarBotao({page: "solicitar_ajuste_ao_compras"}));
+                //setTimeout(() => criarBotao({page: "solicitar_ajuste_ao_compras"}));
                 break;
 
             case "solicitar_ajuste_ao_compras":

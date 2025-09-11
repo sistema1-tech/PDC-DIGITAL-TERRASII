@@ -80,7 +80,7 @@ async function initGenericItems() {
         await searchPageParams();
 
         // 2.1 Busca as entidades permitidas
-        const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Lista_cond_laranjeiras_Report" });
+        const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Entidades_cadastradas" });
         const entidades_aplicaveis = condominios.reduce((acc, cond) => {
             acc[cond.ID] = [
                 cond.Cod_cond_ahreas,
@@ -371,7 +371,7 @@ async function executarProcessosParalelos() {
 }
 
 async function processarDadosPDC() {
-    //https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(num_pdc_temp%3D%3D%222025_09_02_11_45_40%22%20%26%26%20Ativo%3D%3Dtrue%20%26%26%20Aprovado%3D%3Dtrue)&max_records=1000
+    //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(num_pdc_temp%3D%3D%222025_09_02_11_45_40%22%20%26%26%20Ativo%3D%3Dtrue%20%26%26%20Aprovado%3D%3Dtrue)&max_records=1000
     const log = false;
     if (log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
     //const cPDC = "(" + (globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ? `id_temp=="${globais.numPDC_temp}"` : "ID==0")) + ")";

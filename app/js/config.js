@@ -1,13 +1,14 @@
 // Novo arquivo para configurações
 export const CONFIG = {
     APPS: {
-        nomeApp: "condominio-laranjeiras",
+        nomeApp: "terras-de-sao-jose-ii",
         nomeRelPDC: "PDC_Digital_API",
         nomeFormCot: "Cotacoes",
         nomeRelCot: "Cotacoes_API",
         nomeFormPDC: "PDC_Digital"
     },
-    INITIAL_STATE: {//https://guillaumon8.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(num_pdc_temp%3D%3D%222025_09_02_11_45_40%22%20%26%26%20Ativo%3D%3Dtrue%20%26%26%20Aprovado%3D%3Dtrue)&max_records=1000
+    //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/terras-de-sao-jose-ii/report/Centros_custo_API?criteria=(ID!%3D0)&max_records=1000
+    INITIAL_STATE: {
         perfilResponsavel: null,
         novoPerfilResponsavel: null,
         selectedCheckbox: null,
