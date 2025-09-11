@@ -173,9 +173,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
 
         }
         if (dataInput?.value) {
-            const [ano, mes, dia] = dataInput.value.split('-');
-            const meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            vencimentoObj["Vencimento_previsto"] = `${dia}-${meses[parseInt(mes) - 1]}-${ano}`;
+            vencimentoObj["Vencimento_previsto"] = formatDate(dataInput.value, "DD-MMM-YYYY");
         }
         if (valorInput?.value) {
             vencimentoObj["Valor"] = converterStringParaDecimal(valorInput.value, qtdCssDecimais);
@@ -338,7 +336,8 @@ function pegarDadosNF_V2() {
             dadosNF[elemento.name] = converterStringParaDecimal(elemento.value, qtdCssDecimais);
         } else if (elemento.type == "date" && elemento.value) { // Verifica se o campo não está vazio
             const [ano, mes, dia] = elemento.value.split('-');
-            dadosNF[elemento.name] = `${dia}/${mes}/${ano}`;
+            const mesFormatado = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(mes) - 1];
+            dadosNF[elemento.name] = `${dia}-${mesFormatado}-${ano}`;
         } else {
             dadosNF[elemento.name] = elemento.value;
         }
@@ -353,7 +352,9 @@ function pegarDadosNF_V2() {
         inputs.forEach(input => {
             if (input.type === 'date' && input.value) {
                 const [ano, mes, dia] = input.value.split('-');
-                linhaDados[input.name] = `${dia}/${mes}/${ano}`;
+                const mesFormatado = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(mes) - 1];
+                linhaDados[input.name] = `${dia}-${mesFormatado}-${ano}`;
+
             } else {
                 linhaDados[input.name] = input.value;
             }

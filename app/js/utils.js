@@ -1878,3 +1878,45 @@ export function base64Size(base64String) {
 
     return sizeInBytes;
 }
+
+/**
+ * Formata uma data string para o formato especificado
+ * 
+ * @function formatDate
+ * @param {string} dateStr - String contendo a data a ser formatada
+ * @param {string} format - Formato desejado para saída (ex: 'YYYY-MM-DD', 'DD/MM/YYYY', etc)
+ * @returns {string} Data formatada
+ * 
+ * @example
+ * // Retorna '2025-09-11'
+ * formatDate('11/09/2025', 'YYYY-MM-DD')
+ * 
+ * // Retorna '11/09/2025'
+ * formatDate('2025-09-11', 'DD/MM/YYYY')
+ * 
+ * // Retorna '11-Sep-2025'
+ * formatDate('2025-09-11', 'DD-MMM-YYYY')
+ * 
+ * @description
+ * Esta função:
+ * - Aceita datas em diversos formatos de entrada
+ * - Permite especificar o formato de saída desejado
+ * - Utiliza moment.js para parsing e formatação
+ * - Retorna string vazia se a data for inválida
+ * - Suporta formatos localizados através do moment.js
+ */
+export function formatDate(dateStr, format) {
+    if (!dateStr) return '';
+    
+    // Tenta criar um objeto moment com a data
+    const momentDate = moment(dateStr);
+    
+    // Verifica se a data é válida
+    if (!momentDate.isValid()) {
+        console.error('Data inválida:', dateStr);
+        return '';
+    }
+    
+    // Retorna a data formatada no formato especificado
+    return momentDate.format(format);
+}

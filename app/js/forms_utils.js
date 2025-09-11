@@ -1,5 +1,5 @@
 import { globais } from './main.js';
-import { formatToBRL_V2, converterStringParaDecimal, base64Size} from './utils.js';
+import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate} from './utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
 
@@ -196,24 +196,9 @@ export function preencherDadosPDC(data) {
             const parcCriada = dataObj.parcela_criada || "false";
             const numParc = dataObj.Numero_da_parcela || "";
             
-
-            const [dia, mes, ano] = dataStr.split('-') ;
-            const meses = {
-                'Jan': '01',
-                'Feb': '02',
-                'Mar': '03',
-                'Apr': '04',
-                'May': '05',
-                'Jun': '06',
-                'Jul': '07',
-                'Aug': '08',
-                'Sep': '09',
-                'Oct': '10',
-                'Nov': '11',
-                'Dec': '12'
-            };
-            const dataFormatada = dataStr !== ""? `${ano}-${meses[mes]}-${dia.padStart(2, '0')}`: "";
-            adicionarCampoVenc(dataFormatada, valor, numPDC, parcCriada, numParc);
+            const data = formatDate(dataStr, "YYYY-MM-DD");
+        
+            adicionarCampoVenc(data, valor, numPDC, parcCriada, numParc);
 
         });
     }
@@ -232,15 +217,12 @@ export function preencherDadosPDC(data) {
         }
 
         dadosNF.forEach(NF => {
-            const [emissao = "", num = ""] = NF.display_value?.split('|SPLITKEY|') || [];
-            let dataFormatada = "";
-            if (emissao) {
-                const [dia, mes, ano] = emissao.split('/');
-                dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-            }
+            if(log) console.log("NF => ", NF);
+            const emissao = formatDate(NF.Data_emissao_N_Fiscal || "", "YYYY-MM-DD");
+            const num = NF.Numero_N_Fiscal || "";
             //
             const novaLinhaNF = adicionarLinhaNF();
-            novaLinhaNF.querySelector('input[name="Data_emissao_N_Fiscal"]').value = dataFormatada;
+            novaLinhaNF.querySelector('input[name="Data_emissao_N_Fiscal"]').value = emissao;
             novaLinhaNF.querySelector('input[name="Numero_N_Fiscal"]').value = num;
         })
     }
