@@ -685,7 +685,7 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
             if (Object.keys(tiposValidos).includes(tipo)) {
                 let status = null;
                 if (tipo === "confirmar_recebimento") {
-                    status = "Rec. confirmado";
+                    status = "Chec. final";
                 } else if (tipo === "criar_cotacao_controladoria" || tipo === "editar_cotacao_controladoria") {
                     status = "Propostas criadas controladoria";
                 } else if (tipo === "confirmar_compra") {
@@ -1111,7 +1111,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             stats_salvarCot = null;
 
         } else if (globais.pag === "ajustar_compra_compras") {
-            stats_salvarCot = "Rec. confirmado";
+            stats_salvarCot = "Chec. final";
 
         } else if (globais.pag === "checagem_final") {
             stats_salvarCot = "Chec. final";
@@ -1257,11 +1257,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                         "Aguard. compra"
             },
             confirmar_compra: {
-                status: globais.perfilResponsavel.includes("Controladoria")? 'Chec. final': tipoSolicitacao === 'SERVIÇO' || pgtoAnt?'Rec. confirmado' : 'Compra real.',
+                status: globais.perfilResponsavel.includes("Controladoria")? 'Chec. final': tipoSolicitacao === 'SERVIÇO' || pgtoAnt?'Chec. final' : 'Compra real.',
                 sepPorParc: tipoSolicitacao === 'SERVIÇO' || pgtoAnt || globais.perfilResponsavel.includes("Controladoria"),
                 paramsExtraPDC: {pag_antecipado: false}
             },
-            confirmar_recebimento: { status: "Rec. confirmado", sepPorParc: true },
+            confirmar_recebimento: { status: "Chec. final", sepPorParc: true },
             solicitar_ajuste_ao_compras: { status: "Ajuste sol. control.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }},
             enviar_p_checagem_final: { status: "Chec. final" },
             tratar_control: { paramsExtraPDC: { Status_controladoria: "Tratado" } },
