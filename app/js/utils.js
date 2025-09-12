@@ -789,22 +789,8 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
             if (resposta && resposta.code === 3000) {
                 overlay.remove();
                 if (tipo == "confirmar_compra") {
-
-                    // Obtém o valor da entidade selecionada
-                    const entidadeSelecionada = document.getElementById('entidade').value;
-
-                    let link_layout;
-                    // [LAYOUT]
-                    if (entidadeSelecionada == "3938561000066182591") {
-                        link_layout = `${url}terrasii/${globais.nomeApp}/pdf/Laranj_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Laranjeiras`;
-                    }
-                    else if (entidadeSelecionada == "3938561000066182595") {
-                        link_layout = `${url}terrasii/${globais.nomeApp}/pdf/AssociacaoServir_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Ass_Servir`;
-                    }
-                    else if(entidadeSelecionada == "3938561000096117305"){
-                        link_layout = `${url}terrasii/${globais.nomeApp}/pdf/Asa_layout_impressao_pedido?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_Asa_Laranj`;
-                    }
-
+                    const layoutName = "pedido_PDF";
+                    const link_layout = `${url}guillaumon/${globais.nomeApp}/pdf/${layoutName}?id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
                     window.open(`${link_layout}`, '_blank', 'noopener,noreferrer');
                 }
 
@@ -1344,6 +1330,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     await saveTableData_V2({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
                     
                 }
+    
+                const entidadeSelecionada = document.getElementById('entidade').value;
+                const layoutMap = {
+                    "1": "pedido_PDF",
+                };
 
                 const layoutName = "pedido_PDF";
                 if (layoutName) {
