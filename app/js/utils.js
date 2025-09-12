@@ -1111,7 +1111,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             stats_salvarCot = null;
 
         } else if (globais.pag === "ajustar_compra_compras") {
-            stats_salvarCot = "Recebimento confirmado";
+            stats_salvarCot = "Rec. confirmado";
 
         } else if (globais.pag === "checagem_final") {
             stats_salvarCot = "Chec. final";
@@ -1285,7 +1285,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada} },
             suspender_pagamento: {status: "Pagamento suspenso"}
         };
-        
+
         if (acao in statusMap) {
             const params = statusMap[acao];
     
@@ -1908,16 +1908,18 @@ export function base64Size(base64String) {
  */
 export function formatDate(dateStr, format) {
     if (!dateStr) return '';
+
+    // Tenta criar um objeto moment com a data usando os formatos possíveis
+    //const formats = ['YYYY-MM-DD', 'DD/MM/YYYY', 'DD-MMM-YYYY'];
+    const formats = ['DD-MM-YY', 'DD-MM-YYYY', 'DD-MMM-YYYY', 'YYYY-MM-DD', 'DD/MM/YY', 'DD/MM/YYYY', 'DD/MMM/YYYY', 'YYYY/MM/DD', 'DD MM YYYY', 'DD MMM YYYY', 'DD MMMM YYYY', 'YYYY MM DD'];
+    const momentDate = moment(dateStr, formats);
     
-    // Tenta criar um objeto moment com a data
-    const momentDate = moment(dateStr);
-    
-    // Verifica se a data é válida
-    if (!momentDate.isValid()) {
-        console.error('Data inválida:', dateStr);
-        return '';
+    if (momentDate.isValid()) {
+        // Data válida no formato atual
+        return momentDate.format(format);
     }
-    
-    // Retorna a data formatada no formato especificado
-    return momentDate.format(format);
+
+    // Data inválida em todos os formatos fornecidos
+    console.error('Data inválida:', dateStr);
+    return '';
 }
