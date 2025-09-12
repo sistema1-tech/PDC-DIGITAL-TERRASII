@@ -1080,7 +1080,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const data_atual = moment();
         const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
         // Nova constante no formato 'aa-mmm-dd' com mês em inglês
-        const data_atual_formatada_en = data_atual.format('DD-MMM-YYYY HH:mm:ss');
+        //const data_atual_formatada_en = data_atual.format('DD-MMM-YYYY HH:mm:ss');
         let alcada_temp = null;
         let ap_status_subsindico;
         
@@ -1138,7 +1138,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Usuario: "Patrick",
                     E_mail_usuario: "patrick_kum@hotmail.com",
                     IP: globais.userIP,
-                    Data_da_assinatura: data_atual_formatada_en,
+                    Data_da_assinatura: data_atual_formatada,
                     Assinado: true
                 }
             }:
@@ -1149,7 +1149,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Usuario: "Maiara",
                     E_mail_usuario: "Controladoriatsj2@gmail.com",
                     IP: globais.userIP,
-                    Data_da_assinatura: data_atual_formatada_en,
+                    Data_da_assinatura: data_atual_formatada,
                     Assinado: true
                 }
             }
@@ -1191,7 +1191,8 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                             dadosAssinante[input.name] = input.checked;
                         } else if (input.name === "Data_da_assinatura") {
                             if (input.value) {
-                                dadosAssinante[input.name] = moment(input.value, 'YYYY-MM-DDTHH:mm:ss').format('DD/MM/YYYY HH:mm:ss');
+                                //dadosAssinante[input.name] = moment(input.value, 'YYYY-MM-DDTHH:mm:ss').format('DD/MM/YYYY HH:mm:ss');
+                                dadosAssinante[input.name] = formatDate(input.value, 'DD/MM/YYYY HH:mm:ss');
     
                             } else {
                                 dadosAssinante[input.name] = ""; // ou você pode atribuir um valor padrão, como ""
@@ -1219,12 +1220,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 console.log("assinaturas já criadas", apoio_paramExtras.Assinaturas);
                 if (acao === "autorizar_pagamento_subsindico") {
                     apoio_paramExtras.Assinaturas[1].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[1].Data_da_assinatura = data_atual_formatada_en;
+                    apoio_paramExtras.Assinaturas[1].Data_da_assinatura = data_atual_formatada;
                     apoio_paramExtras.Assinaturas[1].Assinado = true;
 
                 } else if (acao === "autorizar_pagamento_sindico") {
                     apoio_paramExtras.Assinaturas[2].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[2].Data_da_assinatura = data_atual_formatada_en;
+                    apoio_paramExtras.Assinaturas[2].Data_da_assinatura = data_atual_formatada;
                     apoio_paramExtras.Assinaturas[2].Assinado = true;
 
                 }
@@ -1248,7 +1249,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                         parcelaCriada ? "Chec. final" :
                         "Prop. aprov."
             },
-            arquivar_cot: { status: "Prop. arquivada" },
+            arquivar_cot: {status: "Prop. arquivada"},
             finalizar_provisionamento: {
                 status:
                     globais.perfilResponsavel.includes("Depto. Pessoal") &&
@@ -1281,10 +1282,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 paramsExtraPDC: apoio_paramExtras
             },
             lancar_pdc_ahreas: { status: "Lanç ERP", paramsExtraPDC: { Status_Guillaumon: "Lançado no ahreas", num_lanc_ahreas: infoInserida } },
-            confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada_en} },
-            suspender_pagamento: { status: "Pagamento suspenso" }
+            confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada} },
+            suspender_pagamento: {status: "Pagamento suspenso"}
         };
-    
+        
         if (acao in statusMap) {
             const params = statusMap[acao];
     
@@ -1332,7 +1333,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     });
                     document.getElementById('pag_antecipado').removeAttribute('checked');
     
-                    await saveTableData_V2({ status: "Prop. criada", sepPorParc: true, paramExtra: { pag_antecipado: false } });
+                    await saveTableData_V2({ status: "Prop. criada", sepPorParc: true, paramExtra: {pag_antecipado: false}});
     
                 }
             } else if (acao === 'confirmar_compra') {

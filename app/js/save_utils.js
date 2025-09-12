@@ -1,4 +1,4 @@
-import { converterStringParaDecimal, executar_apiZoho, customModal_V2 } from './utils.js';
+import { converterStringParaDecimal, executar_apiZoho, customModal_V2, formatDate} from './utils.js';
 import { globais } from './main.js'
 
 const qlt = 4; //Total de linhas de totalizadores, considerando linha com botão de adicionar produto
@@ -173,7 +173,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
 
         }
         if (dataInput?.value) {
-            vencimentoObj["Vencimento_previsto"] = formatDate(dataInput.value, "DD-MMM-YYYY");
+            vencimentoObj["Vencimento_previsto"] = formatDate(dataInput.value, "DD/MM/YYYY");
         }
         if (valorInput?.value) {
             vencimentoObj["Valor"] = converterStringParaDecimal(valorInput.value, qtdCssDecimais);
@@ -335,9 +335,7 @@ function pegarDadosNF_V2() {
         if (elemento.classList.contains('input-number')) {
             dadosNF[elemento.name] = converterStringParaDecimal(elemento.value, qtdCssDecimais);
         } else if (elemento.type == "date" && elemento.value) { // Verifica se o campo não está vazio
-            const [ano, mes, dia] = elemento.value.split('-');
-            const mesFormatado = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(mes) - 1];
-            dadosNF[elemento.name] = `${dia}-${mesFormatado}-${ano}`;
+            dadosNF[elemento.name] = formatDate(elemento.value, "DD/MM/YYYY");
         } else {
             dadosNF[elemento.name] = elemento.value;
         }
@@ -351,9 +349,7 @@ function pegarDadosNF_V2() {
         const inputs = linha.querySelectorAll('input');
         inputs.forEach(input => {
             if (input.type === 'date' && input.value) {
-                const [ano, mes, dia] = input.value.split('-');
-                const mesFormatado = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][parseInt(mes) - 1];
-                linhaDados[input.name] = `${dia}-${mesFormatado}-${ano}`;
+                linhaDados[input.name] = formatDate(input.value, "DD/MM/YYYY");
 
             } else {
                 linhaDados[input.name] = input.value;
@@ -866,7 +862,7 @@ export async function enviarParaPaybox(){
         lancamento["vr_csll_pis_cofins"]= converterStringParaDecimal(dds_impostos[0].rows[3].cells[1].innerText || 0.00);
         lancamento["vr_irrf"]= 0.00;
     
-        lancamento["data_emissao_nf"]= dds_nf.querySelector("input[name='Data_emissao_N_Fiscal']").value;
+        lancamento["data_emissao_nf"]= formatDate(dds_nf.querySelector("input[name='Data_emissao_N_Fiscal']").value, "DD/MM/YYYY");
         lancamento["nro_nf"]= dds_nf.querySelector("input[name='Numero_N_Fiscal']").value;
         //
         let urls = new Array();

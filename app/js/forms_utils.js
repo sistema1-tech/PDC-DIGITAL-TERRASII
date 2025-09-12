@@ -62,7 +62,7 @@ export function mostrarCamposPagamento() {
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
 export function preencherDadosPDC(data) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if(log) console.log("data => ", JSON.stringify(data));
     if(log) console.log("Classificacao_contabil => ", data.Classificacao_contabil);
