@@ -1344,16 +1344,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     await saveTableData_V2({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
                     
                 }
-    
-                const entidadeSelecionada = document.getElementById('entidade').value;
-                const layoutMap = {
-                    "3938561000066182591": "Laranj_layout_impressao_pedido",
-                    "3938561000066182595": "AssociacaoServir_layout_impressao_pedido"
-                };
 
-                const layoutName = layoutMap[entidadeSelecionada];
+                const layoutName = "pedido_PDF";
                 if (layoutName) {
-                    const link_layout = `${url}guillaumon/${globais.nomeApp}/pdf/${layoutName}?ID_entry=${globais.idPDC}&id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
+                    const link_layout = `${url}guillaumon/${globais.nomeApp}/pdf/${layoutName}?id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
                     window.open(link_layout, '_blank', 'noopener,noreferrer');
                 }
             } else if (acao === 'confirmar_recebimento') {
