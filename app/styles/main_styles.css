@@ -848,7 +848,7 @@ button:hover {
 /* Ajuste na classificação para remover labels repetidos */
 .linha-classificacao, .nomes-campos-classificacao {
     display: grid;
-    grid-template-columns: 0.5fr 1fr 1fr 0.5fr auto;
+    grid-template-columns: 0.5fr 1fr 1fr auto;
     gap: 15px;
     padding: 4px 0;
     align-items: start;
@@ -1228,7 +1228,7 @@ button:hover {
 }
 
 .hidden {
-    display: none;
+    display: none !important; /* Força a ocultação do elemento */
 }
 
 .modal {

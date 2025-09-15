@@ -567,10 +567,11 @@ export function adicionarLinhaClassificacao() {
 
     //====================Classe para criar campos de classificação====================\\
     class ClassContField {
-        constructor({ placeholder = null, inputType, inputName, id = null, options = null }) {
+        constructor({ placeholder = null, inputType, inputName, id = null, class_name = null, options = null }) {
             this.inputType = inputType;
             this.inputName = inputName;
             this.id = id;
+            this.class_name = class_name;
             this.options = options;
             this.placeholder = placeholder;
         }
@@ -579,7 +580,7 @@ export function adicionarLinhaClassificacao() {
             //==========Criando o container geral do campo==========//
             const field = document.createElement('div');
             field.id = this.id;
-            field.classList.add('campo', 'dp-field-master-container');
+            field.classList.add('campo', 'dp-field-master-container', this.class_name);
 
             const input = document.createElement('input');
             input.type = this.inputType;
@@ -678,10 +679,20 @@ export function adicionarLinhaClassificacao() {
 
     //====================Buscando bases de classificação====================\\
     const accOptions = [
-        ['CUSTEIO', 'CUSTEIO'],
-        ['INVESTIMENTO', 'INVESTIMENTO'],
-        ['FUNDO DE RESERVA', 'FUNDO DE RESERVA']
+        ['ORDINARIA', 'ORDINARIA'],
+        ['FUNDO DE RESERVA', 'FUNDO DE RESERVA'],
+        ['FUNDO DE INVESTIMENTO', 'FUNDO DE INVESTIMENTO'],
+        ['TAXA DE BENFEITORIAS', 'TAXA DE BENFEITORIAS'],
+        ['TAXA EXTRA - SEGURANÇA', 'TAXA EXTRA - SEGURANÇA'],
+        ['FUNDO TRABALHISTA', 'FUNDO TRABALHISTA'],
+        ['OBRAS', 'OBRAS'],
+        ['RESGATE/APLICAÇÃO', 'RESGATE/APLICAÇÃO'],
+        ['EVENTOS', 'EVENTOS'],
+        ['ACADEMIA', 'ACADEMIA'],
+        ['BAGS', 'BAGS']
     ];
+
+    
     const opClassOpt = Array.from(globais.baseClassesOperacionais.entries()).map(([id, dados]) => [
         id,
         `${dados.contaReduzida} - ${dados.nomeClasse} - ${dados.codigoClasse}`
@@ -693,13 +704,13 @@ export function adicionarLinhaClassificacao() {
 
     const fieldsToCreate = [
         { placeholder: 'Conta...', inputType: 'select', inputName: 'Conta_a_debitar', id: 'conta', options: accOptions },
-        { placeholder: 'Centro Custo...', inputType: 'select', inputName: 'Centro_de_custo', id: 'centro', options: accCenterOpt },
+        { placeholder: 'Centro Custo...', inputType: 'select', inputName: 'Centro_de_custo', id: 'centro', class_name: 'hidden',options: accCenterOpt },
         { placeholder: 'Classe Op...', inputType: 'select', inputName: 'Classe_operacional', id: 'classe', options: opClassOpt },
         { placeholder: 'R$ 0,00', inputType: 'number', inputName: 'Valor', id: 'valor' }
     ];
 
     fieldsToCreate.forEach((field) => {
-        newRowClass.appendChild(new ClassContField({ placeholder: field.placeholder, inputType: field.inputType, inputName: field.inputName, id: field.id, options: field.options }).create());
+        newRowClass.appendChild(new ClassContField({ placeholder: field.placeholder, inputType: field.inputType, inputName: field.inputName, id: field.id, class_name: field.class_name || null,options: field.options }).create());
     });
 
     const removeBtn = document.createElement('button');
