@@ -1,0 +1,169 @@
+/* Mobile styles for screens under 768px */
+@media screen and (max-width: 768px) {
+
+    /* Prevenir scroll horizontal no body e html */
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Garantir que todos os elementos não ultrapassem a largura da tela */
+    .meu-body * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ajustar tabelas para scroll horizontal controlado */
+    .tabela-cotacoes {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Ajustar forms para não ultrapassarem a largura */
+    .form-container form {
+        width: 100%;
+        padding: 0;
+    }
+
+    /* Ajustar inputs e selects */
+    input, select, textarea {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Prevenir redimensionamento de textareas */
+    textarea {
+        resize: none;
+    }
+    
+    body::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    body::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 10px;
+    }
+
+    body::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        transition: background 0.2s;
+    }
+
+    body::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+
+    /* Aplicar o mesmo para elementos com overflow */
+    .tabela-cotacoes {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .tabela-cotacoes::-webkit-scrollbar {
+        display: none;
+    }
+
+    .container {
+        margin: 10px;
+        padding: 10px;
+        min-width: unset;
+        width: calc(100% - 20px);
+    }
+
+    .form-container {
+        min-width: unset;
+        width: calc(100% - 20px);
+        padding: 10px;
+    }
+
+    #container-campos-texto {
+        grid-template-columns: 1fr;
+    }
+
+    .campos-texto-mais-largos {
+        grid-column: 1;
+    }
+    .form-compra textarea, .form-pagamento textarea
+    {
+        min-width: unset;
+    }
+
+    .tabela-cotacoes {
+        overflow-x: auto;
+    }
+
+    #priceTable,
+    #otherDataTable {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .tabela th,
+    .tabela td {
+        padding: 4px;
+        font-size: 14px;
+    }
+
+    #campos-deposito {
+        grid-template-columns: 1fr;
+    }
+    .radio-group
+    {
+        display: grid;
+        grid-template-columns: 0.1fr 0.9fr;
+    }
+
+    #campos-deposito .campo:nth-child(2),
+    #campos-deposito .campo:nth-child(3) {
+        grid-column: 1;
+    }
+
+    .linha-classificacao,
+    .nomes-campos-classificacao {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .nomes-campos-nf,
+    .linha-nf {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .parcela {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .parcela input,
+    .valor-parcela input,
+    .linha-classificacao select,
+    .linha-classificacao input {
+        /*max-width: 90% !important;*/
+    }
+
+    .radio-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .button-up,
+    .button-down {
+        width: 40px;
+        height: 40px;
+        right: 10px;
+    }
+
+    .save-btn,
+    .adjust-btn,
+    .archive-btn {
+        margin: 10px 10px 0px 10px;
+        width: 90%;
+    }
+}
