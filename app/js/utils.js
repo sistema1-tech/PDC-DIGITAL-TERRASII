@@ -1350,7 +1350,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 await enviarParaPaybox()
             }
             */
-            window.open(`${url}#Script:page.refresh`, '_top');
+            var config = {
+                action: "reload"
+            };
+            ZOHO.CREATOR.UTIL.navigateParentURL(config);
 
         } else if (acao === 'duplicar_pdc') {
             //MODIFICA PARA QUE UMA CÓPIA SEJA CRIADA
