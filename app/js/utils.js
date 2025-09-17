@@ -1463,7 +1463,7 @@ export function desabilitarCampos() {
     }
     if(log) console.log("Passou do if inicial!");
     if (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final") {
-        camposParaManterHabilitados = ["Entidade", "Tipo_de_solicitacao","Datas", "Valor", ""];//name
+        camposParaManterHabilitados = ["Entidade", "Tipo_de_solicitacao","Datas", "Valor", "valor-unit",""];//name
         botoesParaManterHabilitados = ["add-parcela", "remover-parcela", "add-linha-nf", "remover-linha-nf"];//classe
         formsParaManterHabilitados = ["form-pagamento", "dados-nf", "form-classificacao", ];//forms
         aTagsParaManterHabilitados = ["gallery-item"];

@@ -1071,9 +1071,11 @@ export function atualizarOuvintesTabCot() {
                         // Verifica se a célula possui a classe "valor-unit"
                         if (celula.classList.contains('valor-unit') && (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final")) {
                             // Adiciona um listener para reverter alterações
-
+                            console.log("VALIDOU A TOLERANCIA");
                             const valorAtual = converterStringParaDecimal(event.target.dataset.valor_original) || 0; // Obtém o valor original
                             const novoValor = converterStringParaDecimal(event.target.innerText) || 0; // Obtém o novo valor
+                            console.log("VALOR ATUAL: " + valorAtual + " NOVO VALOR: " + novoValor + " TOLERANCIA: " + vlrTolerancia);    
+                            
                             if (novoValor > valorAtual + vlrTolerancia) {
                                 event.target.innerText = event.target.dataset.valor_original; // Reverte para o valor original
 
@@ -1101,6 +1103,20 @@ export function atualizarOuvintesTabCot() {
     if(log) console.log("Ouvintes adicionados com sucesso!");
 
     if(log) console.log("----------TODOS OS OUVINTES ADICIONADOS COM SUCESSO----------");
+}
+
+function limitarValorPreenchido(celula, variacao)
+{
+    if(globais.pag === "ajustar_compra_" || globais.pag === "checagem_final")
+    {
+        const valorAtual = converterStringParaDecimal(celula.dataset.valor_original) || 0; // Obtém o valor original
+        const novoValor = converterStringParaDecimal(celula.innerText) || 0; // Obtém o novo valor
+        if (novoValor > valorAtual + variacao || novoValor < valorAtual - variacao) {
+            celula.innerText = celula.dataset.valor_original; // Reverte para o valor original
+            // Exibe modal de aviso com apenas um botão de OK
+            showAlertModal(`Este valor não pode ser maior que o valor atual + tolerância de ${formatToBRL_V2(variacao)}!`);
+        }
+    }
 }
 
 /**
