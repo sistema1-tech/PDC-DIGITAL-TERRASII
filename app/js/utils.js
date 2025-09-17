@@ -38,6 +38,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
         let recOps = await ZOHO.CREATOR.DATA;
 
+
         // Função de criar registro
         async function criar_reg(ddsCriacao) {
 
@@ -48,7 +49,6 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                 form_name: nomeF,
                 payload: ddsCriacao
             };
-
             const resp = await recOps.addRecords(config);
             return resp;
         }
@@ -1449,17 +1449,19 @@ async function prepararParaSalvar(acao, infoInserida = null) {
  *   let forms = ["form-pagamento", "dados-nf"];
  */
 export function desabilitarCampos() {
+    const log = true;
+    if (log) console.log("++++++++++DESABILITANDO CAMPOS++++++++++");
+    if (log) console.log("globais.pag => ", globais.pag);
 
     let camposParaManterHabilitados = [];
     let botoesParaManterHabilitados = [];
     let formsParaManterHabilitados = [];
     let aTagsParaManterHabilitados = [];
 
-    if (globais.pag === 'editar_cotacao' || globais.pag === 'ajustar_cotacao_DP' || globais.pag === "editar_cotacao_DP" || globais.pag === 'ajustar_cotacao' || globais.pag === 'ajustar_compra_compras') {
+    if (['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra'].some(str => globais.pag?.includes(str))) {
         return;
-        
     }
-
+    if(log) console.log("Passou do if inicial!");
     if (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final") {
         camposParaManterHabilitados = ["Entidade", "Tipo_de_solicitacao","Datas", "Valor", ""];//name
         botoesParaManterHabilitados = ["add-parcela", "remover-parcela", "add-linha-nf", "remover-linha-nf"];//classe

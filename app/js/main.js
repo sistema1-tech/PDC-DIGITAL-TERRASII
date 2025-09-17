@@ -371,7 +371,6 @@ async function executarProcessosParalelos() {
 }
 
 async function processarDadosPDC() {
-    //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(num_pdc_temp%3D%3D%222025_09_02_11_45_40%22%20%26%26%20Ativo%3D%3Dtrue%20%26%26%20Aprovado%3D%3Dtrue)&max_records=1000
     const log = false;
     if (log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
     //const cPDC = "(" + (globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ? `id_temp=="${globais.numPDC_temp}"` : "ID==0")) + ")";
@@ -392,7 +391,7 @@ async function processarDadosCotacao() {
     //const idCriterio = globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ?`num_pdc_temp=="${globais.numPDC_temp}"` :"ID==0");
     const idCriterio = globais.numPDC_temp ? `num_pdc_temp=="${globais.numPDC_temp}"` : "ID==0";
 
-    const aprovadoCriterio = !["editar_cotacao", "aprovar_cotacao", "ver_cotacao", "editar_cotacao_DP", "ajustar_cotacao_DP", "aprovar_cotacao_DP"].includes(globais.pag) ?
+    const aprovadoCriterio = !['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra'].some(str => globais.pag?.includes(str)) ?
         " && Aprovado==true" : "";
 
     let cCot = `(${idCriterio} && Ativo==true${aprovadoCriterio})`;
