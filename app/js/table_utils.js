@@ -1026,8 +1026,7 @@ export function atualizarOuvintesTabCot() {
                 // Tratamento para linhas normais de produtos
                 if (j === 1) { // Coluna de quantidade
                     celula.addEventListener('blur', (event) => {
-                        formatToBRL_V2(celula, 3);
-
+                        
                         if (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final") {
                             const valorAtual = converterStringParaDecimal(event.target.dataset.valor_original) || 0; // Obtém o valor original
                             const novoValor = converterStringParaDecimal(event.target.innerText) || 0; // Obtém o novo valor
@@ -1038,6 +1037,7 @@ export function atualizarOuvintesTabCot() {
                             }
                         }
 
+                        formatToBRL_V2(celula, 3);
                         calculateTotalPrices(i);
                     });
 
@@ -1066,24 +1066,12 @@ export function atualizarOuvintesTabCot() {
                     });
 
                     celula.addEventListener('blur', (event) => {
+
+                        const valor_result = limitarValorPreenchido(event.target.dataset.valor_inicial, event.target.innerText, vlrTolerancia);
+
+                        event.target.innerText = valor_result;
+                        event.target.dataset.valor_original = valor_result;
                         formatToBRL_V2(celula);
-
-                        // Verifica se a célula possui a classe "valor-unit"
-                        if (celula.classList.contains('valor-unit') && (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final")) {
-                            // Adiciona um listener para reverter alterações
-                            console.log("VALIDOU A TOLERANCIA");
-                            const valorAtual = converterStringParaDecimal(event.target.dataset.valor_original) || 0; // Obtém o valor original
-                            const novoValor = converterStringParaDecimal(event.target.innerText) || 0; // Obtém o novo valor
-                            console.log("VALOR ATUAL: " + valorAtual + " NOVO VALOR: " + novoValor + " TOLERANCIA: " + vlrTolerancia);    
-                            
-                            if (novoValor > valorAtual + vlrTolerancia) {
-                                event.target.innerText = event.target.dataset.valor_original; // Reverte para o valor original
-
-                                // Exibe modal de aviso com apenas um botão de OK
-                                showAlertModal(`Este valor não pode ser maior que o valor atual + tolerância de ${formatToBRL_V2(vlrTolerancia)}!`);
-                            }
-                        }
-
                         calculateTotalPrices(i);
                     });
                 }
@@ -1105,18 +1093,25 @@ export function atualizarOuvintesTabCot() {
     if(log) console.log("----------TODOS OS OUVINTES ADICIONADOS COM SUCESSO----------");
 }
 
-function limitarValorPreenchido(celula, variacao)
+function limitarValorPreenchido(valor_inicial, valor_atual, variacao)
 {
     if(globais.pag === "ajustar_compra_" || globais.pag === "checagem_final")
     {
-        const valorAtual = converterStringParaDecimal(celula.dataset.valor_original) || 0; // Obtém o valor original
-        const novoValor = converterStringParaDecimal(celula.innerText) || 0; // Obtém o novo valor
-        if (novoValor > valorAtual + variacao || novoValor < valorAtual - variacao) {
-            celula.innerText = celula.dataset.valor_original; // Reverte para o valor original
+        const ap_valor_inicial = converterStringParaDecimal(valor_inicial) || 0; // Obtém o valor original
+        const ap_valor_atual = converterStringParaDecimal(valor_atual) || 0; // Obtém o novo valor
+        if (ap_valor_atual > ap_valor_inicial + variacao || ap_valor_atual < ap_valor_inicial - variacao) {
             // Exibe modal de aviso com apenas um botão de OK
-            showAlertModal(`Este valor não pode ser maior que o valor atual + tolerância de ${formatToBRL_V2(variacao)}!`);
+
+            let msg = `Este valor não pode ser maior que o valor atual`;
+            if (variacao > 0) {
+                msg += ` + tolerância de ${formatToBRL_V2(variacao)}`;
+            }
+            msg += `!`;
+            showAlertModal(msg);
+            return valor_inicial;
         }
     }
+    return valor_atual;
 }
 
 /**
@@ -1264,6 +1259,7 @@ export async function prenchTabCot(data) {
                 if (valoresFornProd.length > 0) {
                     valorUnitarioCell.innerText = formatToBRL_V2(valoresFornProd[0].Valor_unitario || '');
                     valorUnitarioCell.dataset.valor_original = converterStringParaDecimal(valoresFornProd[0].Valor_unitario || '');
+                    valorUnitarioCell.dataset.valor_inicial = converterStringParaDecimal(valoresFornProd[0].Valor_unitario || '');
                     valorTotalCell.innerText = formatToBRL_V2(valoresFornProd[0].Valor_total || '');
                     valorTotalCell.dataset.valor_original = converterStringParaDecimal(valoresFornProd[0].Valor_total || '');
                 }
