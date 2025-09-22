@@ -38,7 +38,6 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
         let recOps = await ZOHO.CREATOR.DATA;
 
-
         // Função de criar registro
         async function criar_reg(ddsCriacao) {
 
@@ -68,7 +67,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
             let baseApoio = new Map();
             let cursor = null
 
-            do{
+            do {
                 const config = {
                     app_name: globais.nomeApp,
                     report_name: nomeR,
@@ -110,24 +109,25 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 
         // Funções solicitadas conforme tipo
         if (tipo === "add_reg") {
-
             return await criar_reg(corpo);
+
         } else if (tipo === "atualizar_reg") {
-
             return await atualizar_reg(nomeR, ID, corpo);
+
         } else if (tipo === "busc_reg") {
-
             return await buscar_reg(nomeR, criterios);
+
         } else if (tipo === "busc_reg_recursivo") {
-
             return await buscar_reg(nomeR, criterios);
+
         } else if (tipo === "subir_arq") {
             return await subirArquivos();
+
         }
-        
     } catch (err) {
         console.log("Erro na API do Zoho => ", err);
         return err;
+
     }
 }
 
@@ -144,7 +144,6 @@ export function formatToBRL_V2(v, nd = 2, alt = true) {
 
     if (!v) return "0,00";//Se for vazio, volta 0,00
 
-
     let av; //Apoio ao valor
     let int = false; //Flag para inteiro
     let isNeg = false; //Flag para negativo
@@ -153,6 +152,7 @@ export function formatToBRL_V2(v, nd = 2, alt = true) {
     const elemento = v.target || v;
     if ((typeof elemento == "string" || typeof elemento == "number")) {
         av = converterStringParaDecimal(elemento);
+
     } else {
         if(alt)
         {
@@ -162,14 +162,15 @@ export function formatToBRL_V2(v, nd = 2, alt = true) {
         {
             av = ap_vlrOrig ||elemento.innerText || elemento.value;
         }
-        //av = ap_vlrOrig ||elemento.innerText || elemento.value;
         int = elemento.classList?.contains("integer-cell") || false;
+
     }
     if (!av) return "0,00";
 
     const vo = av; //Valor original, sem ajuste, para evitar arredondamento
     if (log) console.log("Valor original VO => ", vo);
     if (log) console.log("Valor em decimal => ", av);
+    
     // Verifica se é negativo
     if (av.toString().startsWith('-')) {
         isNeg = true;
