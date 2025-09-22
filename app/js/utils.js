@@ -1274,9 +1274,13 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         if (acao in statusMap) {
             const params = statusMap[acao];
+            if(acao.includes("aprov_cot"))
+            {
+                await gerar_num_pdc();
+            }
     
             await saveTableData_V2(params);
-            
+
             if (acao.includes("finalizar_provisionamento")) {
                 if (globais.perfilResponsavel.includes("Depto. Pessoal")) {
                     document.getElementById('pag_antecipado').setAttribute('checked', 'checked');
@@ -1912,4 +1916,54 @@ export function formatDate(dateStr, format) {
     // Data inválida em todos os formatos fornecidos
     console.error('Data inválida:', dateStr);
     return '';
+}
+
+
+async function gerar_num_pdc()
+{
+    const log = false;
+    if(log) console.log("++++++++++GERANDO NÚMERO DO PDC++++++++++");
+
+    //Busca o último número de PDC criado
+    const ult_num_pdc = await executar_apiZoho({tipo:'busc_reg', criterios: '(ID!=0)', nomeR: 'Ultimo_PDC_criado', nomeF: 'PDC_Digital'});
+    const numeroPDC = (Number(ult_num_pdc[0].Num_princ_PDC) || 1) + 1;
+    globais.numPDC = numeroPDC;
+    if(log) console.log("Número do último PDC => ", numeroPDC);
+
+    //Adiciona o novo número de PDC em cada parcela
+    const parcelas = document.querySelectorAll('#camposData .parcela');
+    if(log) console.log("Quantidade de parcelas => ", parcelas.length);
+
+    parcelas.forEach((parcela, index) => {
+        if(log) console.log("Parcela => ", parcela, " Index => ", index);
+        const btnRemovParcela = parcela.querySelector('.remover-parcela')
+        const pdcValue = parcelas.length > 1 ? `${numeroPDC}/${String(index + 1).padStart(2, '0')}` : numeroPDC;
+        if(log) console.log("Botão de remover parcela => ", btnRemovParcela);
+        if(log) console.log("Valor do PDC para a parcela => ", pdcValue);
+
+        //Cria o input do número do PDC
+        const inputPDC = document.createElement('input');
+        inputPDC.classList.add("campo-datas");
+        inputPDC.type = 'text';
+        inputPDC.value = pdcValue;
+        inputPDC.contentEditable = true; // Campo somente leitura
+        inputPDC.name = 'Num_PDC_parcela';
+        if(log) console.log("Input do número do PDC => ", inputPDC);
+
+        //Adiciona evento para formatar o valor ao mudar
+        inputPDC.addEventListener('change', () => {
+            if (inputPDC.value.includes('/')) {
+                const partes = inputPDC.value.split('/');
+                if (partes[1].length === 1) {
+                    inputPDC.value = `${partes[0]}/${partes[1].padStart(2, '0')}`;
+                }
+            }
+        })
+
+        if (btnRemovParcela) {
+            parcela.insertBefore(inputPDC, btnRemovParcela);
+        } else {
+            parcela.appendChild(inputPDC);
+        }
+    });
 }

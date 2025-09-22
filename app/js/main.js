@@ -17,6 +17,7 @@ import {
     customModal_V2,
     formatToBRL_V2,
     customModal
+
 } from './utils.js'
 import {
     atualizarValorTotalClassificacoes,
@@ -204,7 +205,6 @@ async function setupListenersAndInit() {
 }
 
 async function executarProcessosParalelos() {
-
     if (!globais.pag.includes('criar_cotacao')) {
         //==========TRATA TODOS OS DADOS PARA APRESENTAÇÃO E==========\\
         //==========MODIFICAÇÃO DOS BOTÕES (VISTO QUE NÃO É UMA NOVA SOLICITAÇÃO)==========\\
@@ -215,7 +215,6 @@ async function executarProcessosParalelos() {
             processarDadosCotacao()
         ];
         await Promise.all(tarefas);
-
         if (globais.pag.includes('editar_cotacao') || globais.pag.includes('ajustar_cotacao_DP')) {
             //=====Cria o botão Sol. Aprov. Síndico=====\\
             criarBotao({ page: globais.pag });

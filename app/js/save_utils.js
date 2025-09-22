@@ -227,6 +227,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         }
         if (vencimentos[0].Num_PDC_parcela) {
             dadosIniciaisPdc["Numero_do_PDC"] = indiceParc == null && vencimentos[0].Num_PDC_parcela.includes("/")?globais.numPDC:vencimentos[0].Num_PDC_parcela;
+            dadosIniciaisPdc["Num_princ_PDC"] = indiceParc == null && vencimentos[0].Num_PDC_parcela.includes("/")?globais.numPDC:vencimentos[0].Num_PDC_parcela;
         }
 
         if(log) console.log("Nome: " + "Vencimento_previsto" + ", Valor: " + vencimentos[0].Vencimento_previsto);

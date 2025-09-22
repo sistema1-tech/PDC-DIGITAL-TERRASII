@@ -1099,7 +1099,8 @@ function limitarValorPreenchido(valor_inicial, valor_atual, variacao)
     {
         const ap_valor_inicial = converterStringParaDecimal(valor_inicial) || 0; // Obtém o valor original
         const ap_valor_atual = converterStringParaDecimal(valor_atual) || 0; // Obtém o novo valor
-        if (ap_valor_atual > ap_valor_inicial + variacao || ap_valor_atual < ap_valor_inicial - variacao) {
+        if (ap_valor_atual > ap_valor_inicial + variacao || ap_valor_atual < ap_valor_inicial - variacao)
+        {
             // Exibe modal de aviso com apenas um botão de OK
 
             let msg = `Este valor não pode ser maior que o valor atual`;
