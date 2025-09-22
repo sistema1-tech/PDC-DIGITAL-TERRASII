@@ -387,7 +387,6 @@ async function processarDadosPDC() {
 
 async function processarDadosCotacao() {
     
-    //const idCriterio = globais.numPDC ? `numero_de_PDC=="${globais.numPDC}"` : (globais.numPDC_temp ?`num_pdc_temp=="${globais.numPDC_temp}"` :"ID==0");
     const idCriterio = globais.numPDC_temp ? `num_pdc_temp=="${globais.numPDC_temp}"` : "ID==0";
 
     const aprovadoCriterio = !['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra'].some(str => globais.pag?.includes(str)) ?

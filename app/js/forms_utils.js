@@ -902,6 +902,42 @@ export function popularSelects(classificacoes, centrosCusto) {
     });
 }
 
+function preencherLinhaInicialClassificacao() {
+    const log = false;
+    if (log) console.log("++++++++++PREENCHENDO LINHA INICIAL DE CLASSIFICAÇÃO++++++++++");
+
+    let linhasClassificacao = document.querySelectorAll('#form-classificacao .linha-classificacao');
+    const valorInput = linhasClassificacao?.[0]?.querySelector('input[name="Valor"]');
+    if(log) console.log("linhasClassificacao.length => ", linhasClassificacao?.length);
+    if(log) console.log("valorInput => ", valorInput);
+    if (linhasClassificacao?.length > 1) {
+        return;
+    }else if(linhasClassificacao?.length === 0) {
+        adicionarLinhaClassificacao();
+        linhasClassificacao = document.querySelectorAll('#form-classificacao .linha-classificacao');
+    }
+
+    const valorTotalGeral = converterStringParaDecimal(document.getElementById("valor-total-pagar").innerText, 2);
+    if(log) console.log("valorTotalGeral => ", valorTotalGeral);
+    if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
+
+    let total = 0;
+    if(valorTotalGeral > 0)
+    {
+        total = converterStringParaDecimal(valorTotalGeral, 2);
+
+    }else{
+        total = globais.valor_orcado;
+        
+    }
+    //Adiciona valor de fornecedor aprovado na linha de classificação
+    if (globais.idFornAprovado) {
+        if (log) console.log("Fornecedor aprovado, preenchendo valor na linha de classificação");
+        valorInput.value = formatToBRL_V2(total);
+
+    }
+}
+
 /**
  * Atualiza o valor total das classificações contábeis sempre que um campo de valor é alterado
  * 
@@ -915,15 +951,19 @@ export function atualizarValorTotalClassificacoes() {
     const labelTotal = document.getElementById('valor-total-classificacoes');
     const valorTotalGeral = converterStringParaDecimal(document.getElementById("valor-total-pagar").innerText, 2);
     if(log) console.log("valorTotalGeral => ", valorTotalGeral);
-    let total = 0;
+    if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
+    if(log) console.log("globais.idFornAprovado => ", globais.idFornAprovado);
 
-    if (globais.idFornAprovado && !globais.valor_orcado) {
+    let total = 0;
+    if (globais.idFornAprovado) {
         if (log) console.log("Novo fornecedor selecionado");
         const table = document.getElementById('priceTable');
         const headerRow = table.rows[0];
         const totalRow = table.rows[table.rows.length - 2];
 
         const colIndex = Array.from(headerRow.cells).findIndex(cell => cell.dataset.id_forn === globais.idFornAprovado);
+
+        if(log) console.log("colIndex => ", colIndex);
         if (colIndex !== -1) {
 
             const valorTotalFornecedor = totalRow.cells[colIndex - 2].innerText;
@@ -935,14 +975,21 @@ export function atualizarValorTotalClassificacoes() {
                 total = converterStringParaDecimal(valorTotalFornecedor, 2);
 
             }
+            if(log) console.log("valorTotalFornecedor => ", valorTotalFornecedor);
+            if(log) console.log("total => ", total);
 
             const valoresClassificacoes = document.querySelectorAll('#form-classificacao input[name="Valor"]');
+            if(valoresClassificacoes.length == 1)
+            {
+                preencherLinhaInicialClassificacao();
+            }
+            
             valoresClassificacoes.forEach(input => {
                 const valor = converterStringParaDecimal(input.value).toFixed(2) || 0;
                 total -= valor; // Reduz o valor da classificação do total
                 total = parseFloat(total).toFixed(2); // Converte total para número antes de usar toFixed
-
             });
+            if(log) console.log("total - valoresClassificacoes => ", total);
 
             labelTotal.innerText = formatToBRL_V2(total);
 
@@ -979,22 +1026,16 @@ export function atualizarValorTotalClassificacoes() {
 
         });
 
-        
         labelTotal.innerText = formatToBRL_V2(total);
 
-        if (total == 0) {
-            labelTotal.classList.add('valor-igual');
-            labelTotal.classList.remove('valor-diferente');
-        } else {
-            labelTotal.classList.add('valor-diferente');
-            labelTotal.classList.remove('valor-igual');
-        }
+        labelTotal.classList.remove(['valor-igual','valor-diferente']);
+        labelTotal.classList.add(total == 0 ?'valor-igual':'valor-diferente');
+
     }else {
         labelTotal.innerText = "-";
         labelTotal.classList.add('valor-diferente');
         labelTotal.classList.remove('valor-igual');
     }
-
 }
 
 //===============================================================//

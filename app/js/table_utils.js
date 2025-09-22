@@ -936,7 +936,6 @@ export function atualizarOuvintesTabCot() {
     const tab = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
     const lv = tab.rows;
 
-
     if (!tab) {
         if(log) console.log("TABELA DE COTAÇÃO NÃO ENCONTRADA"); 
         return;
@@ -946,7 +945,6 @@ export function atualizarOuvintesTabCot() {
     if(log) console.log("Removendo ouvintes existentes...");
     // Remove listeners existentes
     function removeAllListeners(element) {
-
         const clone = element.cloneNode(true);
         if(log) console.log("Clonando elementos...");
         const elementString = element.outerHTML;
@@ -959,6 +957,7 @@ export function atualizarOuvintesTabCot() {
 
         element.parentNode.replaceChild(clone, element);
         return clone;
+
     }
 
     for (let i = 0; i < lv.length - 1; i++) {
@@ -972,7 +971,7 @@ export function atualizarOuvintesTabCot() {
     if(log) console.log("Adicionando ouvintes nas células numéricas...");
     // Adiciona listeners para células numéricas
     tab.querySelectorAll('.numeric-cell').forEach(celula => {
-        celula.addEventListener('input', () => {
+        celula.addEventListener('blur', () => {
             restrictNumericInput(celula);
             atualizarValorOrcado();
             atualizarValorTotalParcelas();
