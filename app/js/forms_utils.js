@@ -539,14 +539,6 @@ function atualizarLabels() {
     parcelas.forEach((parcela, index) => {
         //let newNumParc = numeroParcela + index - 1;
         parcela.querySelector('label').innerText = `Parcela nº ${(numParcelaInicial !== null?numParcelaInicial:1) + index}:`;
-        /*
-        // Atualiza o campo de número do PDC
-        const inputNumPDC = parcela.querySelector('input[name="Num_PDC_parcela"]');
-        if (inputNumPDC) {
-            const numPDC = globais.numPDC; // Supondo que globais.numPDC contém o número do PDC
-            inputNumPDC.value = `${numPDC}/${String(index + 1).padStart(2, '0')}`;
-        }
-        */
     });
 }
 
@@ -1547,14 +1539,11 @@ export async function preencherListaAnexosV2(anexos) {
                 cloneFileElement.style.display = 'block';
                 cloneFileElement.src = 'https://placehold.co/100?text=' + fileType;
 
-
-
                 fileElement = document.createElement('a');
                 fileElement.display = 'none';
                 fileElement.href = blobUrl;
                 fileElement.download = file.name;
                 fileElement.appendChild(cloneFileElement);
-
 
             }
 
@@ -1639,14 +1628,6 @@ export function mostrarCamposRetencao() {
     // Verifica se o tipo de solicitação é "SERVIÇO"
     const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     camposNF.querySelector('.campos-iniciais-nf').classList.remove("hidden");
-    /*SUBSTITUÍDO PELO CONTEÚDO ACIMA .|..
-    if (tipoSolicitacao === "SERVIÇO") {
-
-        camposNF.querySelectorAll('*').forEach(child => child.classList.remove("hidden"));
-    }else{
-
-        camposNF.querySelector('.campos-iniciais-nf').classList.remove("hidden");
-    }*/
 }
 
 export function formatarCPFouCNPJ(elemento) {

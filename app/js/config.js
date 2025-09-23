@@ -7,7 +7,6 @@ export const CONFIG = {
         nomeRelCot: "Cotacoes_API",
         nomeFormPDC: "PDC_Digital"
     },
-    //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/terras-de-sao-jose-ii/report/Centros_custo_API?criteria=(ID!%3D0)&max_records=1000
     INITIAL_STATE: {
         perfilResponsavel: null,
         novoPerfilResponsavel: null,

@@ -141,13 +141,6 @@
         align-items: flex-start;
     }
 
-    .parcela input,
-    .valor-parcela input,
-    .linha-classificacao select,
-    .linha-classificacao input {
-        /*max-width: 90% !important;*/
-    }
-
     .radio-group {
         flex-direction: column;
         gap: 10px;
