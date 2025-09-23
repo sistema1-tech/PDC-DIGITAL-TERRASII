@@ -71,6 +71,12 @@ async function initGenericItems() {
                 })
         ]);
 
+        /**
+         * TODO: Revisar essa lógica de carregamento das bases
+         * 1. Se estiver na página criar_cotacao, executa em background (não espera o carregamento)
+         * 2. Se não estiver na página criar_cotacao, carrega bases iniciais para renderização do dashboard
+         * 3. Carrega o restante das bases em background (Não espera o carregamento)
+         */
         // 4. Se não estiver na página criar_cotacao, aguarda as bases carregarem
         if (!globais.pag.includes('criar_cotacao')) {
             await basesPromise;
@@ -124,10 +130,18 @@ async function setupListenersAndInit() {
         "campos-ret-acr": { handler: (elemento) => { formatToBRL_V2(elemento); calcularValorTotalPagar(); }, type: 'blur' },
         "numeric-cell": { handler: (elemento) => handleEnterKeyNavigation(elemento), type: 'keydown' },
         "teste": { handler: () => enviarParaPaybox(), type: 'click' },
+        "section-header":{ handler: (header) =>{() => {
+            const section = header.nextElementSibling;
+            if (section && section.classList.contains('section')) {
+                section.classList.toggle('collapsed');
+                header.classList.toggle('collapsed');
+            }
+            
+        }
+        }, type: 'click' },
         "": { handler: () => setupPixValidation(), type: 'DOMContentLoaded' }
     };
     //"cpf_cnpj_favorecido": { handler: (elemento) => formatarCPFouCNPJ(elemento), type: 'blur' },
-
     Object.entries(buttonActions).forEach(([className, config]) => {
         if (className === '') {
             // Para eventos globais como DOMContentLoaded
@@ -155,9 +169,6 @@ async function setupListenersAndInit() {
             });
         }
     });
-    //==========CONFIGURA OS OUVINTES DAS BARRAS DE TÍTULO, ==========\\
-    //==========(PARA QUE AS SEÇÕES SEJAM EXPANDIDAS/RECOLHIDAS)==========\\
-    setupSectionToggle();
 
     //==========INICIA O TRATAMENTO/APRESENTAÇÃO DOS DADOS==========\\
     await executarProcessosParalelos();
@@ -453,29 +464,6 @@ async function searchPageParams() {
         usuario_logado: globais.usuario_logado, // Adicionado
     });
     if (log) console.log("----------PARÂMETROS DA PÁGINA DEFINIDOS----------");
-}
-
-/**
- * Configura o comportamento de alternância (toggle) para as seções da página
- * 
- * Esta função adiciona event listeners aos cabeçalhos das seções para permitir
- * que o usuário expanda/recolha o conteúdo clicando neles.
- * 
- * Para cada cabeçalho de seção (.section-header):
- * - Adiciona um listener de clique
- * - Quando clicado, alterna a classe 'collapsed' tanto no cabeçalho quanto na seção
- * - A classe 'collapsed' controla a visibilidade/animação através do CSS
- */
-function setupSectionToggle() {
-    document.querySelectorAll('.section-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const section = header.nextElementSibling;
-            if (section && section.classList.contains('section')) {
-                section.classList.toggle('collapsed');
-                header.classList.toggle('collapsed');
-            }
-        });
-    });
 }
 
 // Adicionar esta nova função
