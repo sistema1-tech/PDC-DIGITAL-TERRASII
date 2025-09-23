@@ -170,7 +170,7 @@ export function formatToBRL_V2(v, nd = 2, alt = true) {
     const vo = av; //Valor original, sem ajuste, para evitar arredondamento
     if (log) console.log("Valor original VO => ", vo);
     if (log) console.log("Valor em decimal => ", av);
-    
+
     // Verifica se é negativo
     if (av.toString().startsWith('-')) {
         isNeg = true;
@@ -974,7 +974,6 @@ export async function customModal_V2({
                                 mensagem:`<p>${result.message}</p><p style="max-width: 500px; word-wrap: break-word;">${result.stack}</p>`,
                                 confirmText: 'Ok!'
                             });
-
                         }
                         resolve(result);
 
@@ -1041,7 +1040,8 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
             const valido = validateFields(acao);
             if (!valido) return false;
             */
-
+            const resp = validateFields();
+            if (resp !== true) return true;
             await prepararParaSalvar(acao, infoInserida);
         }
         if (log) console.log("----------RESPOSTA TRATADA, RETORNANDO TRUE----------");
@@ -1590,274 +1590,71 @@ export function desabilitarCampos() {
     });
 }
 
-function validateFields(action) {
-    const log = false;
-    if (log) console.log("++++++++++VALIDANDO CAMPOS OBRIGATÓRIOS++++++++++");
-    if (log) console.log("action => ", action);
-    let all = {};
-    let atLeastOne = {};
-    let otherFormats = {};
-    const fieldNames = {
-        'Entidade': 'Entidade',
-        'Tipo_de_solicitacao': 'Tipo de Solicitação',
-        'Descricao_da_compra': 'Descrição da Compra',
-        'Utilizacao': 'Utilização',
-        'id_forn': 'Fornecedor',
-        'quantidade': 'Quantidade',
-        'valor-unit': 'Valor Unitário',
-        'supplier-checkbox': 'Fornecedor Aprovado',
-        'tipo-pag': 'Tipo de Pagamento',
-        'parcela': 'Parcelas'
-    };
+function validateFields()
+{
+    const log = true;
+    if(log) console.log("++++++++++VALIDANDO CAMPOS++++++++++");
+    //     //=====================================================\\
+    //     ||==========ANALIZANDO CLASSIFICAÇÃO CONTÁBIL==========||
+    //     \\=====================================================//
+    if(log) console.log("Analisando classificação contábil...");
+    const linhas_class = document.querySelectorAll('#form-classificacao .linha-classificacao');
 
-    switch (action) {
-        case 'solicitar_aprovacao_sindico':
-            all = {
-                'Entidade': 'name',
-                'Tipo_de_solicitacao': 'name',
-                'Descricao_da_compra': 'name',
-                'Utilizacao': 'name',
-                'dp-field-input': 'class'
-            };
-            atLeastOne = {
-                'supplier-checkbox': 'class',
-            };
+    if(linhas_class.length === 0)
+    {
+        if(log) console.log("Nenhuma classificação contábil adicionada.");
+        printError({message: "Adicione ao menos uma classificação contábil!"});
+        return false;
+    }
 
-            otherFormats = {
-                'tipo-pag': 'name',
-                'parcela': 'class'
-            }
+    const validacao_contas = Array.from(document.querySelectorAll('#form-classificacao input[name="Conta_a_debitar"]')).every(conta => conta.dataset.id_opcao);
+    const validacao_classes_op = Array.from(document.querySelectorAll('#form-classificacao input[name="Classe_operacional"]')).every(classe => classe.dataset.id_opcao);
+    if(log) console.log("validacao_contas => ", validacao_contas);
+    if(log) console.log("validacao_classes_op => ", validacao_classes_op);
 
-            break;
-        case '':
-            break;
-        default:
-            break;
-    };
+    if(!validacao_contas || !validacao_classes_op)
+    {
+        printError({message: "Todos os dados de classe operacional devem ser preenchidos!"});
+        return false;
+    }
 
-    function validateField(field) {
+    if(log) console.log("Validando soma dos valores das classes operacionais...");
+    let valor_total_class = 0.00;
 
-        if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') {
-            if (log) console.log("-----> É input ou textarea");
-            // Verifica o valor do campo
-            if (field.value === '') {
-                return false;
+    if(log) console.log("document.querySelectorAll('input[name='Valor']')", document.querySelectorAll('input[name="Valor"]'));
+    document.querySelectorAll('#form-classificacao input[name="Valor"]').forEach(input => {
 
-            }
-
-        } else if (field.tagName === 'SELECT') {
-            if (log) console.log("-----> É select");
-            // Verifica se o campo select tem um valor selecionado
-            const selectedOption = field.options[field.selectedIndex];
-            if (selectedOption.classList.contains('invalid')) {
-                return false;
-
-            }
-
-        } else if (field.tagName === 'TD') {
-            if (log) console.log("-----> É td");
-            // Verifica o texto do campo TD
-            if (field.innerText === '') {
-                throw new Error(`O campo "${field.name}" deve ser preenchido.`);
-            }
-
-        } else {
-            if (log) console.log("-----> É um tipo não reconhecido");
-            // Se o campo não for reconhecido, lança um erro
-            throw new Error(`Tipo de campo não reconhecido: ${field.tagName}`);
-
-        }
-    };
-
-    const errorMessage = document.createElement('span');
-    errorMessage.id = 'error-message';
-    errorMessage.textContent = 'Este campo é obrigatório';
-    errorMessage.style.color = 'red';
-
-
-    //==========ALL VALUES ARE REQUIRED==========\\
-    if (log) console.log("-----> Iterando sobre tipos de campos completamente obrigatórios <-----");
-    for (let [key, value] of Object.entries(all)) {
-        if (log) console.log("Campo: ", key, " Tipo: ", value);
-        let campos;
-        if (value === 'dataset') {
-            campos = document.querySelector(`[data-${key}]`);
-
-        } if (['name'].includes(value))//Busca por atributos
+        const valor_original = converterStringParaDecimal(input.dataset?.valor_original || 0);
+        if(log) console.log("valor_original => ", valor_original);
+        if(valor_original === 0)
         {
-            campos = document.querySelectorAll(`[${value}="${key}"]`);
-
-        } else if (['class'].includes(value))//busca por classe (Aparentemente não é um atributo)
-        {
-            campos = document.querySelectorAll(`.${key}`);
-
+            printError({message: "Todos os dados de classe operacional devem ser preenchidos!"});
+            return false;
         }
-
-        if (log) console.log("Campos encontrados: ", (campos || ""));
-        //=====Validando todos os campos encontrados=====\\
-        if (!campos) {
-            if (log) console.log("-----> Nenhum campo foi encontrado, lançando erro!");
-            const overlayElements = document.getElementsByClassName("customConfirm-overlay-div");
-            if (overlayElements) {
-                Array.from(overlayElements).forEach(el => el.remove());
-            }
-
-            customModal_V2({ acao: "alert_campo_obrig", tipoAcao: "alert", titulo: "Campo obrigatório não preenchido", mensagem: `O campo "${fieldNames[key]}" deve ser preenchido.`, confirmText: "Ok" });
-            throw new Error(`Campo obrigatório não preenchido`);
-
-        } else {
-            if (log) console.log("-----> Iterando sobre os campos do tipo atual <-----");
-
-            campos.forEach(campo => {
-                if (log) console.log("Campo: ", campo);
-                const ret = validateField(campo);
-                if (log) console.log("Campo preenchido: ", ret);
-
-                if (!ret) {
-
-                    campo.addEventListener('input', () => errorMessage.remove());
-
-                    campo.insertAdjacentElement('afterend', errorMessage);
-                    campo.focus();
-
-                    const overlayElement = document.querySelector(".customConfirm-overlay-div");
-                    if (overlayElement) {
-                        overlayElement.remove();
-
-                    }
-                    throw new Error(`Campo obrigatório não preenchido`);
-                };
-            });
-
-        }
-
-
-    }
-
-    ////////////////////////////////////////////////////////////////////////
-    /*
-    //=====At least one value is required=====\\
-    for (let [key, value] of Object.entries(atLeastOne)) {
-        console.log("key: ", key, "value: ", value);
-        if (value === 'class') {
-            const elements = document.querySelectorAll(`.${key}`);
-            let ret = false;
-            elements.forEach(element => {
-                console.log("element: ", element);
-                ret = validateField(element);
-                if(ret) {
-                    return true;
-                }
-            })
-
-            if(!ret) {
-                campo.addEventListener('input', () => errorMessage.remove());
-                campo.parentNode.appendChild(errorMessage);
-                campo.parentNode.style.display = 'grid';
-                
-                campo.focus();
-
-                const overlayElement = document.querySelector(".customConfirm-overlay-div");
-                if (overlayElement) {
-                    overlayElement.remove();
-                }
-
-                throw new Error(`Campo obrigatório não preenchido`);
-            }
-        }
-    }
-
-    //=====Other formats=====\\
-    for (let [key, value] of Object.entries(otherFormats)) {
-        console.log("key: ", key, "value: ", value);
-
-        const campos = document.querySelectorAll(`[${value}="${key}"]`);
-        campos.forEach(campo => {
-            console.log("campo: ", campo);
-            console.log("campo.innerText: ", campo.innerText);
-            console.log("campo.value: ", campo.value);
-        })
-
-        if (["tipo-pag"].includes(key)) {
-            const opcaoMarcada = campos[0].querySelector('input:checked');
-            console.log("opcaoMarcada: ", opcaoMarcada);
-            console.log("opcaoMarcada.value: ", opcaoMarcada.value);
-            if (!opcaoMarcada) {
-                throw new Error(`O campo "${key}" deve ser preenchido.`);
-                return false;
-            }
-
-            if (opcaoMarcada.value.includes("Dep. em")) {
-                // Verificar se todos os inputs estão preenchidos
-                const inputs = document.getElementById('campos-deposito').querySelectorAll('input');
-                inputs.forEach(input => {
-                    console.log("input: ", input);
-                    if(input.value.trim() === '') {
-                        throw new Error(`Os campos de depósito devem ser preenchidos.`);
-                        return false;
-                    }
-                })
-
-                if (![...inputs].every(input => input.value.trim() !== '')) {
-                    throw new Error(`Os campos de depósito devem ser preenchidos.`);
-                    return false;
-                }
-            }
-
-            if (["Pix"].some(valor => opcaoMarcada.value.includes(valor))) {
-                // Verificar se todos os inputs do tipo text dentro do elemento #campos-pix estão preenchidos
-                const inputs = document.querySelectorAll('#campos-pix input[type="text"]');
-                if (![...inputs].every(input => input.value.trim() !== '')) {
-                    throw new Error(`Os campos de pix devem ser preenchidos.`);
-                    return false;
-                }
-                // Verificar se o select do tipo de pix está preenchido
-                const select = document.querySelector('#campos-pix select[name="Tipo_de_chave_pix"]');
-                if (select.value === '') {
-                    throw new Error(`O tipo de pix deve ser selecionado.`);
-                    return false;
-                }
-            }
-        }
-
-        if (["parcela"].includes(key)) {
-            campos.forEach(campo => {
-
-                const inputs = [...campo.querySelectorAll('input')].filter(input => input.name !== 'parcela_criada');
-                if (![...inputs].some(input => input.value.trim() !== '')) {
-                    throw new Error(`O campo "${key}" deve ser preenchido.`);
-                    return false;
-                }
-            });
-        }
-    }
-    */
-    if (log) console.log("----------VALIDAÇÃO FINALIZADA, CAMPOS OBRIGATÓRIOS ESTÃO PREENCHIDOS----------");
-    throw new Error(`TODOS OS CAMPOS ESTÃO PREENCHIDOS`);
-
-    return true;
-}
-
-function printErrorModal(erro) {
-    // Cria o modal
-    const modal = document.createElement('div');
-    modal.classList.add('error-modal');
-    modal.innerHTML = `
-      <div class="error-modal-content">
-        <p>${erro.message}</p>
-        <pre>${erro.stack}</pre>
-        <button class="close-modal">Fechar</button>
-      </div>
-    `;
-  
-    // Adiciona o modal no topo do body
-    document.body.appendChild(modal);
-  
-    // Adiciona evento de fechar o modal
-    const closeModalButton = modal.querySelector('.close-modal');
-    closeModalButton.addEventListener('click', () => {
-      modal.remove();
+        
+        valor_total_class += valor_original;
     });
+
+    if(log) console.log("valor_total_class => ", valor_total_class);
+    if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
+
+    if(valor_total_class != globais.valor_orcado)
+    {
+        if(log) console.log("A soma dos valores das classes operacionais deve ser igual ao valor total!");
+        printError({message: "A soma dos valores das classes operacionais deve ser igual ao valor total!"});
+        return false;
+    }
+    
+    function printError({message, response})
+    {
+        customModal_V2({
+            tipoAcao:'alert', 
+            titulo: "Preenchimento incorreto!",
+            mensagem: message,
+            confirmText: "OK"
+        });
+    }
+    return true;
 }
 
 export function base64Size(base64String) {
@@ -1927,7 +1724,7 @@ async function gerar_num_pdc()
 
     //Busca o último número de PDC criado
     const ult_num_pdc = await executar_apiZoho({tipo:'busc_reg', criterios: '(ID!=0)', nomeR: 'Ultimo_PDC_criado', nomeF: 'PDC_Digital'});
-    const numeroPDC = (Number(ult_num_pdc[0].Num_princ_PDC) || 1) + 1;
+    const numeroPDC = (Number(ult_num_pdc[0]?.Num_princ_PDC || 0)) + 1;
     globais.numPDC = numeroPDC;
     if(log) console.log("Número do último PDC => ", numeroPDC);
 

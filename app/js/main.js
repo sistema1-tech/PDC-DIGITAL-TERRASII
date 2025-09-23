@@ -389,10 +389,10 @@ async function processarDadosCotacao() {
     
     const idCriterio = globais.numPDC_temp ? `num_pdc_temp=="${globais.numPDC_temp}"` : "ID==0";
 
-    const aprovadoCriterio = !['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra'].some(str => globais.pag?.includes(str)) ?
-        " && Aprovado==true" : "";
+    const aprovadoCriterio = !['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra', 'aprovar_cotacao'].some(str => globais.pag?.includes(str)) ? " && Aprovado==true" : "";
 
     let cCot = `(${idCriterio} && Ativo==true${aprovadoCriterio})`;
+    console.log("cCot => ", cCot);
     const respCot = await executar_apiZoho({
         tipo: "busc_reg",
         criterios: cCot,

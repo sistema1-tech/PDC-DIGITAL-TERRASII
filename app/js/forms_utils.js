@@ -821,6 +821,7 @@ function preencherDadosClassificacao(classificacoes) {
 
         // Formata e define o valor
         inputValor.value = formatToBRL_V2({ target: { value: valor } });
+        inputValor.dataset.valor_original = formatToBRL_V2({ target: { value: valor } });
     });
 }
 
