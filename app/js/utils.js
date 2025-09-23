@@ -1040,7 +1040,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
             const valido = validateFields(acao);
             if (!valido) return false;
             */
-            const resp = validateFields();
+            const resp = validateFields(acao);
             if (resp !== true) return true;
             await prepararParaSalvar(acao, infoInserida);
         }
@@ -1590,71 +1590,88 @@ export function desabilitarCampos() {
     });
 }
 
-function validateFields()
+function validateFields(acao)
 {
-    const log = true;
-    if(log) console.log("++++++++++VALIDANDO CAMPOS++++++++++");
-    //     //=====================================================\\
-    //     ||==========ANALIZANDO CLASSIFICAÇÃO CONTÁBIL==========||
-    //     \\=====================================================//
-    if(log) console.log("Analisando classificação contábil...");
-    const linhas_class = document.querySelectorAll('#form-classificacao .linha-classificacao');
-
-    if(linhas_class.length === 0)
+    if(
+        [
+            'salvar_cot',
+            'criar_cotacao',
+            'editar_cot',
+            'solicitar_aprovacao_sindico',
+            'corrigir_erros',
+            'ajustar_cot',
+            'aprov_cot',
+            'arquivar_cot',
+            'finalizar_provisionamento',
+            'confirmar_compra',
+        ].includes(acao)
+    )
     {
-        if(log) console.log("Nenhuma classificação contábil adicionada.");
-        printError({message: "Adicione ao menos uma classificação contábil!"});
-        return false;
-    }
-
-    const validacao_contas = Array.from(document.querySelectorAll('#form-classificacao input[name="Conta_a_debitar"]')).every(conta => conta.dataset.id_opcao);
-    const validacao_classes_op = Array.from(document.querySelectorAll('#form-classificacao input[name="Classe_operacional"]')).every(classe => classe.dataset.id_opcao);
-    if(log) console.log("validacao_contas => ", validacao_contas);
-    if(log) console.log("validacao_classes_op => ", validacao_classes_op);
-
-    if(!validacao_contas || !validacao_classes_op)
-    {
-        printError({message: "Todos os dados de classe operacional devem ser preenchidos!"});
-        return false;
-    }
-
-    if(log) console.log("Validando soma dos valores das classes operacionais...");
-    let valor_total_class = 0.00;
-
-    if(log) console.log("document.querySelectorAll('input[name='Valor']')", document.querySelectorAll('input[name="Valor"]'));
-    document.querySelectorAll('#form-classificacao input[name="Valor"]').forEach(input => {
-
-        const valor_original = converterStringParaDecimal(input.dataset?.valor_original || 0);
-        if(log) console.log("valor_original => ", valor_original);
-        if(valor_original === 0)
+        const log = true;
+        if(log) console.log("++++++++++VALIDANDO CAMPOS++++++++++");
+        //     //=====================================================\\
+        //     ||==========ANALIZANDO CLASSIFICAÇÃO CONTÁBIL==========||
+        //     \\=====================================================//
+        if(log) console.log("Analisando classificação contábil...");
+        const linhas_class = document.querySelectorAll('#form-classificacao .linha-classificacao');
+    
+        if(linhas_class.length === 0)
+        {
+            if(log) console.log("Nenhuma classificação contábil adicionada.");
+            printError({message: "Adicione ao menos uma classificação contábil!"});
+            return false;
+        }
+    
+        const validacao_contas = Array.from(document.querySelectorAll('#form-classificacao input[name="Conta_a_debitar"]')).every(conta => conta.dataset.id_opcao);
+        const validacao_classes_op = Array.from(document.querySelectorAll('#form-classificacao input[name="Classe_operacional"]')).every(classe => classe.dataset.id_opcao);
+        if(log) console.log("validacao_contas => ", validacao_contas);
+        if(log) console.log("validacao_classes_op => ", validacao_classes_op);
+    
+        if(!validacao_contas || !validacao_classes_op)
         {
             printError({message: "Todos os dados de classe operacional devem ser preenchidos!"});
             return false;
         }
-        
-        valor_total_class += valor_original;
-    });
-
-    if(log) console.log("valor_total_class => ", valor_total_class);
-    if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
-
-    if(valor_total_class != globais.valor_orcado)
-    {
-        if(log) console.log("A soma dos valores das classes operacionais deve ser igual ao valor total!");
-        printError({message: "A soma dos valores das classes operacionais deve ser igual ao valor total!"});
-        return false;
-    }
     
-    function printError({message, response})
-    {
-        customModal_V2({
-            tipoAcao:'alert', 
-            titulo: "Preenchimento incorreto!",
-            mensagem: message,
-            confirmText: "OK"
+        if(log) console.log("Validando soma dos valores das classes operacionais...");
+        let valor_total_class = 0.00;
+    
+        if(log) console.log("document.querySelectorAll('input[name='Valor']')", document.querySelectorAll('input[name="Valor"]'));
+        document.querySelectorAll('#form-classificacao input[name="Valor"]').forEach(input => {
+    
+            const valor_original = converterStringParaDecimal(input.dataset?.valor_original || 0);
+            if(log) console.log("valor_original => ", valor_original);
+            if(valor_original === 0)
+            {
+                printError({message: "Todos os dados de classe operacional devem ser preenchidos!"});
+                return false;
+            }
+            
+            valor_total_class += valor_original;
         });
+    
+        if(log) console.log("valor_total_class => ", valor_total_class);
+        if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
+    
+        if(valor_total_class != globais.valor_orcado)
+        {
+            if(log) console.log("A soma dos valores das classes operacionais deve ser igual ao valor total!");
+            printError({message: "A soma dos valores das classes operacionais deve ser igual ao valor total!"});
+            return false;
+        }
+        
+        function printError({message, response})
+        {
+            customModal_V2({
+                tipoAcao:'alert', 
+                titulo: "Preenchimento incorreto!",
+                mensagem: message,
+                confirmText: "OK"
+            });
+        }
+        return true;
+
     }
-    return true;
 }
 
 export function base64Size(base64String) {
