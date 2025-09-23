@@ -66,12 +66,10 @@ async function initGenericItems() {
             buscarFornecedores().then(result => { globais.baseFornecedores = result; }),
             buscarCentrosCusto().then(result => { globais.baseCentrosCusto = result; }),
             buscarClassesOperacionais().then(result => {
-                globais.baseClassesOperacionais = result;
-            })
-
-        ]).then(() => {
-            adicionarLinhaClassificacao();
-        });
+                globais.baseClassesOperacionais = result;}).then(() => {
+                    adicionarLinhaClassificacao();
+                })
+        ]);
 
         // 4. Se não estiver na página criar_cotacao, aguarda as bases carregarem
         if (!globais.pag.includes('criar_cotacao')) {
