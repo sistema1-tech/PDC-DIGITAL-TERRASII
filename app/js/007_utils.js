@@ -1594,16 +1594,7 @@ function validateFields(acao)
 {
     if(
         [
-            'salvar_cot',
-            'criar_cotacao',
-            'editar_cot',
-            'solicitar_aprovacao_sindico',
-            'corrigir_erros',
-            'ajustar_cot',
-            'aprov_cot',
-            'arquivar_cot',
-            'finalizar_provisionamento',
-            'confirmar_compra',
+            'solicitar_aprovacao_sindico'
         ].includes(acao)
     )
     {
@@ -1669,9 +1660,8 @@ function validateFields(acao)
                 confirmText: "OK"
             });
         }
-        return true;
-
     }
+    return true;
 }
 
 export function base64Size(base64String) {
