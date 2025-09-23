@@ -40,7 +40,7 @@ import {
 
 } from './007_utils.js'
 import {Globais} from './999_config.js';
-//import {enviarParaPaybox} from './save_utils.js'
+//import {enviarParaPaybox} from './006_save_utils.js'
 
 export const globais = new Globais();
 
@@ -76,6 +76,7 @@ async function initGenericItems() {
                 `<option value="${key}" data-cnpj_ent="${value[2]}" data-cod_cond_ahreas="${value[0]}">${value[1]}</option>`
             ).join('')}`;
         }
+        
         // 3. Cria a Promise que busca todas as bases
         const basesPromise = Promise.allSettled([
             buscarFornecedores().then(result => { globais.baseFornecedores = result; }),
@@ -330,7 +331,10 @@ async function executarProcessosParalelos() {
 
             }
 
-        } else {
+        } else if(globais.pag.includes('_eventos')) {
+            globais.perfilResponsavel = "Comprador eventos";
+        }
+        else {
             globais.perfilResponsavel = "Comprador";
 
         }
@@ -453,7 +457,7 @@ async function searchPageParams() {
         globais.numPDC_temp = params.num_pdc_temp ?? globais.numPDC_temp;
         globais.pag = params.pag ?? globais.pag;
         globais.userIP = params.user_ip ?? globais.userIP;
-        globais.novoPerfilResponsavel = params.perfil_resp || globais.novoPerfilResponsavel;
+        globais.novoPerfilResponsavel = params.perfil_resp ?? globais.novoPerfilResponsavel;
         globais.entidades_permitidas = params.ent_perm ? params.ent_perm.split(",") : globais.entidades_permitidas;
         globais.usuario_logado = params.user ?? globais.usuarioLogado;
     }

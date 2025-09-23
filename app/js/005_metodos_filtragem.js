@@ -35,6 +35,8 @@ export function criarBotao({page = null, removeExistingButtons = false})
         switch (page) {
             case "criar_cotacao":
             case "editar_cotacao":
+            case "criar_cotacao_eventos":
+            case "editar_cotacao_eventos":
             case "criar_cotacao_DP":
             case "editar_cotacao_DP":
             case "criar_cotacao_controladoria":
