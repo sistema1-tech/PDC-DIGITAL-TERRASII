@@ -1,5 +1,5 @@
-import {globais} from './main.js';
-import { customModal, customModal_V2 } from './utils.js';
+import {globais} from './001_main.js';
+import { customModal, customModal_V2 } from './007_utils.js';
 
 export function criarBotao({page = null, removeExistingButtons = false})
 {

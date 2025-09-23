@@ -1,5 +1,5 @@
-import { saveTableData_V2, enviarParaPaybox } from './save_utils.js';
-import { globais } from './main.js';
+import { saveTableData_V2, enviarParaPaybox } from './006_save_utils.js';
+import { globais } from './001_main.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
 

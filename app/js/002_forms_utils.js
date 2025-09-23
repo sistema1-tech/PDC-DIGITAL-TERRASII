@@ -1,5 +1,5 @@
-import { globais } from './main.js';
-import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate} from './utils.js';
+import { globais } from './001_main.js';
+import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate} from './007_utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
 
