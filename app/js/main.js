@@ -38,34 +38,10 @@ import {
     removerCampoVenc,
     removerLinhaNF,
 } from './forms_utils.js';
-import { CONFIG } from './config.js';
-import { criarBotao } from './metodos_filtragem.js';
+import {Globais} from './config.js';
+import {criarBotao} from './metodos_filtragem.js';
 //import {enviarParaPaybox} from './save_utils.js'
 
-class Globais {
-    constructor() {
-        this.state = {
-            baseClassesOperacionais: new Map(),
-            baseFornecedores: new Map(),
-            baseCentrosCusto: new Map(),
-            idsCotacao: new Array(),
-            numSolicPDC: null,
-            userIP: null,
-            arquivosGaleria: new Array(),
-            arquivospPaybox: new Array(),
-            ...CONFIG.INITIAL_STATE,
-            ...CONFIG.APPS
-        };
-
-        return new Proxy(this.state, {
-            get: (target, prop) => target[prop],
-            set: (target, prop, value) => {
-                target[prop] = value;
-                return true;
-            }
-        });
-    }
-}
 export const globais = new Globais();
 
 // Inicia o processo

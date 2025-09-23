@@ -1,5 +1,5 @@
 // Novo arquivo para configurações
-export const CONFIG = {
+const CONFIG = {
     APPS: {
         nomeApp: "terras-de-sao-jose-ii",
         nomeRelPDC: "PDC_Digital_API",
@@ -25,4 +25,29 @@ export const CONFIG = {
         usuario_logado: null,
         entidades_permitidas: null,
     }
-}; 
+};
+
+export class Globais {
+    constructor() {
+        this.state = {
+            baseClassesOperacionais: new Map(),
+            baseFornecedores: new Map(),
+            baseCentrosCusto: new Map(),
+            idsCotacao: new Array(),
+            numSolicPDC: null,
+            userIP: null,
+            arquivosGaleria: new Array(),
+            arquivospPaybox: new Array(),
+            ...CONFIG.INITIAL_STATE,
+            ...CONFIG.APPS
+        };
+
+        return new Proxy(this.state, {
+            get: (target, prop) => target[prop],
+            set: (target, prop, value) => {
+                target[prop] = value;
+                return true;
+            }
+        });
+    }
+}
