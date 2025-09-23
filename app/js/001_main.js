@@ -1,25 +1,4 @@
 import {
-    atualizarOuvintesTabCot,
-    addSupplierColumn,
-    removeProductRow,
-    addProductRow,
-    prenchTabCot,
-} from './003_table_utils.js'
-import {
-    buscarClassesOperacionais,
-    buscarFornecedores,
-    buscarCentrosCusto,
-
-} from './004_dados_p_selects.js';
-import {
-    desabilitarCampos,
-    executar_apiZoho,
-    customModal_V2,
-    formatToBRL_V2,
-    customModal
-
-} from './007_utils.js'
-import {
     atualizarValorTotalClassificacoes,
     atualizarValorTotalParcelas,
     atualizarValorOrcado,
@@ -38,8 +17,29 @@ import {
     removerCampoVenc,
     removerLinhaNF,
 } from './002_forms_utils.js';
-import {Globais} from './999_config.js';
+import {
+    atualizarOuvintesTabCot,
+    addSupplierColumn,
+    removeProductRow,
+    addProductRow,
+    prenchTabCot,
+} from './003_table_utils.js'
+import {
+    buscarClassesOperacionais,
+    buscarFornecedores,
+    buscarCentrosCusto,
+
+} from './004_dados_p_selects.js';
 import {criarBotao} from './005_metodos_filtragem.js';
+import {
+    desabilitarCampos,
+    executar_apiZoho,
+    customModal_V2,
+    formatToBRL_V2,
+    customModal
+
+} from './007_utils.js'
+import {Globais} from './999_config.js';
 //import {enviarParaPaybox} from './save_utils.js'
 
 export const globais = new Globais();
