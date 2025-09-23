@@ -1,14 +1,15 @@
 import {
     atualizarValorTotalClassificacoes,
     atualizarValorTotalParcelas,
-    atualizarValorOrcado,
     adicionarLinhaClassificacao,
+    validarEntidadesPermitidas,
     removerLinhaClassificacao,
     calcularValorTotalPagar,
     atualizarValorOriginal,
     preencherListaAnexosV2,
     mostrarCamposPagamento,
     mostrarCamposRetencao,
+    atualizarValorOrcado,
     adicionarCampoVenc,
     setupPixValidation,
     preencherDadosPDC,
@@ -16,6 +17,7 @@ import {
     adicionarLinhaNF,
     removerCampoVenc,
     removerLinhaNF,
+
 } from './002_forms_utils.js';
 import {
     atualizarOuvintesTabCot,
@@ -56,27 +58,9 @@ async function initGenericItems() {
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
 
-        // 2.1 Busca as entidades permitidas
-        const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Entidades_cadastradas" });
-        const entidades_aplicaveis = condominios.reduce((acc, cond) => {
-            acc[cond.ID] = [
-                cond.Cod_cond_ahreas,
-                cond.Nome,
-                cond.CNPJ
-            ];
-            return acc;
-        }, {});
-        if (log) console.log("Entidades aplicáveis mapeadas: ", entidades_aplicaveis);
-        console.log("globais.pag => ", globais.pag);
-        const campo_entidades = document.querySelector('select[name="Entidade"]');
-        if (campo_entidades) {
-            campo_entidades.innerHTML = `
-        <option value="" disabled selected class="invalid">Selecione uma entidade...</option>
-        ${Object.entries(entidades_aplicaveis).map(([key, value]) =>
-                `<option value="${key}" data-cnpj_ent="${value[2]}" data-cod_cond_ahreas="${value[0]}">${value[1]}</option>`
-            ).join('')}`;
-        }
-        
+        // 2. Valida as entidades permitidas
+        validarEntidadesPermitidas();
+
         // 3. Cria a Promise que busca todas as bases
         const basesPromise = Promise.allSettled([
             buscarFornecedores().then(result => { globais.baseFornecedores = result; }),

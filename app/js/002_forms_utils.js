@@ -1,5 +1,5 @@
 import { globais } from './001_main.js';
-import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate} from './007_utils.js';
+import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho} from './007_utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
 
@@ -42,6 +42,47 @@ export function mostrarCamposPagamento() {
 //===================================================================//
 //====================VALIDA ENTIDADES PERMITIDAS====================//
 //===================================================================//
+export async function validarEntidadesPermitidas() {
+    // 2.1 Busca as entidades permitidas
+    const condominios = await executar_apiZoho({ tipo: "busc_reg", criterios: `(ID in [${globais.entidades_permitidas?.map(BigInt).join(",")}])`, nomeR: "Entidades_cadastradas" });
+    const entidades_aplicaveis = condominios.reduce((acc, cond) => {
+        acc[cond.ID] = [
+            cond.Cod_cond_ahreas,
+            cond.Nome,
+            cond.CNPJ
+        ];
+        return acc;
+    }, {});
+
+    const campo_entidades = document.querySelector('select[name="Entidade"]');
+    if (campo_entidades) {
+        //Criando a opção padrão
+        campo_entidades.innerHTML = '';
+        const option_invalid = document.createElement('option');
+        option_invalid.value = '';
+        option_invalid.disabled = true;
+        option_invalid.selected = true;
+        option_invalid.classList.add('invalid');
+        option_invalid.textContent = 'Selecione uma entidade...';
+        campo_entidades.appendChild(option_invalid);
+
+        //Adicionando as opções válidas
+        Object.entries(entidades_aplicaveis).forEach(([key, value]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.dataset.codCondAhreas = value[0];
+            option.dataset.cnpjEnt = value[2];
+            option.textContent = value[1];
+
+            // Caso exista apenas uma entidade, seleciona automaticamente
+            if (Object.entries(entidades_aplicaveis).length === 1) {
+                option.selected = true;
+            }
+
+            campo_entidades.appendChild(option);
+        });
+    }
+}
 
 //=============================================================//
 //====================PREENCHE DADOS DO PDC====================//
