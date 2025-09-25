@@ -31,11 +31,11 @@ import {globais} from './999_config.js';
 //import {enviarParaPaybox} from './006_save_utils.js'
 
 // Inicia o processo
-initGenericItems().catch(error => {
+__INIT__().catch(error => {
     console.error('Erro na inicialização:', error);
 });
 
-async function initGenericItems() {
+async function __INIT__() {
     try {
         const log = false;
         if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
@@ -73,6 +73,7 @@ async function initGenericItems() {
         // 5. Configura os ouvintes (Se a página ainda não tiver carregado, adiciona um ouvinte para aguardar carregar, senão inicia os processos)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', async() => {setupEventListeners(); await executarProcessosParalelos();});
+
         } else {
             setupEventListeners();
             await executarProcessosParalelos();
@@ -85,8 +86,10 @@ async function initGenericItems() {
 
 async function executarProcessosParalelos() {
     if (!globais.pag.includes('criar_cotacao')) {
-        //==========TRATA TODOS OS DADOS PARA APRESENTAÇÃO E==========\\
-        //==========MODIFICAÇÃO DOS BOTÕES (VISTO QUE NÃO É UMA NOVA SOLICITAÇÃO)==========\\
+        //   //======================================================================\\
+        //   ||==========TRATA E APRESENTA OS DADOS NA TELA (PDC EXISTENTE)==========||
+        //   ||==========TAMBÉM MODIFICA OS BOTÕES DE ACORDO COM A PÁGINA  ==========||
+        //   \\======================================================================//
 
         //=====Preenche paralelamente os dados da tab de preços e o restante do PDC=====\\
         const tarefas = [
@@ -94,6 +97,7 @@ async function executarProcessosParalelos() {
             processarDadosCotacao()
         ];
         await Promise.all(tarefas);
+
         if (globais.pag.includes('editar_cotacao') || globais.pag.includes('ajustar_cotacao_DP')) {
             //=====Cria o botão Sol. Aprov. Síndico=====\\
             criarBotao({ page: globais.pag });
@@ -285,68 +289,6 @@ async function processarDadosCotacao() {
     atualizarValorOriginal();
     calcularValorTotalPagar();
         
-}
-
-/**
- * Adiciona navegação por pontos (dots) para as seções da página
- * 
- * @function addNavDots
- * @returns {void}
- * 
- * @description
- * Esta função implementa:
- * 1. Observador de interseção para detectar seções visíveis
- * 2. Atualização automática dos pontos de navegação
- * 3. Navegação suave ao clicar nos pontos
- * 
- * Funcionalidades:
- * - Monitora a visibilidade das seções usando IntersectionObserver
- * - Atualiza o ponto ativo quando uma seção está 50% visível
- * - Permite navegação suave ao clicar nos pontos
- * - Usa margem de detecção para melhor precisão
- * 
- * @example
- * // Adiciona navegação por pontos à página
- * addNavDots();
- */
-function addNavDots() {
-    // Adiciona o observer para as seções
-    const sections = document.querySelectorAll('.section');
-    const dots = document.querySelectorAll('.dot');
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // Remove a classe active de todos os dots
-                dots.forEach(dot => dot.classList.remove('active'));
-
-                // Adiciona a classe active ao dot correspondente
-                const sectionId = entry.target.id.replace('section', '');
-                const activeDot = document.querySelector(`.dot[data-section="${sectionId}"]`);
-                if (activeDot) {
-                    activeDot.classList.add('active');
-                }
-            }
-        });
-    }, {
-        threshold: 0.5, // Ativa quando 50% da seção está visível
-        rootMargin: '-10% 0px -10% 0px' // Cria uma margem de detecção
-    });
-
-    // Observa todas as seções
-    sections.forEach(section => observer.observe(section));
-
-    // Adiciona click event nos dots para navegaço suave
-    dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            const sectionId = dot.dataset.section;
-            const targetSection = document.getElementById(`section${sectionId}`);
-            targetSection.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        });
-    });
 }
 
 async function searchPageParams() {
