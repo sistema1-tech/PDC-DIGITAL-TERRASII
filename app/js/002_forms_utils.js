@@ -1,4 +1,4 @@
-import { globais } from './001_main.js';
+import { globais } from './999_config.js';
 import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho} from './007_utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;

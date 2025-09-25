@@ -3,27 +3,15 @@ import {
     atualizarValorTotalParcelas,
     adicionarLinhaClassificacao,
     validarEntidadesPermitidas,
-    removerLinhaClassificacao,
     calcularValorTotalPagar,
     atualizarValorOriginal,
     preencherListaAnexosV2,
-    mostrarCamposPagamento,
     mostrarCamposRetencao,
     atualizarValorOrcado,
-    adicionarCampoVenc,
-    setupPixValidation,
     preencherDadosPDC,
-    formatarCPFouCNPJ,
-    adicionarLinhaNF,
-    removerCampoVenc,
-    removerLinhaNF,
-
 } from './002_forms_utils.js';
 import {
     atualizarOuvintesTabCot,
-    addSupplierColumn,
-    removeProductRow,
-    addProductRow,
     prenchTabCot,
 } from './003_table_utils.js'
 import {
@@ -36,15 +24,11 @@ import {criarBotao} from './005_metodos_filtragem.js';
 import {
     desabilitarCampos,
     executar_apiZoho,
-    customModal_V2,
-    formatToBRL_V2,
-    customModal
+    setupEventListeners
 
 } from './007_utils.js'
-import {Globais} from './999_config.js';
+import {globais} from './999_config.js';
 //import {enviarParaPaybox} from './006_save_utils.js'
-
-export const globais = new Globais();
 
 // Inicia o processo
 initGenericItems().catch(error => {
@@ -77,6 +61,7 @@ async function initGenericItems() {
          * 2. Se não estiver na página criar_cotacao, carrega bases iniciais para renderização do dashboard
          * 3. Carrega o restante das bases em background (Não espera o carregamento)
          */
+
         // 4. Se não estiver na página criar_cotacao, aguarda as bases carregarem
         if (!globais.pag.includes('criar_cotacao')) {
             await basesPromise;
@@ -87,91 +72,15 @@ async function initGenericItems() {
 
         // 5. Configura os ouvintes (Se a página ainda não tiver carregado, adiciona um ouvinte para aguardar carregar, senão inicia os processos)
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupListenersAndInit);
+            document.addEventListener('DOMContentLoaded', async() => {setupEventListeners(); await executarProcessosParalelos();});
         } else {
-            await setupListenersAndInit();
+            setupEventListeners();
+            await executarProcessosParalelos();
+
         }
     } catch (error) {
         console.error('Erro ao inicializar:', error);
     }
-}
-
-async function setupListenersAndInit() {
-    //==========CONFIGURA OS OUVINTES GERAIS==========\\
-    const buttonActions = {
-        "add-supplier-btn": { handler: () => addSupplierColumn(), type: 'click' },
-        "add-product-btn": { handler: () => addProductRow(), type: 'click' },
-        "remove-product-btn": {
-            handler: (elemento) => customModal({
-                botao: elemento,
-                tipo: 'remover_produto',
-                mensagem: 'Deseja realmente remover este produto?'
-            }).then(() => { removeProductRow(elemento); }),
-            type: 'click'
-        },
-        "save-btn": {
-            handler: (elemento) => customModal_V2({
-                botao: elemento,
-                acao: 'salvar_cot',
-                mensagem: 'Deseja realmente salvar esta cotação?'
-            }),
-            type: 'click'
-        },
-        "formas-pagamento": { handler: (elemento) => mostrarCamposPagamento(), type: 'click' },
-        "add-linha-nf": { handler: () => adicionarLinhaNF(), type: 'click' },
-        "remover-linha-nf": { handler: (elemento) => removerLinhaNF(elemento), type: 'click' },
-        "add-parcela": { handler: () => adicionarCampoVenc(null, null, globais.numPDC), type: 'click' },
-        "remover-parcela": { handler: (elemento) => removerCampoVenc(elemento), type: 'click' },
-        "add-classificacao": { handler: () => adicionarLinhaClassificacao(), type: 'click' },
-        "remover-classificacao": { handler: (elemento) => removerLinhaClassificacao(elemento), type: 'click' },
-        "valor-parcela": { handler: (elemento) => { formatToBRL_V2(elemento); atualizarValorTotalParcelas(); }, type: 'blur' },
-        "valor-classificacao": { handler: (elemento) => { formatToBRL_V2(elemento); atualizarValorTotalClassificacoes(); }, type: 'blur' },
-        "campos-ret-desc": { handler: (elemento) => { formatToBRL_V2(elemento); calcularValorTotalPagar(); }, type: 'blur' },
-        "campos-ret-acr": { handler: (elemento) => { formatToBRL_V2(elemento); calcularValorTotalPagar(); }, type: 'blur' },
-        "numeric-cell": { handler: (elemento) => handleEnterKeyNavigation(elemento), type: 'keydown' },
-        "teste": { handler: () => enviarParaPaybox(), type: 'click' },
-        "section-header":{ handler: (header) =>{() => {
-            const section = header.nextElementSibling;
-            if (section && section.classList.contains('section')) {
-                section.classList.toggle('collapsed');
-                header.classList.toggle('collapsed');
-            }
-            
-        }
-        }, type: 'click' },
-        "": { handler: () => setupPixValidation(), type: 'DOMContentLoaded' }
-    };
-    //"cpf_cnpj_favorecido": { handler: (elemento) => formatarCPFouCNPJ(elemento), type: 'blur' },
-    Object.entries(buttonActions).forEach(([className, config]) => {
-        if (className === '') {
-            // Para eventos globais como DOMContentLoaded
-            if (config.type === 'DOMContentLoaded') {
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', config.handler);
-                } else {
-                    config.handler();
-                }
-            } else {
-                document.addEventListener(config.type, config.handler);
-            }
-        } else {
-            // Para elementos específicos
-            document.querySelectorAll(`.${className}`).forEach(elemento => {
-                if (config.type === 'DOMContentLoaded') {
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', () => config.handler(elemento));
-                    } else {
-                        config.handler(elemento);
-                    }
-                } else {
-                    elemento.addEventListener(config.type, () => config.handler(elemento));
-                }
-            });
-        }
-    });
-
-    //==========INICIA O TRATAMENTO/APRESENTAÇÃO DOS DADOS==========\\
-    await executarProcessosParalelos();
 }
 
 async function executarProcessosParalelos() {

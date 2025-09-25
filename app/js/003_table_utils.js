@@ -7,7 +7,9 @@ import {
     executar_apiZoho,
     customModal
 } from './007_utils.js';
-import { globais, handleEnterKeyNavigation } from './001_main.js'
+import {handleEnterKeyNavigation} from './001_main.js'
+import {globais} from './999_config.js'
+
 import { atualizarValorTotalClassificacoes, atualizarValorTotalParcelas, atualizarValorOrcado } from './002_forms_utils.js';
 
 const qlt = 4; //Total de linhas de totalizadores, considerando linha com botão de adicionar produto

@@ -1,7 +1,27 @@
 import { saveTableData_V2, enviarParaPaybox } from './006_save_utils.js';
-import { globais } from './001_main.js';
+import {globais, eventConfig} from './999_config.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
+//   //========================================\\
+//   ||===========ABERTURA DA PÁGINA===========||
+//   \\========================================//
+export function setupEventListeners() {
+    console.log("++++++++++CONFIGURANDO EVENTOS++++++++++");
+    console.log("Eventos configurados: ", Object.keys(eventConfig).length);
+    Object.entries(eventConfig).forEach(([className, config]) => {
+        const elements = className ? document.querySelectorAll(`.${className}`) : [document];
+        elements.forEach(element => {
+            const handler = () => config.handler(element);
+            if (config.type === 'DOMContentLoaded') {
+                document.readyState === 'loading' 
+                ? document.addEventListener('DOMContentLoaded', handler)
+                : handler();
+            } else {
+                element.addEventListener(config.type, handler);
+            }
+        });
+    });
+}
 
 /**
  * Executa requisições para a API do Zoho Creator
@@ -1722,7 +1742,6 @@ export function formatDate(dateStr, format) {
     console.error('Data inválida:', dateStr);
     return '';
 }
-
 
 async function gerar_num_pdc()
 {

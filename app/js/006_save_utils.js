@@ -1,6 +1,5 @@
 import { converterStringParaDecimal, executar_apiZoho, customModal_V2, formatDate} from './007_utils.js';
-import { globais } from './001_main.js'
-
+import { globais } from './999_config.js'
 const qlt = 4; //Total de linhas de totalizadores, considerando linha com botão de adicionar produto
 const ipcv = 3; //Indice da primeira coluna de valores (Valor unitário do primeiro fornecedor)
 const qtdCssDecimais = 2; //Quantidade de casas decimais dos campos decimais (Atualmente o campo do zoho suporta apenas 2, para alterar precisa MEXER NO ZOHO)
