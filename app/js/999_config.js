@@ -22,19 +22,29 @@ import { customModal, customModal_V2 } from './007_utils.js';
 //   ||==========DEFINE AS VARIÁVEIS GLOBAIS==========||
 //   \\===============================================//
 const CONFIG = {
-    APPS: {
+    ENT_NAMES: {
         nomeApp: "terras-de-sao-jose-ii",
         nomeRelPDC: "PDC_Digital_API",
         nomeFormCot: "Cotacoes",
         nomeRelCot: "Cotacoes_API",
-        nomeFormPDC: "PDC_Digital"
+        nomeFormPDC: "PDC_Digital",
+        pag: 'criar_cotacao',
+    },
+    BASES:
+    {
+        baseClassesOperacionais: new Map(),
+        baseFornecedores: new Map(),
+        baseCentrosCusto: new Map(),
+        idsCotacao: new Array(),
+        arquivosGaleria: new Array(),
+        arquivospPaybox: new Array(),
+        usuarioLogado: new Map()
     },
     INITIAL_STATE: {
         perfilResponsavel: null,
         novoPerfilResponsavel: null,
         selectedCheckbox: null,
         cotacaoExiste: false,
-        pag: 'criar_cotacao',
         classificacoes: null,
         idFornAprovado: null,
         valor_orcado: null,
@@ -46,22 +56,22 @@ const CONFIG = {
         tipo: null,
         usuario_logado: null,
         entidades_permitidas: null,
+        id_usuario_logado: null,
+    },
+    OTHER:
+    {
+        numSolicPDC: null,
+        userIP: null,
     }
 };
 
 class Globais {
     constructor() {
         this.state = {
-            baseClassesOperacionais: new Map(),
-            baseFornecedores: new Map(),
-            baseCentrosCusto: new Map(),
-            idsCotacao: new Array(),
-            numSolicPDC: null,
-            userIP: null,
-            arquivosGaleria: new Array(),
-            arquivospPaybox: new Array(),
+            ...CONFIG.ENT_NAMES,
+            ...CONFIG.BASES,
             ...CONFIG.INITIAL_STATE,
-            ...CONFIG.APPS
+            ...CONFIG.OTHER
         };
 
         return new Proxy(this.state, {
@@ -74,7 +84,6 @@ class Globais {
     }
 }
 export const globais = new Globais();
-
 
 //   //=========================================\\
 //   ||==========CONFIGURA OS OUVINTES==========||
@@ -142,6 +151,7 @@ const actions =
 
     }
 }
+
 //Adiciona os ouvintes a uma unica coleção (É separado antes para melhorar a legibilidade do código)//
 export const eventConfig = {
     ...actions.buttons,

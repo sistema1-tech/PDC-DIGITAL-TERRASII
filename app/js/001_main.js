@@ -44,6 +44,7 @@ async function __INIT__() {
 
         // 2. Valida as entidades permitidas
         validarEntidadesPermitidas();
+        //buscarDadosUsuarioLogado();
 
         // 3. Cria a Promise que busca todas as bases
         const basesPromise = Promise.allSettled([
@@ -84,6 +85,43 @@ async function __INIT__() {
     }
 }
 
+async function buscarDadosUsuarioLogado() {
+    if (globais.id_usuario_logado)
+    {
+        const apoio_dados_usuario = new Map();
+        //usuarioLogado
+        const config = {
+            tipo: "busc_reg",
+            criterios: `(ID==${globais.id_usuario_logado})`,
+            nomeR: "Usuarios_API",
+        }
+
+        const apoio_usuario = await executar_apiZoho(config);
+
+        apoio_dados_usuario.set("ID", apoio_usuario[0]?.ID || null);
+        apoio_dados_usuario.set("Nome_completo", apoio_usuario[0]?.Nome_completo || null);
+        apoio_dados_usuario.set("e_mail_pessoal", apoio_usuario[0]?.e_mail_pessoal || null);
+        apoio_dados_usuario.set("e_mail_profissional", apoio_usuario[0]?.e_mail_profissional || null);
+        apoio_dados_usuario.set("Cargo", apoio_usuario[0]?.Cargo || null);
+        apoio_dados_usuario.set("Departamento", apoio_usuario[0]?.Departamento || null);
+        apoio_dados_usuario.set("Entidades_permitidas", apoio_usuario[0]?.Entidades_permitidas.map(ent => ent.ID) || null);
+
+        console.log("apoio_usuario => ", apoio_usuario);
+        const ids_perfis = apoio_usuario[0]?.Perfil1.map(perfil => perfil.ID) || [];
+        console.log("ids_perfis => ", ids_perfis);
+
+        const config_perfis = {
+            tipo: "busc_reg",
+            criterios: `ID in [${ids_perfis.join(",")}]`,
+            nomeR: "Perfis_criados_API",
+        }
+
+        console.log("config_perfis => ", config_perfis);
+        const perfis = await executar_apiZoho(config_perfis);
+        console.log("perfis => ", perfis);
+    }
+}
+
 async function executarProcessosParalelos() {
     if (!globais.pag.includes('criar_cotacao')) {
         //   //======================================================================\\
@@ -104,14 +142,6 @@ async function executarProcessosParalelos() {
             if (globais.perfilResponsavel.includes("Depto. Pessoal") || globais.perfilResponsavel.includes("Controladoria")) {
 
                 if (globais.perfilResponsavel === "Depto. Pessoal") {
-
-                    //=====Remove todos os botões de classe remover-parcela e add-parcela=====\\
-                    /*DESABILIEI POIS ELE PRECISA CRIAR AO MENOS UMA PARCELA
-                    const parcelasElements = document.querySelectorAll('.remover-parcela, .add-parcela');
-                    if (parcelasElements) {
-                        parcelasElements.forEach(el => el.remove());
-                    }
-                    */
 
                     //=====Desabilita os campos de nome Num_PDC_parcela e adiciona o cursor: not-allowed=====\\
                     const numPDCParcelaElements = document.querySelectorAll('input[name="Num_PDC_parcela"]');
@@ -134,7 +164,12 @@ async function executarProcessosParalelos() {
             //=====Cria o botão de Aprovar Cotação=====\\
             criarBotao({ page: "aprovar_cotacao", removeExistingButtons: true });
 
-        } else if (["confirmar_compra", "arquivar_cotacao", "duplicar_pdc", "ver_cotacao"].includes(globais.pag)) {
+        } else if ([
+            "confirmar_compra", 
+            "arquivar_cotacao", 
+            "duplicar_pdc", 
+            "ver_cotacao"
+        ].includes(globais.pag)) {
             //=====Se for qualquer outro processo que precise apenas criar botão, cria o botão correspondente=====\\
             criarBotao({ page: globais.pag, removeExistingButtons: true });
 
@@ -155,14 +190,14 @@ async function executarProcessosParalelos() {
                 {
                     page: globais.pag,
                     removeExistingButtons:
-                        [
-                            "receber_compra",
-                            "autorizar_pagamento_subsindico",
-                            "autorizar_pagamento_sindico",
-                            "confirmar_todas_as_assinaturas",
-                            "lancar_pdc_ahreas",
-                            "confirmar_pag_ahreas"
-                        ].includes(globais.pag) ? true : false
+                    [
+                        "receber_compra",
+                        "autorizar_pagamento_subsindico",
+                        "autorizar_pagamento_sindico",
+                        "confirmar_todas_as_assinaturas",
+                        "lancar_pdc_ahreas",
+                        "confirmar_pag_ahreas"
+                    ].includes(globais.pag) ? true : false
                 }
             );
 
@@ -304,6 +339,7 @@ async function searchPageParams() {
         globais.novoPerfilResponsavel = params.perfil_resp ?? globais.novoPerfilResponsavel;
         globais.entidades_permitidas = params.ent_perm ? params.ent_perm.split(",") : globais.entidades_permitidas;
         globais.usuario_logado = params.user ?? globais.usuarioLogado;
+        globais.id_usuario_logado = params.id_user ?? globais.id_usuario_logado;
     }
     if (log) console.log("Parâmetros da página definidos:", {
         numPDC: globais.numPDC,
@@ -313,6 +349,7 @@ async function searchPageParams() {
         novoPerfilResponsavel: globais.novoPerfilResponsavel, // Adicionado
         entidades_permitidas: globais.entidades_permitidas, // Adicionado    
         usuario_logado: globais.usuario_logado, // Adicionado
+        id_usuario_logado: globais.id_usuario_logado // Adicionado
     });
     if (log) console.log("----------PARÂMETROS DA PÁGINA DEFINIDOS----------");
 }
