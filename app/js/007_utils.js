@@ -1317,7 +1317,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 input.value = '';
             });
     
-            await saveTableData_V2("Prop. criada");
+            await saveTableData_V3({status: "Prop. criada"});
     
             //window.parent.location.href = `${url}#Report:Solicitacoes_em_andamento`;
             /*setTimeout(function () {
