@@ -176,7 +176,9 @@ async function executarProcessosParalelos() {
         } else if ([
             "criar_numero_de_PDC",
             "receber_compra",
-            "ajustar_compra_compras",
+            "enviar_p_ass_control",
+            "enviar_p_assinatura",
+            "lancamentos_provisionados",
             "checagem_final",
             "autorizar_pagamento_subsindico",
             "autorizar_pagamento_sindico",
@@ -231,9 +233,11 @@ async function executarProcessosParalelos() {
         }
 
         //=====Mostra os campos de retenção se for necessário=====\\
+        /*
         if (["ajustar_compra_compras", "checagem_final", "lancar_pdc_ahreas", "confirmar_pag_ahreas", "duplicar_pdc"].includes(globais.pag)) {
             mostrarCamposRetencao();
         }
+        */
 
         //=====Desabilita os campos baseado no globais.pag passado=====\\
         desabilitarCampos();

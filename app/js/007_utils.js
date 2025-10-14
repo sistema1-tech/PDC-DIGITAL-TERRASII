@@ -1,4 +1,4 @@
-import { saveTableData_V2, enviarParaPaybox } from './006_save_utils.js';
+import { saveTableData_V3, enviarParaPaybox } from './006_save_utils.js';
 import {globais, eventConfig} from './999_config.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
@@ -76,12 +76,13 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 
         // Função de atualizar registro
         async function atualizar_reg(nomeR, ID, corpo) {
-            if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", corpo);
+            const data = { "data": corpo };
+            if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", data);
             return await recOps.updateRecordById({
                 app_name: globais.nomeApp,
                 report_name: nomeR,
                 id: ID,
-                payload: corpo
+                payload: data
             });
         }
 
@@ -688,147 +689,10 @@ export async function customModal({ botao = null, tipo = null, titulo = null, me
         };
 
         // Verifica se o tipo está no mapa e cria o payload
-        if (payloadMap[tipo]) {
-
-            // Verifica se o tipo é valido//
-            ////{Ação:seprara por parcela}////
-            const tiposValidos = {
-                "criar_cotacao_DP": false,
-                "editar_cotacao_DP": false,
-                "criar_cotacao_controladoria": false,
-                "editar_cotacao_controladoria": false,
-                "solicitar_aprovacao_sindico": false,
-                "finalizar_provisionamento": false,
-                "enviar_p_checagem_final": false,
-                "enviar_p_assinatura": false,
-                "confirmar_compra": pgtoAnt ? true : false,
-                "confirmar_recebimento": true
-            };
-
-            if (Object.keys(tiposValidos).includes(tipo)) {
-                let status = null;
-                if (tipo === "confirmar_recebimento") {
-                    status = "Chec. final";
-                } else if (tipo === "criar_cotacao_controladoria" || tipo === "editar_cotacao_controladoria") {
-                    status = "Propostas criadas controladoria";
-                } else if (tipo === "confirmar_compra") {
-                    status = "Chec. final";
-                }
-                await saveTableData_V2(status, tiposValidos[tipo]);
-            }
-
-            payload = { data: [{ ...payloadMap[tipo] }] };
-            //payload = { data: [{ ...payloadMap[tipo], Datas: getDates(tipo) }] };
-
-        } else if (tipo === 'salvar_cot' || tipo === 'editar_pdc') {
-
-            toggleElements(false);
-            try {
-                console.log("TENTANDO SALVAR COTACAO")
-                await saveTableData_V2();
-
-                window.open(`${url}#Script:page.refresh`, '_top');
-                return;
-            } catch (erro) {
-                console.error('Erro ao salvar cotação:', erro);
-                toggleElements(true);
-                messageElement.innerHTML = 'Ocorreu um erro ao salvar a cotação. Tente novamente.';
-                return;
-            }
-        } else if (tipo === 'remover_fornecedor' || tipo === 'remover_produto') {
+        if (tipo === 'remover_fornecedor' || tipo === 'remover_produto') {
             overlay.remove();
             return Promise.resolve(true);
-        } else if (tipo === 'duplicar_pdc') {
-            //MODIFICA PARA QUE UMA CÓPIA SEJA CRIADA
-            globais.cotacaoExiste = false;
-
-            //CRIA UM NOVO ID TEMPORÁRIO PARA A CÓPIA E LIMPA O NUMERO DO PDC
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-
-            globais.numPDC_temp = `${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
-            globais.numPDC = null;
-
-            //MUDA O TIPO DE SALVAMENTO
-            globais.tipo = "criar_pdc";
-
-            //LIMPA AS CÉLULAS DE QUANTIDADE E VALOR UNITÁRIO
-            const quantidadeTds = document.querySelectorAll('td.quantidade');
-            const valorUnitTds = document.querySelectorAll('td.valor-unit');
-            const totalForns = document.querySelectorAll('td.total-fornecedor');
-            [...quantidadeTds, ...valorUnitTds, ...totalForns].forEach(td => {
-                td.textContent = '';
-                if (td.dataset.valor_original) delete td.dataset.valor_original;
-
-                // Limpar a célula do lado direito se for valor unitário
-                if (td.classList.contains('valor-unit')) {
-                    const nextTd = td.nextElementSibling;
-                    if (nextTd) {
-                        nextTd.textContent = '';
-                        if (nextTd.dataset.valor_original) delete nextTd.dataset.valor_original;
-                    }
-                }
-            });
-
-            //LIMPA OS FORNECEDORES APROVADOS
-            const elemsAprovados = document.querySelectorAll('.forn-aprovado');
-            elemsAprovados.forEach(elem => {
-                elem.classList.remove('forn-aprovado');
-            });
-
-            //LIMPA AS LINHAS DE PARCELAS
-            const divsParcela = document.querySelectorAll('div.parcela');
-            divsParcela.forEach(div => {
-                div.remove();
-            });
-            //LIMPA AS CÉLULAS DE VALOR DA CLASSIFICAÇÃO CONTÁBIL
-            const formClassificacao = document.querySelector('#form-classificacao');
-            const inputsValor = formClassificacao.querySelectorAll('input[name="Valor"]');
-            inputsValor.forEach(input => {
-                input.value = '';
-            });
-
-            await saveTableData_V2("Prop. criada");
-            window.open(`${url}#Report:Solicitacoes_em_andamento`, '_top');
-            return;
-        }
-
-        try {
-            console.log("PAYLOAD => ", JSON.stringify(payload));
-            const resposta = await executar_apiZoho({
-                tipo: "atualizar_reg",
-                ID: globais.idPDC,
-                corpo: payload,
-                nomeR: globais.nomeRelPDC
-            });
-            console.log("RESPOSTA => ", JSON.stringify(resposta));
-
-            // Fecha o modal após sucesso
-            if (resposta && resposta.code === 3000) {
-                overlay.remove();
-                if (tipo == "confirmar_compra") {
-                    const layoutName = "pedido_PDF";
-                    const link_layout = `${url}guillaumon/${globais.nomeApp}/pdf/${layoutName}?id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
-                    window.open(`${link_layout}`, '_blank', 'noopener,noreferrer');
-                }
-
-                // Opcional: recarregar a página ou atualizar a interface
-                window.open(`${url}#Script:page.refresh`, '_top');
-            } else {
-                throw new Error('Falha na atualização');
-            }
-        } catch (erro) {
-            console.error('Erro ao processar requisição:', erro);
-            // Volta para o estado normal do modal em caso de erro
-            toggleElements(true);
-            // Opcional: mostrar mensagem de erro para o usuário
-            messageElement.innerHTML = 'Ocorreu um erro ao processar sua solicitação. Tente novamente.';
-        }
+        } 
     };
 
     // Montagem final do popup
@@ -1049,6 +913,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
                 'solicitar_ajuste_ao_compras',
                 'enviar_p_checagem_final',
                 'tratar_control',
+                'enviar_p_ass_control',
                 'enviar_p_assinatura',
                 'autorizar_pagamento_sindico',
                 'autorizar_pagamento_subsindico',
@@ -1119,7 +984,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         if (globais.pag === "criar_numero_de_PDC") {
             stats_salvarCot = null;
 
-        } else if (globais.pag === "ajustar_compra_compras") {
+        } else if (globais.pag === "enviar_p_assinatura") {
             stats_salvarCot = "Chec. final";
 
         } else if (globais.pag === "checagem_final") {
@@ -1132,6 +997,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         let tudoAssinado = false;
     
         if ([
+            "enviar_p_ass_control",
             "enviar_p_assinatura",
             "autorizar_pagamento_sindico",
             "autorizar_pagamento_subsindico",
@@ -1186,7 +1052,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             }
             if(log) console.log("assinaturasIniciais => ", JSON.stringify(assinaturasIniciais));
             function buscarAssinaturas() {
-                const log = true;
+                const log = false;
                 if (log) console.log("++++++++++BUSCANDO ASSINATURAS++++++++++");
     
                 const assinantes = document.querySelectorAll('.assinantes .assinante');
@@ -1220,7 +1086,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
             }
     
-            if (acao === "enviar_p_assinatura") {
+            if (acao === "enviar_p_assinatura" || acao === "enviar_p_ass_control") {
                 apoio_paramExtras.Assinaturas.push(...Object.values(assinaturasIniciais));
     
             } else {
@@ -1274,8 +1140,15 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             solicitar_ajuste_ao_compras: { status: "Ajuste sol. control.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }},
             enviar_p_checagem_final: { status: "Chec. final" },
             tratar_control: { paramsExtraPDC: { Status_controladoria: "Tratado" } },
+            enviar_p_ass_control:
+            {
+                status: "Prop. criada",
+                sepPorParc: globais.perfilResponsavel.includes("Controladoria"),
+                paramsExtraPDC: apoio_paramExtras
+            },
             enviar_p_assinatura: {
                 status: "Ass. control.",
+                sepPorParc: globais.perfilResponsavel.includes("Controladoria"),
                 paramsExtraPDC: apoio_paramExtras
             },
             autorizar_pagamento_subsindico: {
@@ -1297,17 +1170,17 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         if (acao in statusMap) {
             const params = statusMap[acao];
-            if(acao.includes("aprov_cot"))
+            if(["aprov_cot", "enviar_p_ass_control"].includes(acao))
             {
                 await gerar_num_pdc();
             }
     
-            await saveTableData_V2(params);
+            const ids_pdcs_criados = await saveTableData_V3(params);
 
             if (acao.includes("finalizar_provisionamento")) {
                 if (globais.perfilResponsavel.includes("Depto. Pessoal")) {
                     document.getElementById('pag_antecipado').setAttribute('checked', 'checked');
-                    await saveTableData_V2({ status: "Chec. final", sepPorParc: true });
+                    await saveTableData_V3({ status: "Chec. final", sepPorParc: true });
                     //=====REMOVE ALGUNS DADOS DO PDC E FAZ A COPIA DAS PARCELAS=====\\
                     //CRIA UM NOVO ID TEMPORÁRIO PARA A CÓPIA E LIMPA O NUMERO DO PDC
                     const now = new Date();
@@ -1346,15 +1219,15 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     });
                     document.getElementById('pag_antecipado').removeAttribute('checked');
     
-                    await saveTableData_V2({ status: "Prop. criada", sepPorParc: true, paramExtra: {pag_antecipado: false}});
+                    await saveTableData_V3({ status: "Prop. criada", sepPorParc: true, paramExtra: {pag_antecipado: false}});
     
                 }
             } else if (acao === 'confirmar_compra') {
                 if (tipoSolicitacao === 'SERVIÇO' || globais.perfilResponsavel.includes("Controladoria")) {
-                    await saveTableData_V2({ status: "Separado em parcelas" });
+                    await saveTableData_V3({ status: "Separado em parcelas" });
 
                 } else if (pgtoAnt) {
-                    await saveTableData_V2({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
+                    await saveTableData_V3({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
                     
                 }
     
@@ -1369,7 +1242,15 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     window.open(link_layout, '_blank', 'noopener,noreferrer');
                 }
             } else if (acao === 'confirmar_recebimento') {
-                await saveTableData_V2({ status: "Separado em parcelas" });
+                await saveTableData_V3({ status: "Separado em parcelas" });
+            }
+            else if(acao === 'enviar_p_ass_control')
+            {
+                const resp = await executar_apiZoho({tipo: "atualizar_reg", ID: ids_pdcs_criados[0], corpo: {Status_geral: "Ass. control."}, nomeR: globais.nomeRelPDC});
+                if(globais.tipo === "editar_pdc")
+                {
+                    await saveTableData_V3({ status: "Separado em parcelas" });                
+                }
             }
             /*
             if(params.status == "Pag. aut.")
@@ -1438,13 +1319,18 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
             await saveTableData_V2("Prop. criada");
     
-            window.parent.location.href = `${url}#Report:Solicitacoes_em_andamento`;
-            setTimeout(function () {
+            //window.parent.location.href = `${url}#Report:Solicitacoes_em_andamento`;
+            /*setTimeout(function () {
                 window.open(`${url}#Script:page.refresh`, '_top');
     
             }, 1000);
-    
-            return;
+            */
+           var config = {
+                action: "open",
+                url: `${url}#Report:Solicitacoes_em_andamento`,
+                window: "same"
+            };
+            ZOHO.CREATOR.UTIL.navigateParentURL(config);
         }
         if (log) console.log("----------PROCESSO DE SALVAMENTO CONCLUÍDO----------");
         
@@ -1455,9 +1341,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             mensagem:`<p>${error.message}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,
             confirmText: 'Ok!'
         });
-        
     }
-
 }
 
 /**
@@ -1476,7 +1360,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
  *   let forms = ["form-pagamento", "dados-nf"];
  */
 export function desabilitarCampos() {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++DESABILITANDO CAMPOS++++++++++");
     if (log) console.log("globais.pag => ", globais.pag);
 
@@ -1485,7 +1369,7 @@ export function desabilitarCampos() {
     let formsParaManterHabilitados = [];
     let aTagsParaManterHabilitados = [];
 
-    if (['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra'].some(str => globais.pag?.includes(str))) {
+    if (['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra', 'lancamentos_provisionados'].some(str => globais.pag?.includes(str))) {
         return;
     }
     if(log) console.log("Passou do if inicial!");
@@ -1620,7 +1504,7 @@ function validateFields(acao)
         ].includes(acao)
     )
     {
-        const log = true;
+        const log = false;
         if(log) console.log("++++++++++VALIDANDO CAMPOS++++++++++");
         //     //=====================================================\\
         //     ||==========ANALIZANDO CLASSIFICAÇÃO CONTÁBIL==========||
@@ -1747,7 +1631,7 @@ export function formatDate(dateStr, format) {
 
 async function gerar_num_pdc()
 {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++GERANDO NÚMERO DO PDC++++++++++");
 
     //Busca o último número de PDC criado

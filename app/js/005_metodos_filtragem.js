@@ -39,7 +39,6 @@ export function criarBotao({page = null, removeExistingButtons = false})
             case "editar_cotacao_eventos":
             case "criar_cotacao_DP":
             case "editar_cotacao_DP":
-            case "criar_cotacao_controladoria":
             case "editar_cotacao_controladoria":
                 configurarBotao('approve-sindico-btn adjust-btn', 'Sol. Aprov. Síndico', "solicitar_aprovacao_sindico", null, "Deseja solicitar a aprovação do síndico?");
                 if (page.includes("editar_cotacao")) setTimeout(() => criarBotao({page: "arquivar_cotacao"}), 0);
@@ -225,10 +224,14 @@ export function criarBotao({page = null, removeExistingButtons = false})
             case "solicitar_ajuste_ao_compras":
                 configurarBotao('adjust-btn', 'Solicitar ajuste', page, null, 'Deseja solicitar o AJUSTE deste PDC?');
                 break;
+            
+            case "criar_cotacao_controladoria":
+                configurarBotao('confirm-purchase-btn adjust-btn', 'Sol. aut. Síndico', 'enviar_p_ass_control', null, 'Deseja enviar o PDC para que o SÍNDICO e o SUBSÍNDICO possa autorizar?');
+                break;
 
-            case "ajustar_compra_compras":
-                configurarBotao('confirm-purchase-btn adjust-btn', 'Enviar p/ checagem final', 'enviar_p_checagem_final', null, 'Deseja enviar o PDC para a CHECAGEM FINAL da controladoria?');
-                //setTimeout(() => criarBotao({page: "arquivar_cotacao"}));
+            case "lancamentos_provisionados":
+                configurarBotao('confirm-purchase-btn adjust-btn', 'Sol. aut. Síndico', 'enviar_p_ass_control', null, 'Deseja enviar o PDC para que o SÍNDICO e o SUBSÍNDICO possa autorizar?');
+                setTimeout(() => criarBotao({page: "arquivar_cotacao"}));
                 break;
 
             case "checagem_final":

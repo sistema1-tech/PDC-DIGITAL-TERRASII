@@ -16,7 +16,7 @@ import {
     removeProductRow,
     addProductRow,
 } from './003_table_utils.js'
-import { customModal, customModal_V2 } from './007_utils.js';
+import { customModal, customModal_V2, formatToBRL_V2 } from './007_utils.js';
 
 //   //===============================================\\
 //   ||==========DEFINE AS VARIÁVEIS GLOBAIS==========||

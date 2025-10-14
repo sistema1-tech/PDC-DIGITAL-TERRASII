@@ -133,6 +133,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
     const log = false;
 
     if(log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
+
     //====================BUSCA OS DADOS INICIAIS DO PDC====================\\
     if(log) console.log("=> BUSCANDO DADOS INICIAIS DO PDC <=");
     const formDdsInicais = document.querySelector('#dados-PDC');
@@ -226,7 +227,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         }
         if (vencimentos[0].Num_PDC_parcela) {
             dadosIniciaisPdc["Numero_do_PDC"] = indiceParc == null && vencimentos[0].Num_PDC_parcela.includes("/")?globais.numPDC:vencimentos[0].Num_PDC_parcela;
-            dadosIniciaisPdc["Num_princ_PDC"] = indiceParc == null && vencimentos[0].Num_PDC_parcela.includes("/")?globais.numPDC:vencimentos[0].Num_PDC_parcela;
+            dadosIniciaisPdc["Num_princ_PDC"] = (typeof globais.numPDC === 'string' && globais.numPDC.split) ? globais.numPDC.split("/")[0] : globais.numPDC;
         }
 
         if(log) console.log("Nome: " + "Vencimento_previsto" + ", Valor: " + vencimentos[0].Vencimento_previsto);
@@ -588,24 +589,17 @@ function getItemData(base64String) {
 //================================================================\\
 //===========================SALVA TUDO===========================\\
 //================================================================\\
-/**
- * Salva os dados da tab.
- * 
- * @function saveTableData
- * @param {Object} options - Opções para a função.
- * @param {String} options.tipo - Tipo de ação a ser realizada (editar ou criar).
- * @returns {Promise} Uma promessa que resolve após a conclusão da ação.
- * 
- * @description
- * Esta função é responsável por salvar os dados da tab. Se uma cotação já existe, ela limpa a cotação antiga e salva a nova. Caso contrário, cria uma nova cotação.
- */
-export async function saveTableData_V2({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
+
+export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
-        const log = false;
+        const log = true;
         if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);
         if(log) console.log("paramsExtraPDC => ", paramsExtraPDC);
+
+
+        const ids_pdcs_criados = new Array();
     
         if (globais.cotacaoExiste) {
             if(log) console.log("=> COTAÇÃO EXISTE <=");
@@ -613,9 +607,7 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                 if(log) console.log("*Não é separação por parcela, limpando dados da cotação");
                 for (const id of globais.idsCotacao) {
                     let payload = {
-                        data: {
                             Ativo: false
-                        }
                     };
                     const resp = await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
                     if(resp.code !== 3000) {
@@ -628,10 +620,10 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
             } else {
                 if(log) console.log("*É separação por parcela");
                 globais.cotacaoExiste = false;
-    
+                
             }
             if(log) console.log("*Marca que cotação não existe");
-            await saveTableData_V2({status, sepPorParc, paramsExtraPDC});
+            ids_pdcs_criados.push(...await saveTableData_V3({status, sepPorParc, paramsExtraPDC}));
     
         } else {
             if(log) console.log("=> COTACAO NÃO EXISTE <=");
@@ -666,11 +658,8 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                 let idNovoPDC = null;
                 if (globais.tipo === 'editar_pdc') {
                     if(log) console.log("É EDIÇÃO DE PDC!");
-                    let payload = {
-                        data: dadosPDC
-                    };
     
-                    respPDC = await executar_apiZoho({ tipo: "atualizar_reg", ID: globais.idPDC, corpo: payload, nomeR: globais.nomeRelPDC });
+                    respPDC = await executar_apiZoho({ tipo: "atualizar_reg", ID: globais.idPDC, corpo: dadosPDC, nomeR: globais.nomeRelPDC });
                     console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
     
                 } else {
@@ -683,6 +672,7 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
                     if (respPDC.code === 3000) {
                         if (globais.idPDC === null) globais.idPDC = respPDC.data.ID; // Preenche globais.idPDC com o ID retornado
                         idNovoPDC = respPDC.data.ID;
+                        ids_pdcs_criados.push(idNovoPDC);
                     }
                 }
 
@@ -761,7 +751,7 @@ export async function saveTableData_V2({status = null, sepPorParc = false, param
             globais.cotacaoExiste = true;
             globais.tipo = apoioTipoAnt;
         }
-        
+        return ids_pdcs_criados;
     } catch (error) {
         rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
         customModal_V2({
@@ -778,9 +768,7 @@ async function rollbackSaveData(rbAction = null, rbParams = {}) {
     if(rbAction === "reset_price_quote") {
         for (const id of globais.idsCotacao) {
             let payload = {
-                data: {
                     Ativo: true
-                }
             };
             await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
 

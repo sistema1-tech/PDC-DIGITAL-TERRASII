@@ -1028,7 +1028,7 @@ export function atualizarOuvintesTabCot() {
                 if (j === 1) { // Coluna de quantidade
                     celula.addEventListener('blur', (event) => {
                         
-                        if (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final") {
+                        if (globais.pag === "lancamentos_provisionados" || globais.pag === "checagem_final") {
                             const valorAtual = converterStringParaDecimal(event.target.dataset.valor_original) || 0; // Obtém o valor original
                             const novoValor = converterStringParaDecimal(event.target.innerText) || 0; // Obtém o novo valor
                             if (novoValor > valorAtual) {
