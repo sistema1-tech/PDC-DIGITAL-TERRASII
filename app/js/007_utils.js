@@ -160,7 +160,7 @@ export function formatToBRL_V2(v, nd = 2, alt = true) {
     if (log) console.log("Número de decimais => ", nd);
     let ap_vlrOrig = null;
 
-    if (v.dataset && v.dataset.valor_original) {
+    if (v.dataset) {
         ap_vlrOrig = v.dataset.valor_original;
         delete v.dataset.valor_original;
     }
