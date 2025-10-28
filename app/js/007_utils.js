@@ -927,8 +927,8 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
             const valido = validateFields(acao);
             if (!valido) return false;
             */
-            const resp = validateFields(acao);
-            if (resp !== true) return true;
+            //const resp = validateFields(acao);
+            //if (resp !== true) return true;
             await prepararParaSalvar(acao, infoInserida);
         }
         if (log) console.log("----------RESPOSTA TRATADA, RETORNANDO TRUE----------");
