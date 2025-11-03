@@ -959,9 +959,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         
         if(acao === "autorizar_pagamento_subsindico")
         {
-            let crit = `(Inicio <="${data_atual_formatada}" && Fim>="${data_atual_formatada}")`;
-            ap_status = "Ass. subsindico";
             /*
+            let crit = `(Inicio <="${data_atual_formatada}" && Fim>="${data_atual_formatada}")`;
+            let ap_status = "Ass. subsindico";
+            
             const resp = await executar_apiZoho({
                 tipo: "busc_reg", 
                 criterios: crit, 
@@ -994,7 +995,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         let apoio_paramExtras = {};
         apoio_paramExtras.Assinaturas = [];
         let tudoAssinado = false;
-        
+
 
         let ap_status_subsindico = "Ass. subsindico";
     
@@ -1005,9 +1006,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             "autorizar_pagamento_subsindico",
             "confirmar_todas_as_assinaturas"
         ].includes(acao)) {
-            const apoio_assin_inic = 
-            console.log("globais.user => ", globais.usuario_logado);
-            globais.usuario_logado == "patrick_kum@hotmail.com"?
+            const apoio_assin_inic = globais.usuario_logado == "patrick_kum@hotmail.com"?
             {
                 "Patrick": {
                     Cargo: "Controladoria",
@@ -1031,7 +1030,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 }
             }
 
-            if(parseFloat(document.querySelector('#valor-total-pagar').innerText) >= 10000)
+            if(parseFloat(document.querySelector('#valor-total-pagar').innerText) >= 3000)
             {
                 apoio_assin_inic["Joana"] = {
                     Cargo: "Administrativo",

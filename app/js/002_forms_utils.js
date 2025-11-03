@@ -1359,7 +1359,7 @@ export function calcularValorTotalPagar() {
 //====================ANEXOS====================//
 //==============================================//
 export async function preencherListaAnexosV2(anexos) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
     
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];

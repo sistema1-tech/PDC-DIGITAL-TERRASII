@@ -512,15 +512,16 @@ async function getGalleryFiles() {
         const apGalleryItems = document.querySelectorAll('.gallery-item');
         const galleryItems = Array.prototype.slice.call(apGalleryItems, 0, -2);
         const files = Array.from(galleryItems).map(item => {
+            console.log("item => ", item);
             if (item.firstChild && item.firstChild.hasAttribute('data-src')) {
                 const dataSrc = item.firstChild.getAttribute('data-src');
-                return {
-                    type: getItemType(dataSrc),
-                    data: getItemData(dataSrc),
-                };
-            } else {
-                return {};
+
+                if (dataSrc && dataSrc.startsWith('data:')) {
+                    return { type: getItemType(dataSrc), data: getItemData(dataSrc) };
+                }
             }
+            return {};
+            
         });
 
         const promises = files.map(file => {
@@ -545,7 +546,7 @@ function getItemType(base64String) {
     */
 
 function getItemType(base64String) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PEGANDO TIPO DO ARQUIVO++++++++++");
     const match = base64String.match(/^data:([^;]+);base64,/);
     if(log) console.log("match => ", match);
@@ -563,7 +564,7 @@ function getItemType(base64String) {
 }
 
 function getItemData(base64String) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
     const fileType = getItemType(base64String);
     const fileContent = atob(base64String.replace(`data:${base64String.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
