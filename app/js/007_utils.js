@@ -956,12 +956,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         // Nova constante no formato 'aa-mmm-dd' com mês em inglês
         //const data_atual_formatada_en = data_atual.format('DD-MMM-YYYY HH:mm:ss');
         let alcada_temp = null;
-        let ap_status_subsindico;
         
         if(acao === "autorizar_pagamento_subsindico")
         {
             let crit = `(Inicio <="${data_atual_formatada}" && Fim>="${data_atual_formatada}")`;
-            ap_status_subsindico = "Ass. subsindico";
+            ap_status = "Ass. subsindico";
             /*
             const resp = await executar_apiZoho({
                 tipo: "busc_reg", 
@@ -995,6 +994,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         let apoio_paramExtras = {};
         apoio_paramExtras.Assinaturas = [];
         let tudoAssinado = false;
+        let ap_status_subsindico = "Ass. subsindico";
     
         if ([
             "enviar_p_ass_control",
@@ -1003,8 +1003,8 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             "autorizar_pagamento_subsindico",
             "confirmar_todas_as_assinaturas"
         ].includes(acao)) {
-            console.log("globais.user => ", globais.usuario_logado);
             const apoio_assin_inic = 
+            console.log("globais.user => ", globais.usuario_logado);
             globais.usuario_logado == "patrick_kum@hotmail.com"?
             {
                 "Patrick": {
@@ -1028,9 +1028,22 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Assinado: true
                 }
             }
+
+            if(parseFloat(document.querySelector('#valor-total-pagar').innerText) >= 10000)
+            {
+                apoio_assin_inic["Joana"] = {
+                    Cargo: "Administrativo",
+                    Funcao: "Síndico",
+                    Usuario: "Joana",
+                    E_mail_usuario: "sindico@tsj2.com.br",
+                    IP: "",
+                    Data_da_assinatura: "",
+                    Assinado: false
+                }
+            }
+
             //
             const assinaturasIniciais = {
-                ...apoio_assin_inic,
                 "Gilson": {
                     Cargo: "Administrativo",
                     Funcao: "Gerente operacional",
@@ -1040,15 +1053,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Data_da_assinatura: "",
                     Assinado: false
                 },
-                "Joana": {
-                    Cargo: "Administrativo",
-                    Funcao: "Síndico",
-                    Usuario: "Joana",
-                    E_mail_usuario: "sindico@tsj2.com.br",
-                    IP: "",
-                    Data_da_assinatura: "",
-                    Assinado: false
-                }
+                ...apoio_assin_inic,
             }
             if(log) console.log("assinaturasIniciais => ", JSON.stringify(assinaturasIniciais));
             function buscarAssinaturas() {
@@ -1094,9 +1099,9 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
                 console.log("assinaturas já criadas", apoio_paramExtras.Assinaturas);
                 if (acao === "autorizar_pagamento_subsindico") {
-                    apoio_paramExtras.Assinaturas[1].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[1].Data_da_assinatura = data_atual_formatada;
-                    apoio_paramExtras.Assinaturas[1].Assinado = true;
+                    apoio_paramExtras.Assinaturas[0].IP = globais.userIP;
+                    apoio_paramExtras.Assinaturas[0].Data_da_assinatura = data_atual_formatada;
+                    apoio_paramExtras.Assinaturas[0].Assinado = true;
 
                 } else if (acao === "autorizar_pagamento_sindico") {
                     apoio_paramExtras.Assinaturas[2].IP = globais.userIP;
