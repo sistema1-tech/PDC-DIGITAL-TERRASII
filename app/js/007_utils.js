@@ -994,6 +994,8 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         let apoio_paramExtras = {};
         apoio_paramExtras.Assinaturas = [];
         let tudoAssinado = false;
+        
+
         let ap_status_subsindico = "Ass. subsindico";
     
         if ([
@@ -1641,7 +1643,6 @@ async function gerar_num_pdc()
 
     //Busca o último número de PDC criado
     const ult_num_pdc = await executar_apiZoho({tipo:'busc_reg', criterios: '(ID!=0)', nomeR: 'Ultimo_PDC_criado', nomeF: 'PDC_Digital'});
-    if(log) console.log(`---------------------\nRESULTADO DA API: ${ult_num_pdc}\n---------------------`)
     const numeroPDC = (Number(ult_num_pdc[0]?.Num_princ_PDC || 0)) + 1;
     globais.numPDC = numeroPDC;
     if(log) console.log("Número do último PDC => ", numeroPDC);
