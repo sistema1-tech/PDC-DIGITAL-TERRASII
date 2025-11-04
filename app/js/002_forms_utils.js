@@ -1368,6 +1368,7 @@ export async function preencherListaAnexosV2(anexos) {
         "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx", 
         "vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
         ".vnd.ms-excel": "xls",
+        "octet-stream": "msg",
         "plain": "txt",
     };
     const galleryElement = document.getElementById('gallery');

@@ -555,6 +555,7 @@ function getItemType(base64String) {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'application/docx',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'application/pptx',
       'text/plain': 'txt',
+      'octet-stream': 'msg',
       'application/.vnd.ms-excel': 'xls',
       // adicione mais tipos de arquivos aqui, se necessário
     };
