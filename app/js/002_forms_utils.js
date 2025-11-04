@@ -1451,6 +1451,7 @@ export async function preencherListaAnexosV2(anexos) {
                 fileElement.setAttribute('file-name', fileName);
                 fileElement.alt = 'Minitatura da imagem ou PDF';
                 fileElement.style.display = 'none';
+                
 
                 const checkSrcInterval = setInterval(() => {
                     if (imgEl && imgEl.src && imgEl.src !== "") {
@@ -1459,14 +1460,17 @@ export async function preencherListaAnexosV2(anexos) {
                         const initUrl = 'https://terrasii.zohocreatorportal.com';
                         if (typesToView.includes(fileType) && fileSize < 20) {
                             fileElement.src = imgEl.src;
-                            fileElement.setAttribute('data-download-src', imgEl.src);
                             if (fileType === 'PDF') {
                                 fileElement.setAttribute('data-type', 'iframe');
-                                fileElement.removeAttribute('data-download-src');
                                 fileElement.setAttribute('data-download-url', `${initUrl}${newAnexo}`);
-                                //==========CRIANDO UM PLACEHOLDER PARA OS ARQUIVOS QUE NÃO POSSUEM MINIATURAS==========//
-                                fileElement.src = 'https://placehold.co/100?text=' + fileType;
+                                fileElement.src = `https://placehold.co/100?text=${fileType}`;
+
+                            }else
+                            {
+                                fileElement.setAttribute('data-download-src', imgEl.src);
+
                             }
+
                         } else {
                             const cloneFileElement = fileElement.cloneNode(true);
                             cloneFileElement.style.width = '100px';
@@ -1475,18 +1479,51 @@ export async function preencherListaAnexosV2(anexos) {
                             cloneFileElement.removeAttribute('data-fancybox');
 
                             //==========CRIANDO UM PLACEHOLDER PARA OS ARQUIVOS QUE NÃO POSSUEM MINIATURAS==========//
-                            cloneFileElement.src = 'https://placehold.co/100?text=' + fileType;
+                            cloneFileElement.src = `https://placehold.co/100?text=${fileType}`;
                             fileElement = document.createElement('a');
                             fileElement.href = `${initUrl}${newAnexo}`;
                             fileElement.download = `${initUrl}${newAnexo}`;
                             fileElement.appendChild(cloneFileElement);
                         }
                         fileElement.setAttribute('data-src', imgEl.src);
+                        fileElement.insertAdjacentText('afterend',fileName.slice(fileName.indexOf('_')+1,fileName.length));
+
+                        //==========CRIANDO UM ELEMENTO COM O NOME DO ARQUIVO==========//
+                        const fileNameElement = document.createElement('p');
+                        fileNameElement.style.maxWidth = '100px';
+                        fileNameElement.style.fontSize = '11pt';
+                        fileNameElement.style.marginLeft = 'auto';
+                        fileNameElement.style.marginRight = 'auto';
+                        fileNameElement.style.wordBreak = 'break-word';
+                        fileNameElement.classList.add('file-name');
+                        fileNameElement.textContent = fileName.slice(fileName.indexOf('_')+1,fileName.length);
 
                         //==========ADICIONANDO O ELEMENTO A GALERIA==========//
                         fileElement.style.display = 'block';
+
                         fileContainer.appendChild(fileElement);
+                        fileContainer.appendChild(fileNameElement);
+
                         newLoadingSpinner.remove();
+
+
+                        // Adiciona um evento de clique ao elemento
+                        console.log('Adicinoando botão direito');
+                        const opcaoDownload = document.createElement('a');
+                        opcaoDownload.href = `${initUrl}${newAnexo}`; // Define o caminho para o arquivo que deseja baixar
+                        opcaoDownload.textContent = 'Baixar arquivo'; // Define o texto da opção de menu
+                        opcaoDownload.download = fileName; 
+
+                        fileElement.addEventListener('contextmenu', function(event) {
+                            event.preventDefault(); // Previne o comportamento padrão do botão direito do mouse
+                            console.log('Botão direito clicado');
+
+                            // Adiciona a opção de menu ao contexto do mouse
+                            document.body.appendChild(opcaoDownload);
+                            opcaoDownload.click(); // Simula um clique no link para iniciar o download
+                            document.body.removeChild(opcaoDownload); // Remove a opção de menu do contexto do mouse
+                        });
+                        console.log('Arquivo adicionado');
 
                         clearInterval(checkSrcInterval);
                         resolve();

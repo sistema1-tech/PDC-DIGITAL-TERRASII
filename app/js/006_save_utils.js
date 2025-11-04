@@ -696,10 +696,12 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 {
                     let qtd_docs = Object.keys(arquivos).length;
                     for (let i = 0; i < globais.arquivosGaleria.length; i++) {
+                        console.log("globais.arquivosGaleria[i] => ", globais.arquivosGaleria[i]);
                         arquivos[qtd_docs] = { type: `arquivo_${i}`, data: globais.arquivosGaleria[i]};
                         qtd_docs++;
                     }
                     qtdFiles = Object.keys(arquivos).length;
+                    throw new Error("VERIFICAR ESSE TRECHO DE CÓDIGO DE ARQUIVOS DA GALERIA!");
                     
                 }
                 if(log) console.log("Quantidade de arquivos => ", qtdFiles);
