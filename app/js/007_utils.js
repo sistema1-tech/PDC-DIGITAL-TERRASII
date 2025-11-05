@@ -1006,33 +1006,21 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             "autorizar_pagamento_subsindico",
             "confirmar_todas_as_assinaturas"
         ].includes(acao)) {
-            const apoio_assin_inic = globais.usuario_logado == "patrick_kum@hotmail.com"?
+            const apoio_assin_inic = new Map();
+            apoio_assin_inic["Financeiro"] = 
             {
-                "Patrick": {
-                    Cargo: "Controladoria",
-                    Funcao: "Auxiliar controladoria",
-                    Usuario: "Patrick",
-                    E_mail_usuario: "patrick_kum@hotmail.com",
-                    IP: globais.userIP,
-                    Data_da_assinatura: data_atual_formatada,
-                    Assinado: true
-                }
-            }:
-            {
-                "Financeiro": {
-                    Cargo: "Controladoria",
-                    Funcao: "Auxiliar controladoria",
-                    Usuario: "Maiara",
-                    E_mail_usuario: "Controladoriatsj2@gmail.com",
-                    IP: globais.userIP,
-                    Data_da_assinatura: data_atual_formatada,
-                    Assinado: true
-                }
+                Cargo: "Controladoria",
+                Funcao: "Auxiliar controladoria",
+                Usuario: "Maiara",
+                E_mail_usuario: "Controladoriatsj2@gmail.com",
+                IP: globais.userIP,
+                Data_da_assinatura: data_atual_formatada,
+                Assinado: true
             }
 
             if(parseFloat(document.querySelector('#valor-total-pagar').innerText) >= 3000)
             {
-                apoio_assin_inic["Joana"] = {
+                apoio_assin_inic["Joana"]={
                     Cargo: "Administrativo",
                     Funcao: "Síndico",
                     Usuario: "Joana",
@@ -1097,18 +1085,21 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
             } else {
                 buscarAssinaturas();
-
-                console.log("assinaturas já criadas", apoio_paramExtras.Assinaturas);
+                console.log("assinaturas j  criadas", apoio_paramExtras.Assinaturas);
                 if (acao === "autorizar_pagamento_subsindico") {
-                    apoio_paramExtras.Assinaturas[0].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[0].Data_da_assinatura = data_atual_formatada;
-                    apoio_paramExtras.Assinaturas[0].Assinado = true;
-
+                    const indice = 0;
+                    if (apoio_paramExtras.Assinaturas.length > indice) {
+                        apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+                        apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+                        apoio_paramExtras.Assinaturas[indice].Assinado = true;
+                    }
                 } else if (acao === "autorizar_pagamento_sindico") {
-                    apoio_paramExtras.Assinaturas[2].IP = globais.userIP;
-                    apoio_paramExtras.Assinaturas[2].Data_da_assinatura = data_atual_formatada;
-                    apoio_paramExtras.Assinaturas[2].Assinado = true;
-
+                    const indice = 2;
+                    if (apoio_paramExtras.Assinaturas.length > indice) {
+                        apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+                        apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+                        apoio_paramExtras.Assinaturas[indice].Assinado = true;
+                    }
                 }
             }
             tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
