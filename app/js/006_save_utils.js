@@ -546,7 +546,7 @@ function getItemType(base64String) {
     */
 
 function getItemType(base64String) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PEGANDO TIPO DO ARQUIVO++++++++++");
     const match = base64String.match(/^data:([^;]+);base64,/);
     if(log) console.log("match => ", match);
@@ -565,7 +565,7 @@ function getItemType(base64String) {
 }
 
 function getItemData(base64String) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
     const fileType = getItemType(base64String);
     const fileContent = atob(base64String.replace(`data:${base64String.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
@@ -594,7 +594,7 @@ function getItemData(base64String) {
 
 export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
-        const log = true;
+        const log = false;
         if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);
@@ -697,12 +697,10 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                     let qtd_docs = Object.keys(arquivos).length;
                     for (let i = 0; i < globais.arquivosGaleria.length; i++) {
                         console.log("globais.arquivosGaleria[i] => ", globais.arquivosGaleria[i]);
-                        arquivos[qtd_docs] = { type: `arquivo_${i}`, data: globais.arquivosGaleria[i]};
+                        arquivos[qtd_docs] = { type: `${globais.arquivosGaleria[i].name}`, data: globais.arquivosGaleria[i]};
                         qtd_docs++;
                     }
                     qtdFiles = Object.keys(arquivos).length;
-                    throw new Error("VERIFICAR ESSE TRECHO DE CÓDIGO DE ARQUIVOS DA GALERIA!");
-                    
                 }
                 if(log) console.log("Quantidade de arquivos => ", qtdFiles);
                 if (qtdFiles > 0) {

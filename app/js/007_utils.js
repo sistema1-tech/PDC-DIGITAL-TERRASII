@@ -1637,7 +1637,7 @@ export function formatDate(dateStr, format) {
 
 async function gerar_num_pdc()
 {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++GERANDO NÚMERO DO PDC++++++++++");
 
     //Busca o último número de PDC criado
