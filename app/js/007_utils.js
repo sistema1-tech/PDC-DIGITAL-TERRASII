@@ -1017,8 +1017,9 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 Data_da_assinatura: data_atual_formatada,
                 Assinado: true
             }
-
-            if(converterStringParaDecimal(document.querySelector('#valor-total-pagar').innerText) >= 3000)
+            console.log("tag total => ", document.querySelector('.valor-parcela'));
+            console.log("||||||||||||valor total => ", converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original));
+            if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 3000)
             {
                 apoio_assin_inic["Joana"]={
                     Cargo: "Administrativo",
