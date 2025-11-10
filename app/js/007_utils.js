@@ -942,15 +942,16 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 async function prepararParaSalvar(acao, infoInserida = null) {
 
     try {
-        const log = false;
+        const log = true;
     
         if (log) console.log("++++++++++PREPARANDO PARA SALVAR++++++++++");
         if (log) console.log("acao => ", acao);
+        if (log) console.log("page => ", globais.pag);
         if (log) console.log("infoInserida => ", infoInserida);
     
         const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
         const parcelaCriadaElement = document.getElementsByName('parcela_criada')[0];
-        const parcelaCriada = parcelaCriadaElement ? parcelaCriadaElement.checked : false;
+        let parcelaCriada = parcelaCriadaElement ? parcelaCriadaElement.checked : false;
         const data_atual = moment();
         const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
         // Nova constante no formato 'aa-mmm-dd' com mês em inglês
@@ -981,11 +982,13 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const pgtoAnt = document.getElementById('pag_antecipado').checked;
     
         let stats_salvarCot = "Prop. criada";
+        let apoio_sep_parcela = globais.perfilResponsavel.includes("Controladoria");
         if (globais.pag === "criar_numero_de_PDC") {
             stats_salvarCot = null;
 
-        } else if (globais.pag === "enviar_p_assinatura") {
-            stats_salvarCot = "Chec. final";
+        } else if (acao === "enviar_p_assinatura") {
+            stats_salvarCot = parcelaCriada? "Ass. control." : "Chec. final";
+            apoio_sep_parcela = false;
 
         } else if (globais.pag === "checagem_final") {
             stats_salvarCot = "Chec. final";
@@ -1017,8 +1020,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 Data_da_assinatura: data_atual_formatada,
                 Assinado: true
             }
-            console.log("tag total => ", document.querySelector('.valor-parcela'));
-            console.log("||||||||||||valor total => ", converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original));
+            
             if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 3000)
             {
                 apoio_assin_inic["Joana"]={
@@ -1031,8 +1033,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Assinado: false
                 }
             }
-
-            //
+            
             const assinaturasIniciais = {
                 "Gilson": {
                     Cargo: "Administrativo",
@@ -1141,12 +1142,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             enviar_p_ass_control:
             {
                 status: "Prop. criada",
-                sepPorParc: globais.perfilResponsavel.includes("Controladoria"),
+                sepPorParc: apoio_sep_parcela,
                 paramsExtraPDC: apoio_paramExtras
             },
             enviar_p_assinatura: {
-                status: "Ass. control.",
-                sepPorParc: globais.perfilResponsavel.includes("Controladoria"),
+                status: stats_salvarCot,
+                sepPorParc: apoio_sep_parcela,
                 paramsExtraPDC: apoio_paramExtras
             },
             autorizar_pagamento_subsindico: {
@@ -1172,7 +1173,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             {
                 await gerar_num_pdc();
             }
-    
+
             const ids_pdcs_criados = await saveTableData_V3(params);
 
             if (acao.includes("finalizar_provisionamento")) {

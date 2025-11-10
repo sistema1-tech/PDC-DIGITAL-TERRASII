@@ -1359,6 +1359,15 @@ button:hover {
 {
     display: flex;
 }
+
+.remove-anexo-btn
+{
+    position: absolute;
+    top: 8px;
+    margin-bottom: 0px;
+    margin-left: 90px;
+    z-index: 1;
+}
 .botao-adicionar
 {
     width:auto;
