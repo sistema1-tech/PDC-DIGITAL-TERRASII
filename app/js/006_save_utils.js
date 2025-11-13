@@ -234,7 +234,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         if(log) console.log("Nome: " + "Num_PDC_parcela" + ", Valor: " + vencimentos[0].Num_PDC_parcela);
 
     }
-    if (globais.perfilResponsavel != null && globais.pag != "checagem_final") {
+    if (globais.perfilResponsavel != null && globais.pag == "duplicar_pdc") {
         dadosIniciaisPdc["Perfil_responsavel"] = globais.perfilResponsavel;
     }
 

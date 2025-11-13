@@ -38,6 +38,7 @@ const CONFIG = {
         idsCotacao: new Array(),
         arquivosGaleria: new Array(),
         arquivospPaybox: new Array(),
+        arquivosRemovidos: new Array(),
         usuarioLogado: new Map()
     },
     INITIAL_STATE: {
