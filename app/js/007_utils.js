@@ -160,12 +160,12 @@ export function formatToBRL_V2(v, nd = 2, alt = true) {
     if (log) console.log("Número de decimais => ", nd);
     let ap_vlrOrig = null;
 
+    if (!v) return "0,00";//Se for vazio, volta 0,00
+    
     if (v.dataset) {
         ap_vlrOrig = v.dataset.valor_original;
         delete v.dataset.valor_original;
     }
-
-    if (!v) return "0,00";//Se for vazio, volta 0,00
 
     let av; //Apoio ao valor
     let int = false; //Flag para inteiro
