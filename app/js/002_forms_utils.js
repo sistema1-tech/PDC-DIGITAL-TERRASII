@@ -968,10 +968,9 @@ function preencherLinhaInicialClassificacao() {
         
     }
     //Adiciona valor de fornecedor aprovado na linha de classificação
-    if (globais.idFornAprovado) {
+    if (globais.idFornAprovado && valorInput.value == "") {
         if (log) console.log("Fornecedor aprovado, preenchendo valor na linha de classificação");
         valorInput.value = formatToBRL_V2(total);
-
     }
 }
 
