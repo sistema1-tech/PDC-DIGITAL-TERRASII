@@ -1,10 +1,7 @@
 import { globais } from './999_config.js';
-import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho } from './007_utils.js';
-
-
+import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho} from './007_utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
-const initUrl = 'https://terrasii.zohocreatorportal.com';
 
 /**
  * Mostra/oculta campos de pagamento com base na forma de pagamento selecionada
@@ -110,15 +107,16 @@ export async function validarEntidadesPermitidas() {
  */
 export function preencherDadosPDC(data) {
     const log = false;
-    if (log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
-    if (log) console.log("data => ", JSON.stringify(data));
-    if (log) console.log("Classificacao_contabil => ", data.Classificacao_contabil);
+    if(log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
+    if(log) console.log("data => ", JSON.stringify(data));
+    if(log) console.log("Classificacao_contabil => ", data.Classificacao_contabil);
     globais.cotacaoExiste = true;
     globais.idPDC = data.ID;
     globais.numPDC = data.Numero_do_PDC;
     globais.perfilResponsavel = data.Perfil_responsavel;
     globais.numSolicPDC = data.num_sol;
-    if (data.Perfil_responsavel) {
+    if(data.Perfil_responsavel)
+    {
         globais.perfilResponsavel = data.Perfil_responsavel;
     }
     //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(ID%3D%3D0%20%26%26%20Ativo%3D%3Dtrue)&max_records=1000
@@ -196,19 +194,19 @@ export function preencherDadosPDC(data) {
         const inputConta = formPagamento.querySelector('#conta');
         const inputFavorecidoDeposito = formPagamento.querySelector('#favorecido-deposito');
         const inputCPF_CNPJ_favorecido = formPagamento.querySelector('#cpf_cnpj_favorecido');
-
+        
         if (data.Banco) inputBanco.value = data.Banco;
         if (data.AG) inputAgencia.value = data.AG;
         if (data.N_Conta) inputConta.value = data.N_Conta;
         if (data.Favorecido) inputFavorecidoDeposito.value = data.Favorecido;
         if (data.CPF_CNPJ_do_favorecido) inputCPF_CNPJ_favorecido.value = data.CPF_CNPJ_do_favorecido;
 
-    } else if (data.Forma_de_pagamento === 'Pix') {
+    }else if(data.Forma_de_pagamento === 'Pix'){
         const inputTipoPix = formPagamento.querySelector('#tipo-pix');
         const inputPixChave = formPagamento.querySelector('#pix-chave');
 
-        if (data.Tipo_de_chave_pix) inputTipoPix.value = data.Tipo_de_chave_pix;
-        if (data.Chave_pix) inputPixChave.value = data.Chave_pix;
+        if(data.Tipo_de_chave_pix) inputTipoPix.value = data.Tipo_de_chave_pix;
+        if(data.Chave_pix) inputPixChave.value = data.Chave_pix;
     }
 
     // =====[LINHAS DE PARCELAS]=====//
@@ -226,7 +224,7 @@ export function preencherDadosPDC(data) {
         }
 
         // Marca o pagamento antecipado, caso seja true
-        if (data.pag_antecipado == "true") {
+        if (data.pag_antecipado == "true"){
             const inputPagAntecipado = camposData.querySelector('#pag_antecipado');
             inputPagAntecipado.setAttribute('checked', true);
         }
@@ -241,9 +239,9 @@ export function preencherDadosPDC(data) {
             const numPDC = dataObj.Num_PDC_parcela || "";
             const parcCriada = dataObj.parcela_criada || "false";
             const numParc = dataObj.Numero_da_parcela || "";
-
+            
             const data = formatDate(dataStr, "YYYY-MM-DD");
-
+        
             adicionarCampoVenc(data, valor, numPDC, parcCriada, numParc);
 
         });
@@ -254,7 +252,8 @@ export function preencherDadosPDC(data) {
     if (log) console.log("|||||Preenchendo dados de notas fiscais|||||");
     if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
     const camposNF = document.querySelector('#linhas-nf');
-    if (data.Dados_da_nota_fiscal1) {
+    if(data.Dados_da_nota_fiscal1)
+    {
         const dadosNF = data.Dados_da_nota_fiscal1;
         const linhaNF = camposNF.querySelector('.linha-nf');
         if (linhaNF) {
@@ -262,7 +261,7 @@ export function preencherDadosPDC(data) {
         }
 
         dadosNF.forEach(NF => {
-            if (log) console.log("NF => ", NF);
+            if(log) console.log("NF => ", NF);
             const emissao = formatDate(NF.Data_emissao_N_Fiscal || "", "YYYY-MM-DD");
             const num = NF.Numero_N_Fiscal || "";
             //
@@ -377,7 +376,7 @@ export function preencherDadosPDC(data) {
             }
             inputDataAssinatura.value = dataUTC.format('YYYY-MM-DDTHH:mm:ss');
         } else {
-            inputDataAssinatura.value = ''; // ou algum valor padrão que você queira
+        inputDataAssinatura.value = ''; // ou algum valor padrão que você queira
         }
 
         elementAssinante.appendChild(inputDataAssinatura);
@@ -404,7 +403,7 @@ export function preencherDadosPDC(data) {
             const elementAssinante = criarAssinante(assinante);
             elementAssinantes.appendChild(elementAssinante);
         });
-
+        
         formAssinantes.insertBefore(elementAssinantes, formAssinantes.querySelector('div[id="botoes"]'));
     }
 
@@ -413,7 +412,8 @@ export function preencherDadosPDC(data) {
     if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
     if (log) console.log("|||||Preenchendo dados de classificação|||||");
     if (log) console.log("||||||||||||||||||||||||||||||||||||||||||||");
-    if (data.Classificacao_contabil) {
+    if(data.Classificacao_contabil)
+    {
         preencherDadosClassificacao(data.Classificacao_contabil);
 
     }
@@ -437,17 +437,17 @@ export function preencherDadosPDC(data) {
  * @description
  * - Cria um novo campo de data para parcelas de pagamento
  */
-export function adicionarCampoVenc(data = null, valor = null, numPDC = null, parcCriada = null, numParcela = null) {
+export function adicionarCampoVenc(data = null, valor = null, numPDC = null, parcCriada = null, numParcela =  null) {
     const log = false;
-    if (log) console.log("++++++++++ADICIONANDO LINHAS DE PARCELAS++++++++++");
+    if(log) console.log("++++++++++ADICIONANDO LINHAS DE PARCELAS++++++++++");
 
-    if (numParcela !== 1) numeroParcela++;
-    if (log) console.log("numParcela => ", numParcela);
-    if (log) console.log("data => ", data);
-    if (log) console.log("valor => ", valor);
-    if (log) console.log("numPDC => ", numPDC);
-    if (log) console.log("parcCriada => ", parcCriada);
-    if (log) console.log("numParcela => ", numParcela);
+    if(numParcela !== 1) numeroParcela++;
+    if(log) console.log("numParcela => ", numParcela);
+    if(log) console.log("data => ", data);
+    if(log) console.log("valor => ", valor);
+    if(log) console.log("numPDC => ", numPDC);
+    if(log) console.log("parcCriada => ", parcCriada);
+    if(log) console.log("numParcela => ", numParcela);
 
     //====================CRIA UM NOVO CONTAINER PARA O CAMPO DE DATA E O BOTÃO DE REMOVER====================//
     const novoCampo = document.createElement('div');
@@ -455,8 +455,8 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
 
     //====================CRIA O RÓTULO PARA O CAMPO DE DATA====================//
     const novoLabel = document.createElement('label');
-    novoLabel.innerText = `Parcela nº ${numParcela === null ? numeroParcela : numParcela}:`;
-    if (numParcela !== null && numParcelaInicial === null) numParcelaInicial = parseInt(numParcela);
+    novoLabel.innerText = `Parcela nº ${numParcela === null?numeroParcela:numParcela}:`;
+    if(numParcela !== null && numParcelaInicial === null) numParcelaInicial = parseInt(numParcela);
 
     //====================CRIA O CAMPO DE DATA====================//
     const novoInput = document.createElement('input');
@@ -505,7 +505,7 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
     novoInputParcelaCriada.type = 'checkbox';
     novoInputParcelaCriada.name = 'parcela_criada';
     novoInputParcelaCriada.classList.add('campo-datas', 'hidden');
-    if (parcCriada == 'true') novoInputParcelaCriada.setAttribute('checked', 'checked');
+    if(parcCriada == 'true') novoInputParcelaCriada.setAttribute('checked', 'checked');
 
     //====================CRIA O BOTÃO DE REMOVER====================//
     const removerButton = document.createElement('button');
@@ -529,7 +529,7 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
 
     //====================ATUALIZA OS RÓTULOS DE PARCELA PARA MANTER A SEQUÊNCIA CORRETA====================//
     atualizarLabels();
-    if (log) console.log("----------LINHA DE PARCELA CRIADA----------");
+    if(log) console.log("----------LINHA DE PARCELA CRIADA----------");
 }
 
 /**
@@ -543,18 +543,18 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
  */
 export function removerCampoVenc(elemento) {
     const log = false;
-    if (log) console.log("++++++++++REMOVENDO LINHA DE PARCELA++++++++++");
+    if(log) console.log("++++++++++REMOVENDO LINHA DE PARCELA++++++++++");
     const parentElement = elemento.parentElement;
     const parentClass = parentElement.className;
-    if (log) console.log("parentElement => ", parentElement);
-    if (log) console.log("parentClass => ", parentClass);
+    if(log) console.log("parentElement => ", parentElement);
+    if(log) console.log("parentClass => ", parentClass);
 
     const elementosSimilares = document.getElementsByClassName(parentClass);
-    if (log) console.log("elementosSimilares => ", elementosSimilares);
-    if (log) console.log("elementosSimilares.length => ", elementosSimilares.length);
+    if(log) console.log("elementosSimilares => ", elementosSimilares);
+    if(log) console.log("elementosSimilares.length => ", elementosSimilares.length);
 
     if (elementosSimilares.length > 1) {
-        if (log) console.log("----------LINHA DE PARCELA REMOVIDA----------");
+        if(log) console.log("----------LINHA DE PARCELA REMOVIDA----------");
 
         parentElement.remove();
         numeroParcela--;
@@ -563,7 +563,7 @@ export function removerCampoVenc(elemento) {
         atualizarValorTotalParcelas();
         return;
     }
-    if (log) console.log("----------LINHA NÃO PODE SER REMOVIDA POR SER A ÚLTIMA----------");
+    if(log) console.log("----------LINHA NÃO PODE SER REMOVIDA POR SER A ÚLTIMA----------");
 }
 
 /**
@@ -582,7 +582,7 @@ function atualizarLabels() {
     const parcelas = document.querySelectorAll('#camposData .parcela');
     parcelas.forEach((parcela, index) => {
         //let newNumParc = numeroParcela + index - 1;
-        parcela.querySelector('label').innerText = `Parcela nº ${(numParcelaInicial !== null ? numParcelaInicial : 1) + index}:`;
+        parcela.querySelector('label').innerText = `Parcela nº ${(numParcelaInicial !== null?numParcelaInicial:1) + index}:`;
     });
 }
 
@@ -593,7 +593,7 @@ function atualizarLabels() {
 export function adicionarLinhaClassificacao() {
 
     const log = false;
-    if (log) console.log("++++++++++ADICIONANDO LINHA DE CLASSIFICAÇÃO++++++++++");
+    if(log) console.log("++++++++++ADICIONANDO LINHA DE CLASSIFICAÇÃO++++++++++");
 
     const classFields = document.getElementById('camposClassificacao');
 
@@ -664,7 +664,7 @@ export function adicionarLinhaClassificacao() {
                                 option.style.display = '';
                             });
                         }, 100);
-                    } else {
+                    }else{
                         const opcaoFinal = this.options.find(([value, text]) => text === valorDigitado);
                         input.dataset.id_opcao = opcaoFinal[0];
                         optContainer.style.display = 'none';
@@ -688,7 +688,7 @@ export function adicionarLinhaClassificacao() {
                 //Criando o restante das opções//
                 this.options.forEach(([value, text]) => {
                     const option = document.createElement('div');
-
+                    
                     option.classList.add(`option-${this.inputName}`, 'dropdown-opcao');
                     option.textContent = text;
                     option.dataset.id_opcao = value;
@@ -728,7 +728,7 @@ export function adicionarLinhaClassificacao() {
         ['BAGS', 'BAGS']
     ];
 
-
+    
     const opClassOpt = Array.from(globais.baseClassesOperacionais.entries()).map(([id, dados]) => [
         id,
         `${dados.contaReduzida} - ${dados.nomeClasse} - ${dados.codigoClasse}`
@@ -740,24 +740,24 @@ export function adicionarLinhaClassificacao() {
 
     const fieldsToCreate = [
         { placeholder: 'Conta...', inputType: 'select', inputName: 'Conta_a_debitar', id: 'conta', options: accOptions },
-        { placeholder: 'Centro Custo...', inputType: 'select', inputName: 'Centro_de_custo', id: 'centro', class_name: 'hidden', options: accCenterOpt },
+        { placeholder: 'Centro Custo...', inputType: 'select', inputName: 'Centro_de_custo', id: 'centro', class_name: 'hidden',options: accCenterOpt },
         { placeholder: 'Classe Op...', inputType: 'select', inputName: 'Classe_operacional', id: 'classe', options: opClassOpt },
         { placeholder: 'R$ 0,00', inputType: 'number', inputName: 'Valor', id: 'valor' }
     ];
 
     fieldsToCreate.forEach((field) => {
-        newRowClass.appendChild(new ClassContField({ placeholder: field.placeholder, inputType: field.inputType, inputName: field.inputName, id: field.id, class_name: field.class_name || null, options: field.options }).create());
+        newRowClass.appendChild(new ClassContField({ placeholder: field.placeholder, inputType: field.inputType, inputName: field.inputName, id: field.id, class_name: field.class_name || null,options: field.options }).create());
     });
 
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.classList.add('remover-classificacao', 'close-icon', 'remove-btn', 'transl-because-title');
-
+    
     removeBtn.addEventListener('click', () => removerLinhaClassificacao(removeBtn));
 
     newRowClass.appendChild(removeBtn);
     classFields.appendChild(newRowClass);
-    if (log) console.log("----------LINHA DE CLASSIFICAÇÃO ADICIONADA----------");
+    if(log) console.log("----------LINHA DE CLASSIFICAÇÃO ADICIONADA----------");
 }
 
 /**
@@ -792,9 +792,9 @@ export function removerLinhaClassificacao(botao) {
 //====================PREENCHE OS DADOS DE CLASSIFICAÇÃO CONTÁBIL====================//
 //===================================================================================//
 function preencherDadosClassificacao(classificacoes) {
-    const log = false;
-    if (log) console.log("++++++++++PREENCHENDO DADOS DE CLASSIFICAÇÃO++++++++++");
-    if (log) console.log("classificacoes => ", JSON.stringify(classificacoes));
+    const log = true;
+    if(log) console.log("++++++++++PREENCHENDO DADOS DE CLASSIFICAÇÃO++++++++++");
+    if(log) console.log("classificacoes => ", JSON.stringify(classificacoes));
     const formClassificacao = document.querySelector('#form-classificacao');
 
     // Limpa as linhas existentes
@@ -805,18 +805,18 @@ function preencherDadosClassificacao(classificacoes) {
     // Para cada classificação, cria uma nova linha
     classificacoes.forEach(classificacao => {
         // Extrai os valores do display_value
-        if (log) console.log("classificacao => ", classificacao);
+        if(log) console.log("classificacao => ", classificacao);
         const conta = classificacao.Conta_a_debitar || "";
         const centro = classificacao.Centro_de_custo.Codigo || "";
         const classe = classificacao.Classe_operacional.Codigo || "";
         const valor = classificacao.Valor || "";
         const id = classificacao.ID || "";
 
-        if (log) console.log("conta => ", conta);
-        if (log) console.log("centro => ", centro);
-        if (log) console.log("classe => ", classe);
-        if (log) console.log("valor => ", valor);
-        if (log) console.log("id => ", id);
+        if(log) console.log("conta => ", conta);
+        if(log) console.log("centro => ", centro);
+        if(log) console.log("classe => ", classe);
+        if(log) console.log("valor => ", valor);
+        if(log) console.log("id => ", id);
         //const [conta, centro, classe, valor, id] = classificacao.display_value.split('|SPLITKEY|');
 
         // Adiciona uma nova linha
@@ -849,7 +849,7 @@ function preencherDadosClassificacao(classificacoes) {
         });
 
         // Adiciona seleção da conta a debitar
-        Array.from(selectConta.parentNode.querySelectorAll('.dropdown-opcao')).forEach(option => {
+        Array.from(selectConta.parentNode.querySelectorAll('.dropdown-opcao') ).forEach(option => {
             if (option.textContent === conta.trim() && conta !== '') {
                 option.click();
             }
@@ -940,37 +940,37 @@ export function popularSelects(classificacoes, centrosCusto) {
 }
 
 function preencherLinhaInicialClassificacao() {
-    const log = false;
+    const log = true;
     if (log) console.log("++++++++++PREENCHENDO LINHA INICIAL DE CLASSIFICAÇÃO++++++++++");
 
     let linhasClassificacao = document.querySelectorAll('#form-classificacao .linha-classificacao');
     const valorInput = linhasClassificacao?.[0]?.querySelector('input[name="Valor"]');
-    if (log) console.log("linhasClassificacao.length => ", linhasClassificacao?.length);
-    if (log) console.log("valorInput => ", valorInput);
+    if(log) console.log("linhasClassificacao.length => ", linhasClassificacao?.length);
+    if(log) console.log("valorInput => ", valorInput);
     if (linhasClassificacao?.length > 1) {
         return;
-    } else if (linhasClassificacao?.length === 0) {
+    }else if(linhasClassificacao?.length === 0) {
         adicionarLinhaClassificacao();
         linhasClassificacao = document.querySelectorAll('#form-classificacao .linha-classificacao');
     }
 
     const valorTotalGeral = converterStringParaDecimal(document.getElementById("valor-total-pagar").innerText, 2);
-    if (log) console.log("valorTotalGeral => ", valorTotalGeral);
-    if (log) console.log("globais.valor_orcado => ", globais.valor_orcado);
+    if(log) console.log("valorTotalGeral => ", valorTotalGeral);
+    if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
 
     let total = 0;
-    if (valorTotalGeral > 0) {
+    if(valorTotalGeral > 0)
+    {
         total = converterStringParaDecimal(valorTotalGeral, 2);
 
-    } else {
+    }else{
         total = globais.valor_orcado;
-
+        
     }
     //Adiciona valor de fornecedor aprovado na linha de classificação
-    if (globais.idFornAprovado) {
+    if (globais.idFornAprovado && valorInput.value == "") {
         if (log) console.log("Fornecedor aprovado, preenchendo valor na linha de classificação");
         valorInput.value = formatToBRL_V2(total);
-
     }
 }
 
@@ -986,9 +986,9 @@ export function atualizarValorTotalClassificacoes() {
 
     const labelTotal = document.getElementById('valor-total-classificacoes');
     const valorTotalGeral = converterStringParaDecimal(document.getElementById("valor-total-pagar").innerText, 2);
-    if (log) console.log("valorTotalGeral => ", valorTotalGeral);
-    if (log) console.log("globais.valor_orcado => ", globais.valor_orcado);
-    if (log) console.log("globais.idFornAprovado => ", globais.idFornAprovado);
+    if(log) console.log("valorTotalGeral => ", valorTotalGeral);
+    if(log) console.log("globais.valor_orcado => ", globais.valor_orcado);
+    if(log) console.log("globais.idFornAprovado => ", globais.idFornAprovado);
 
     let total = 0;
     if (globais.idFornAprovado) {
@@ -999,31 +999,33 @@ export function atualizarValorTotalClassificacoes() {
 
         const colIndex = Array.from(headerRow.cells).findIndex(cell => cell.dataset.id_forn === globais.idFornAprovado);
 
-        if (log) console.log("colIndex => ", colIndex);
+        if(log) console.log("colIndex => ", colIndex);
         if (colIndex !== -1) {
 
             const valorTotalFornecedor = totalRow.cells[colIndex - 2].innerText;
-            if (valorTotalGeral > 0) {
+            if(valorTotalGeral > 0)
+            {
                 total = converterStringParaDecimal(valorTotalGeral, 2);
 
-            } else {
+            }else{
                 total = converterStringParaDecimal(valorTotalFornecedor, 2);
 
             }
-            if (log) console.log("valorTotalFornecedor => ", valorTotalFornecedor);
-            if (log) console.log("total => ", total);
+            if(log) console.log("valorTotalFornecedor => ", valorTotalFornecedor);
+            if(log) console.log("total => ", total);
 
             const valoresClassificacoes = document.querySelectorAll('#form-classificacao input[name="Valor"]');
-            if (valoresClassificacoes.length == 1) {
+            if(valoresClassificacoes.length == 1)
+            {
                 preencherLinhaInicialClassificacao();
             }
-
+            
             valoresClassificacoes.forEach(input => {
                 const valor = converterStringParaDecimal(input.value).toFixed(2) || 0;
                 total -= valor; // Reduz o valor da classificação do total
                 total = parseFloat(total).toFixed(2); // Converte total para número antes de usar toFixed
             });
-            if (log) console.log("total - valoresClassificacoes => ", total);
+            if(log) console.log("total - valoresClassificacoes => ", total);
 
             labelTotal.innerText = formatToBRL_V2(total);
 
@@ -1039,14 +1041,16 @@ export function atualizarValorTotalClassificacoes() {
             labelTotal.classList.add('valor-diferente');
             labelTotal.classList.remove('valor-igual');
         }
-    } else if (globais.valor_orcado) {
-        if (log) console.log("Fornecedor já aprovado");
-        if (valorTotalGeral > 0) {
+    } else if(globais.valor_orcado)
+    {   
+        if(log) console.log("Fornecedor já aprovado");
+        if(valorTotalGeral > 0)
+        {
             total = converterStringParaDecimal(valorTotalGeral, 2);
 
-        } else {
+        }else{
             total = globais.valor_orcado;
-
+            
         }
 
         const valoresClassificacoes = document.querySelectorAll('#form-classificacao input[name="Valor"]');
@@ -1060,10 +1064,10 @@ export function atualizarValorTotalClassificacoes() {
 
         labelTotal.innerText = formatToBRL_V2(total);
 
-        labelTotal.classList.remove(['valor-igual', 'valor-diferente']);
-        labelTotal.classList.add(total == 0 ? 'valor-igual' : 'valor-diferente');
+        labelTotal.classList.remove(['valor-igual','valor-diferente']);
+        labelTotal.classList.add(total == 0 ?'valor-igual':'valor-diferente');
 
-    } else {
+    }else {
         labelTotal.innerText = "-";
         labelTotal.classList.add('valor-diferente');
         labelTotal.classList.remove('valor-igual');
@@ -1172,10 +1176,11 @@ export function setupPixValidation() {
 }
 
 
-export function atualizarValorOrcado() {
+export function atualizarValorOrcado()
+{
     const log = false;
 
-    if (log) console.log("++++++++++ATUALIZANDO VALOR ORÇADO++++++++++");
+    if(log) console.log("++++++++++ATUALIZANDO VALOR ORÇADO++++++++++");
     const table = document.getElementById('priceTable');
     const headerRow = table.rows[0]; // Primeira linha do cabeçalho
     const totalRow = table.rows[table.rows.length - 2]; // Última linha (linha de total)
@@ -1189,7 +1194,7 @@ export function atualizarValorOrcado() {
 
             globais.valor_orcado = converterStringParaDecimal(valorTotalFornecedor).toFixed(2) || 0; // Inicializa o total com o valor do fornecedor aprovado
         } else {
-
+            
             globais.valor_orcado = 0;
         }
     } else {
@@ -1214,7 +1219,7 @@ export function atualizarValorOrcado() {
  */
 export function atualizarValorTotalParcelas() {
     const log = false;
-    if (log) console.log("++++++++++ATUALIZANDO VALOR TOTAL DAS PARCELAS++++++++++");
+    if(log) console.log("++++++++++ATUALIZANDO VALOR TOTAL DAS PARCELAS++++++++++");
     const valorTotalGeral = converterStringParaDecimal(document.getElementById('valor-total-pagar').innerText, 2);
 
     const table = document.getElementById('priceTable');
@@ -1231,16 +1236,18 @@ export function atualizarValorTotalParcelas() {
             const valorTotalFornecedor = totalRow.cells[colIndex - 2].innerText; // +1 para pegar a célula correta
 
             const valoresParcelas = document.querySelectorAll('#camposData input[name="Valor"]');
-
-
-            if (valorTotalGeral > 0) {
+            
+            
+            if(valorTotalGeral > 0)
+            {
                 total = valorTotalGeral;
 
-            } else {
-                total = converterStringParaDecimal(valorTotalFornecedor, 2); // Inicializa o total com o valor do fornecedor aprovado
+            }else
+            {
+                total = converterStringParaDecimal(valorTotalFornecedor,2); // Inicializa o total com o valor do fornecedor aprovado
 
             }
-
+                
             valoresParcelas.forEach(input => {
                 const valor = converterStringParaDecimal(input.value, 2);
                 total -= valor; // Reduz o valor da parcela do total
@@ -1262,12 +1269,15 @@ export function atualizarValorTotalParcelas() {
             labelTotal.classList.remove('valor-igual');
 
         }
-    } else if (globais.valor_orcado) {
-        if (valorTotalGeral > 0) {
+    } else if(globais.valor_orcado)
+    {   
+        if(valorTotalGeral > 0)
+        {
             total = valorTotalGeral;
-        } else {
+        }else 
+        {
             total = globais.valor_orcado;
-
+            
         }
 
         const valoresParcelas = document.querySelectorAll('#camposData input[name="Valor"]');
@@ -1347,389 +1357,21 @@ export function calcularValorTotalPagar() {
 //==============================================//
 //====================ANEXOS====================//
 //==============================================//
-function anexos_controller() {
-    const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
-    const convertTypes = {
-        "vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
-        "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
-        "vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
-        ".vnd.ms-excel": "xls",
-        "octet-stream": "msg",
-        "plain": "txt",
-    };
-
-    const elLibConfig = {
-        buttons: [
-            "download",
-            "close"
-        ],
-        download: true,
-        enableDownload: true,
-        beforeClose: function () {
-            var scrollPosition = document.querySelector('.meu-body').scrollTop;
-            window.sessionStorage.setItem('scrollPosition', scrollPosition);
-        },
-        afterClose: function () {
-            var scrollPosition = window.sessionStorage.getItem('scrollPosition');
-            setTimeout(function () {
-                document.body.scrollTop = parseInt(scrollPosition);
-            }, 100);
-        }
-    };
-
-    return { typesToView, convertTypes, elLibConfig };
-}
-
-//==========FUNÇÃO DE APOIO==========//
-function createLoadingSpinner() {
-    const loadingSpinnerContainer = document.createElement('div');
-    loadingSpinnerContainer.className = 'customConfirm-loading-spinner-container';
-    loadingSpinnerContainer.style.width = '100px';
-    loadingSpinnerContainer.style.height = '100px';
-    loadingSpinnerContainer.style.display = 'flex';
-    loadingSpinnerContainer.style.justifyContent = 'center';
-    loadingSpinnerContainer.style.alignItems = 'center';
-
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'customConfirm-loading-spinner';
-
-    loadingSpinnerContainer.appendChild(loadingSpinner);
-
-    return loadingSpinnerContainer;
-}
-
-async function createFileMiniature({galeria= null ,file = null, origem = null}) {
-    const { typesToView, convertTypes, elLibConfig } = anexos_controller();
-    const log = false;
-
-    if (log) console.log("++++++++++CRIANDO MINIATURA DE ARQUIVO++++++++++");
-    //==========CONTAINER PARA DADOS DO ARQUIVO==========//
-    const file_container = document.createElement('div');
-    file_container.classList.add('gallery-item');
-    
-    //==========LOADING SPINNER==========//
-    const loading_spinner = createLoadingSpinner();
-    file_container.appendChild(loading_spinner);
-
-    //==========ADICIONANDO A GALERIA==========//
-    galeria.appendChild(file_container);
-
-    //==========ELEMENTO PARA ARQUIVO==========//
-    let file_field = document.createElement('img');
-
-    file_field.setAttribute('data-fancybox', 'gallery');
-    file_field.alt = 'Minitatura da imagem ou PDF';
-    file_field.style.display = 'none';
-
-    //==========ELEMENTO DO NOME DO ARQUIVO==========//
-    const file_name = document.createElement('p');
-    file_name.classList.add('file-name');
-
-    file_name.style.maxWidth = '100px';
-    file_name.style.fontSize = '11pt';
-    file_name.style.marginLeft = 'auto';
-    file_name.style.marginRight = 'auto';
-    file_name.style.wordBreak = 'break-word';
-    file_name.style.display = 'none';
-
-    let name = "";
-    if(origem == 'zoho')
-    {
-        file_field.classList.add('anexo-zoho');
-        console.log("Antes de começar a tratar");
-        ZOHO.CREATOR.UTIL.setImageData(file_field, file);
-        //==========SETANDO ARQUIVO NO ELEMENTO==========//
-
-        await new Promise(resolve => {
-            const checkSrcInterval = setInterval(() => {
-                console.log("Tratando");
-                if (file_field && file_field.src && file_field.src !== "") {
-                    file_field.setAttribute('data-src', file_field.src)
-                    console.log("Tratado");
-                    clearInterval(checkSrcInterval);
-                    resolve();
-                }
-            }, 100);
-        });
-        //==========SETANDO NOME DO ARQUIVO==========//
-        const ap_name = file.split('?filepath=')[1];
-        name = ap_name.slice(ap_name.indexOf('_') + 1, ap_name.length);
-        
-    }else if(origem == 'novo')
-    {
-        file_field.classList.add('anexo-novo');
-
-        //==========SETANDO NOME DO ARQUIVO==========//
-        name = file.name;
-
-        //
-        globais.arquivosGaleria.push(file);
-        const blobUrl = URL.createObjectURL(file);
-        file_field.setAttribute('data-src', blobUrl);
-    }
-
-
-    file_name.textContent = name;
-    console.log("SAIU DO IF");
-    console.log("fileField.src => ", file_field.src);
-    const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
-    const fileType = convertTypes[file.split('.').pop().toLowerCase()] || file.split('.').pop().toUpperCase() || '';
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-    console.log("typesToView => ", typesToView);
-    console.log("fileType => ", fileType);
-    console.log("fileSize => ", fileSize);
-    if (typesToView.includes(fileType) && fileSize < 20) {
-        
-        if (fileType === 'PDF') {
-            file_field.setAttribute('data-type', 'iframe');
-            file_field.setAttribute('data-download-url', `${initUrl}${file}`);
-            file_field.src = `https://placehold.co/100?text=${fileType}`;
-        } else {
-            file_field.setAttribute('data-download-src', file_field.src);
-        }
-    }else{
-        const clone_file_field = file_field.cloneNode(true);
-        clone_file_field.style.width = '100px';
-        clone_file_field.style.height = '100px';
-        clone_file_field.style.display = 'block';
-        clone_file_field.removeAttribute('data-fancybox');
-
-        //==========CRIANDO UM PLACEHOLDER PARA OS ARQUIVOS QUE NÃO POSSUEM MINIATURAS==========//
-        clone_file_field.src = `https://placehold.co/100?text=${fileType}`;
-        file_field = document.createElement('a');
-        file_field.href = `${initUrl}${file}`;
-        file_field.download = `${initUrl}${file}`;
-        file_field.appendChild(clone_file_field);
-    }
-
-    //==========BOTÃO REMOVER ARQUIVO==========//
-    const remove_btn = document.createElement('button');
-    remove_btn.classList.add('remove-anexo-btn', 'close-icon');
-    remove_btn.style.display = 'none';
-    if (log) console.log("remove_btn => ", remove_btn);
-
-    //==========EVENTOS==========//
-    //=====BAIXAR ARQUIVO=====//
-    const opcaoDownload = document.createElement('a');
-    opcaoDownload.href = `${initUrl}${file}`; // Define o caminho para o arquivo que deseja baixar
-    opcaoDownload.textContent = 'Baixar arquivo'; // Define o texto da opção de menu
-    opcaoDownload.download = name;
-
-    file_field.addEventListener('contextmenu', function (event) {
-        event.preventDefault(); // Previne o comportamento padrão do botão direito do mouse
-
-        document.body.appendChild(opcaoDownload);
-        opcaoDownload.click(); // Simula um clique no link para iniciar o download
-        document.body.removeChild(opcaoDownload); // Remove a opção de menu do contexto do mouse
-    });
-
-    //==========CONSOLIDA ELEMENTOS==========//
-    file_container.appendChild(remove_btn);
-    file_container.appendChild(file_field);
-    file_container.appendChild(file_name);
-    return {file_container, file_field, file_name, remove_btn, loading_spinner};
-}
-
 export async function preencherListaAnexosV2(anexos) {
     const log = false;
-    if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
-
-    //==========VARIÁVEIS DE APOIO==========//
-    const { typesToView, convertTypes, elLibConfig } = anexos_controller();
-
-    //==========PROCURA E INSTANCIA ELEMENTO DA GALERIA==========//
-    const galleryElement = document.getElementById('gallery');
-    if (!galleryElement) return console.error('Elemento gallery não encontrado');
-    galleryElement.innerHTML = '';
-
-    //==========PRENCHE A GALERIA COM OS ANEXOS==========//
-    if (anexos && anexos.length > 0) {
-        const promises = [];
-        for (const anexo of anexos) {
-            promises.push(new Promise(async (resolve) => {
-
-                //==========VARIÁVEIS DE APOIO==========//
-                const newAnexo = anexo.Arquivo;
-
-                //==========NOVO ELEMENTO DA GALERIA==========//
-                let { file_container, file_field, file_name, remove_btn, loading_spinner } = await createFileMiniature({galeria: galleryElement, file: newAnexo, origem: 'zoho'});
-                file_field.style.display = 'block';
-                file_name.style.display = 'block';
-                remove_btn.style.display = 'block';
-                file_container.style.display = 'block';
-                loading_spinner.remove();
-                resolve();
-
-            }));
-
-        }
-
-        
-        await Promise.all(promises);
-
-    } else {
-        //==========CRIANDO MENSAGEM DE NÃO HÁ ANEXOS==========//
-        const pContainer = document.createElement('div');
-        pContainer.classList.add('gallery-item', 'mensagem-anexos-container');
-
-        const p = document.createElement('p');
-        p.style.textAlign = 'center';
-        p.style.margin = '20px';
-        p.style.color = 'gray';
-        p.style.fontSize = '14px';
-        p.style.fontWeight = 'bold';
-        p.classList.add('mensagem-anexos');
-        p.textContent = 'Não há anexos...';
-        pContainer.appendChild(p);
-        galleryElement.appendChild(pContainer);
-
-    }
-
-    const btnContainer = document.createElement('div');
-    btnContainer.classList.add('btn-container', 'gallery-item');
-
-    const botaoAdicionar = document.createElement('a');
-    botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
-    botaoAdicionar.style.padding = '10px 20px';
-    botaoAdicionar.style.fontSize = '60px';
-    botaoAdicionar.style.cursor = 'pointer';
-    botaoAdicionar.style.borderLeft = '1px solid transparent';
-    botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, gray, gray, gray, gray, gray, gray, transparent) 1';
-
-    // Cria um input do tipo file, escondido
-    const inputFile = document.createElement('input');
-    inputFile.type = 'file';
-
-    inputFile.style.display = 'none';
-
-    // Evento para abrir o seletor de arquivos ao clicar no botão
-    botaoAdicionar.addEventListener('click', () => {
-        inputFile.disabled = false;
-        inputFile.readOnly = false;
-        inputFile.click();
-    });
-
-    // Evento de mudança no input, para processar o arquivo selecionado
-    inputFile.addEventListener('change', async (event) => {
-        const files = event.target.files;
-        if (files.length > 0) {
-            const file = files[0];
-            const fileName = file.name;
-
-            globais.arquivosGaleria.push(file);
-            const fileType = file.name.split('.').pop().toUpperCase();
-
-            // Cria o container para o arquivo
-            const fileContainer = document.createElement('div');
-            fileContainer.classList.add('gallery-item');
-            galleryElement.insertBefore(fileContainer, btnContainer);
-
-            const blobUrl = URL.createObjectURL(file);
-
-            const newLoadingSpinner = createLoadingSpinner();
-            fileContainer.appendChild(newLoadingSpinner);
-
-            let fileElement = document.createElement('img');
-            fileElement.classList.add('novo-anexo');
-            fileElement.style.display = 'none';
-
-            if (typesToView.includes(fileType)) {
-
-                fileElement.alt = 'Minitatura do arquivo';
-                fileElement.setAttribute('data-fancybox', 'gallery');
-                fileElement.setAttribute('data-src', blobUrl);
-                fileElement.setAttribute('data-download-src', blobUrl); // Permitir download
-
-                if (fileType === 'PDF') {
-                    fileElement.setAttribute('data-type', 'iframe'); // Define como iframe no Fancybox
-                    fileElement.src = 'https://placehold.co/150?text=PDF';
-                } else {
-                    fileElement.src = blobUrl;
-                }
-
-            } else {
-                const cloneFileElement = fileElement.cloneNode(true);
-                cloneFileElement.classList.add('novo-anexo');
-                cloneFileElement.style.width = '100px';
-                cloneFileElement.style.height = '100px';
-                cloneFileElement.style.display = 'block';
-                cloneFileElement.src = 'https://placehold.co/100?text=' + fileType;
-
-                fileElement = document.createElement('a');
-                fileElement.display = 'none';
-                fileElement.href = blobUrl;
-                fileElement.download = file.name;
-                fileElement.appendChild(cloneFileElement);
-
-            }
-            //==========CRIANDO UM ELEMENTO COM O NOME DO ARQUIVO==========//
-            const fileNameElement = document.createElement('p');
-            fileNameElement.style.maxWidth = '100px';
-            fileNameElement.style.fontSize = '11pt';
-            fileNameElement.style.marginLeft = 'auto';
-            fileNameElement.style.marginRight = 'auto';
-            fileNameElement.style.wordBreak = 'break-word';
-            fileNameElement.classList.add('file-name');
-            fileNameElement.textContent = fileName.slice(fileName.indexOf('_') + 1, fileName.length);
-
-            fileContainer.appendChild(fileElement);
-            fileContainer.appendChild(fileNameElement);
-            fileElement.style.display = 'block';
-            newLoadingSpinner.remove();
-            $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-
-            const removeButton = document.createElement('button');
-            removeButton.classList.add('remove-anexo-btn', 'close-icon');
-
-            fileContainer.prepend(removeButton);
-
-            // Remove a mensagem de anexos
-            const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
-            if (mensagemAnexos) {
-                mensagemAnexos.remove();
-            }
-        }
-    });
-
-    //==========INICIANDO O FANCYBOX==========//
-    await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-    // Adiciona o botão e o input ao DOM;
-    btnContainer.appendChild(inputFile);
-    btnContainer.appendChild(botaoAdicionar);
-    galleryElement.appendChild(btnContainer);
-
-    //==========CRIANDO BOTÃO DE REMOVER==========//
-    for (const item of galleryElement.children) {
-        console.log('file container => ', item);
-        if (item !== galleryElement.lastElementChild) {
-            const removeButton = document.createElement('button');
-            removeButton.classList.add('remove-anexo-btn', 'close-icon');
-
-            item.prepend(removeButton);
-
-        }
-    }
-
-}
-
-
-
-export async function preencherListaAnexos(anexos) {
-    const log = true;
-    if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
-
+    if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
+    
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
     const convertTypes = {
-        "vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
-        "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+        "vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", 
+        "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx", 
         "vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
         ".vnd.ms-excel": "xls",
         "octet-stream": "msg",
         "plain": "txt",
     };
     const galleryElement = document.getElementById('gallery');
-
+    
     if (!galleryElement) {
         console.error('Elemento gallery não encontrado');
         return;
@@ -1742,13 +1384,13 @@ export async function preencherListaAnexos(anexos) {
         ],
         download: true,
         enableDownload: true,
-        beforeClose: function () {
+        beforeClose: function() {
             var scrollPosition = document.querySelector('.meu-body').scrollTop;
             window.sessionStorage.setItem('scrollPosition', scrollPosition);
         },
-        afterClose: function () {
+        afterClose: function() {
             var scrollPosition = window.sessionStorage.getItem('scrollPosition');
-            setTimeout(function () {
+            setTimeout(function() {
                 document.body.scrollTop = parseInt(scrollPosition);
             }, 100);
         }
@@ -1772,19 +1414,19 @@ export async function preencherListaAnexos(anexos) {
     }
 
     galleryElement.innerHTML = '';
-    if (log) console.log("anexos => ", anexos);
+    if(log) console.log("anexos => ", anexos);
     if (anexos && anexos.length > 0) {
         const promises = [];
         for (const anexo of anexos) {
             promises.push(new Promise((resolve) => {
                 //==========VARIÁVEIS DE APOIO==========//
-                if (log) console.log("anexo => ", anexo);
+                if(log) console.log("anexo => ", anexo);
                 const newAnexo = anexo.Arquivo;
                 const fileType = convertTypes[newAnexo.split('.').pop().toLowerCase()] || newAnexo.split('.').pop().toUpperCase() || '';
-                if (log) console.log("fileType => ", fileType);
+                if(log) console.log("fileType => ", fileType);
                 //const fileType = newAnexo.split('.').pop().toUpperCase();
                 const fileName = newAnexo.split('?filepath=')[1];
-                if (log) console.log("fileName => ", fileName);
+                if(log) console.log("fileName => ", fileName);
 
                 //==========BUSCANDO O ARQUIVO NO ZOHO==========//
                 const imgEl = document.createElement('img');
@@ -1808,6 +1450,7 @@ export async function preencherListaAnexos(anexos) {
                 fileElement.setAttribute('file-name', fileName);
                 fileElement.alt = 'Minitatura da imagem ou PDF';
                 fileElement.style.display = 'none';
+                
 
                 const checkSrcInterval = setInterval(() => {
                     if (imgEl && imgEl.src && imgEl.src !== "") {
@@ -1821,7 +1464,8 @@ export async function preencherListaAnexos(anexos) {
                                 fileElement.setAttribute('data-download-url', `${initUrl}${newAnexo}`);
                                 fileElement.src = `https://placehold.co/100?text=${fileType}`;
 
-                            } else {
+                            }else
+                            {
                                 fileElement.setAttribute('data-download-src', imgEl.src);
 
                             }
@@ -1841,7 +1485,7 @@ export async function preencherListaAnexos(anexos) {
                             fileElement.appendChild(cloneFileElement);
                         }
                         fileElement.setAttribute('data-src', imgEl.src);
-                        fileElement.insertAdjacentText('afterend', fileName.slice(fileName.indexOf('_') + 1, fileName.length));
+                        fileElement.insertAdjacentText('afterend',fileName.slice(fileName.indexOf('_')+1,fileName.length));
 
                         //==========CRIANDO UM ELEMENTO COM O NOME DO ARQUIVO==========//
                         const fileNameElement = document.createElement('p');
@@ -1851,7 +1495,7 @@ export async function preencherListaAnexos(anexos) {
                         fileNameElement.style.marginRight = 'auto';
                         fileNameElement.style.wordBreak = 'break-word';
                         fileNameElement.classList.add('file-name');
-                        fileNameElement.textContent = fileName.slice(fileName.indexOf('_') + 1, fileName.length);
+                        fileNameElement.textContent = fileName.slice(fileName.indexOf('_')+1,fileName.length);
 
                         //==========ADICIONANDO O ELEMENTO A GALERIA==========//
                         fileElement.style.display = 'block';
@@ -1867,9 +1511,9 @@ export async function preencherListaAnexos(anexos) {
                         const opcaoDownload = document.createElement('a');
                         opcaoDownload.href = `${initUrl}${newAnexo}`; // Define o caminho para o arquivo que deseja baixar
                         opcaoDownload.textContent = 'Baixar arquivo'; // Define o texto da opção de menu
-                        opcaoDownload.download = fileName;
+                        opcaoDownload.download = fileName; 
 
-                        fileElement.addEventListener('contextmenu', function (event) {
+                        fileElement.addEventListener('contextmenu', function(event) {
                             event.preventDefault(); // Previne o comportamento padrão do botão direito do mouse
                             console.log('Botão direito clicado');
 
@@ -2004,22 +1648,12 @@ export async function preencherListaAnexos(anexos) {
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
 }
-
-
-
-
-
-
-
-
-
-
 //=================================================//
 //====================LINHAS NF====================//
 //=================================================//
 export function adicionarLinhaNF() {
     const log = false;
-    if (log) console.log("++++++++++ADICIONANDO LINHA DE NOTA FISCAL++++++++++");
+    if(log) console.log("++++++++++ADICIONANDO LINHA DE NOTA FISCAL++++++++++");
     const linhasNF = document.getElementById('linhas-nf');
 
     const novaLinha = document.createElement('div');
@@ -2149,42 +1783,42 @@ function validarCNPJ(cnpj) {
     let soma = 0;
     let pos = tamanho - 7;
 
-    if (log) console.log("tamanho: " + tamanho);
-    if (log) console.log("numeros: " + numeros);
-    if (log) console.log("digitos: " + digitos);
-    if (log) console.log("soma: " + soma);
-    if (log) console.log("pos: " + pos);
+    if(log) console.log("tamanho: " + tamanho);
+    if(log) console.log("numeros: " + numeros);
+    if(log) console.log("digitos: " + digitos);
+    if(log) console.log("soma: " + soma);
+    if(log) console.log("pos: " + pos);
 
     for (let i = tamanho; i >= 1; i--) {
         soma += numeros.charAt(tamanho - i) * pos--;
         if (pos < 2) pos = 9;
     }
 
-    if (log) console.log("soma: " + soma);
-    if (log) console.log("pos: " + pos);
+    if(log) console.log("soma: " + soma);
+    if(log) console.log("pos: " + pos);
 
     let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
-    if (log) console.log("resultado: " + resultado);
+    if(log) console.log("resultado: " + resultado);
     if (resultado.toString() != digitos.charAt(0)) return false;
 
     tamanho = tamanho + 1;
     numeros = cnpj.substring(0, tamanho);
     soma = 0;
     pos = tamanho - 7;
-    if (log) console.log("numeros: " + numeros);
-    if (log) console.log("soma: " + soma);
-    if (log) console.log("pos: " + pos);
+    if(log) console.log("numeros: " + numeros);
+    if(log) console.log("soma: " + soma);
+    if(log) console.log("pos: " + pos);
 
     for (let i = tamanho; i >= 1; i--) {
         soma += numeros.charAt(tamanho - i) * pos--;
         if (pos < 2) pos = 9;
     }
 
-    if (log) console.log("soma: " + soma);
-    if (log) console.log("pos: " + pos);
+    if(log) console.log("soma: " + soma);
+    if(log) console.log("pos: " + pos);
 
     resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
-    if (log) console.log("resultado: " + resultado);
-
+    if(log) console.log("resultado: " + resultado);
+    
     return resultado === digitos.charAt(1);
 }
