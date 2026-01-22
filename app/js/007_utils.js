@@ -1035,11 +1035,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             }
             
             const assinaturasIniciais = {
-                "Gilson": {
+                "Weverton": {
                     Cargo: "Administrativo",
                     Funcao: "Gerente operacional",
-                    Usuario: "Gilson",
-                    E_mail_usuario: "gerente.operacional@tsj2.com.br",
+                    Usuario: "Weverton",
+                    E_mail_usuario: "controladoriatsj2@gmail.com",
                     IP: "",
                     Data_da_assinatura: "",
                     Assinado: false
