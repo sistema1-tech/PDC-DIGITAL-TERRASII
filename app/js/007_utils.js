@@ -1227,7 +1227,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
                 } else if (pgtoAnt) {
                     await saveTableData_V3({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
-                    
                 }
     
                 const entidadeSelecionada = document.getElementById('entidade').value;

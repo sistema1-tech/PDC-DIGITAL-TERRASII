@@ -1643,6 +1643,8 @@ export async function preencherListaAnexosV2(anexos) {
     //==========INICIANDO O FANCYBOX==========//
     await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
 
+    const disabledElements = document.querySelectorAll('.wait-file');
+    disabledElements.forEach(el => el.classList.remove('wait-file'));
     // Adiciona o botão e o input ao DOM;
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);

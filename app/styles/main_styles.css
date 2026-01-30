@@ -8,17 +8,19 @@ body {
     margin: 0;
     padding: 0;
 }
-html{
+
+html {
     overflow: hidden;
 }
-body{
+
+body {
     overflow-y: scroll !important;
     overflow-x: auto;
     margin-left: auto;
     margin-right: auto;
 }
 
-.container{
+.container {
     position: relative;
     margin: 50px 50px 50px 50px;
     min-width: calc(84% - 100px);
@@ -34,8 +36,7 @@ body{
     padding-bottom: 40px;
 }
 
-.section-final
-{
+.section-final {
     padding-bottom: 20px;
 }
 
@@ -51,17 +52,20 @@ body{
     font-size: 100%;
     color: #333;
     margin-bottom: 0px;
-    
+
     text-align: center;
 }
 
 /* CSS */
 select option[disabled] {
-    color: #999999; /* ou qualquer outra cor que desejar */
+    color: #999999;
+    /* ou qualquer outra cor que desejar */
 }
 
 /*==========SECAO DADOS DO PDC==========*/
-.form-compra, .form-pagamento, .form-dados-nf {
+.form-compra,
+.form-pagamento,
+.form-dados-nf {
     font-family: Arial, sans-serif;
     color: #333;
     display: flex;
@@ -81,7 +85,8 @@ select option[disabled] {
     border-radius: 5px;
 }
 
-.entidade, .tipo {
+.entidade,
+.tipo {
     width: 100%;
     padding: 5px;
     margin-bottom: 10px;
@@ -105,28 +110,26 @@ select option[disabled] {
     grid-column-end: 3;
 }
 
-.check-pag-antecipado
-{
+.check-pag-antecipado {
     display: flex;
     flex-wrap: wrap;
     max-width: 350px;
 }
 
-.form-compra label, 
-.form-pagamento label, 
+.form-compra label,
+.form-pagamento label,
 .form-classificacao label,
 .form-dados-nf label,
 .campos-retencao-nf label,
 .form-dados-nf-label,
-#campos-assinatura label{
+#campos-assinatura label {
     font-weight: bold;
     margin-bottom: 5px;
     display: block;
     font-size: 100%;
 }
 
-.form-pagamento .label-pag-antecipado
-{
+.form-pagamento .label-pag-antecipado {
     font-weight: normal;
     margin-top: 5px;
 }
@@ -134,7 +137,7 @@ select option[disabled] {
 .check-pag-antecipado:has(input[type="checkbox"]:checked)::after {
     content: "(A primeira parcela será enviada para pagamento assim que a compra for confirmada.)";
     display: block;
-    width:100%;
+    width: 100%;
 }
 
 .form-compra textarea,
@@ -142,8 +145,7 @@ select option[disabled] {
 .form-compra input,
 .form-dados-nf input,
 .form-pagamento textarea,
-.form-pagamento input[type="text"] 
-{
+.form-pagamento input[type="text"] {
     font-family: Arial, sans-serif;
     border: 1px solid #ccc;
     box-sizing: border-box;
@@ -151,18 +153,18 @@ select option[disabled] {
     font-size: 11pt;
     padding: 5px;
     color: #333;
-    width: 100%;    
+    width: 100%;
 }
 
-.form-compra textarea, 
-.form-pagamento textarea{
+.form-compra textarea,
+.form-pagamento textarea {
     min-width: 250px;
     min-height: 100px;
     max-height: 200px;
 }
 
 .form-compra input[type="radio"] {
-    
+
     margin-right: 5px;
 }
 
@@ -222,8 +224,7 @@ select option[disabled] {
 }
 
 .tabela th,
-.tabela td
-{
+.tabela td {
     max-width: 300px;
     border: 1px solid #0000003d;
     padding: 8px;
@@ -236,8 +237,7 @@ select option[disabled] {
     background-color: #8294b4;
 }
 
-#priceTable .forn-aprovado
-{
+#priceTable .forn-aprovado {
     background-color: #586f99;
 }
 
@@ -298,13 +298,13 @@ button:hover {
     transition: color 0.3s ease;
     font-size: 30px;
 }
-.add-btn{
+
+.add-btn {
     color: #187124;
     margin: 0px 0px 0px 10px;
 }
 
-.add-product-btn
-{
+.add-product-btn {
     margin-left: 3%;
 }
 
@@ -313,19 +313,16 @@ button:hover {
     margin-top: 2px;
 }
 
-.linhas-totalizadoras td
-{
+.linhas-totalizadoras td {
     font-weight: bold;
     background-color: #D2D6D8;
 }
 
-.linhas-totalizadoras td:first-child
-{
+.linhas-totalizadoras td:first-child {
     text-align: left;
 }
 
-.borda-oculta
-{
+.borda-oculta {
     border: none !important;
     text-align: left !important;
 }
@@ -351,6 +348,7 @@ button:hover {
 .save-btn:hover {
     background-color: #45a049;
 }
+
 /*==========SECAO 05==========*/
 
 .campos-retencao-nf {
@@ -359,18 +357,17 @@ button:hover {
     margin-top: 20px;
 }
 
-.campos-retencao-nf th, .campos-retencao-nf td {
+.campos-retencao-nf th,
+.campos-retencao-nf td {
     /*border: 1px solid #000;*/
     padding: 8px;
 }
 
-.campos-retencao-nf th
-{
+.campos-retencao-nf th {
     text-align: center;
 }
 
-.campos-retencao-nf td
-{
+.campos-retencao-nf td {
     text-align: left;
 }
 
@@ -465,8 +462,8 @@ button:hover {
     text-align: left;
     transition: background-color 0.3s;
 }
-.dp-field-sel-btn
-{
+
+.dp-field-sel-btn {
     background-color: #fff;
     padding: 12px 15px;
     font-size: 16px;
@@ -479,8 +476,7 @@ button:hover {
     transition: background-color 0.3s;
 }
 
-.dp-field-opt-container
-{
+.dp-field-opt-container {
     background-color: #fff;
     max-width: 100%;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -675,25 +671,32 @@ button:hover {
 
 /*==========BARRA DE ROLAGEM==========*/
 ::-webkit-scrollbar {
-    width: 12px; /* Largura da barra vertical */
-    height: 12px; /* Altura da barra horizontal */
+    width: 12px;
+    /* Largura da barra vertical */
+    height: 12px;
+    /* Altura da barra horizontal */
 }
 
 ::-webkit-scrollbar-track {
-    background: #f0f0f0; /* Cor do fundo da barra */
+    background: #f0f0f0;
+    /* Cor do fundo da barra */
     border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #888; /* Cor da barra de rolagem */
+    background: #888;
+    /* Cor da barra de rolagem */
     border-radius: 6px;
-    border: 3px solid #f0f0f0; /* Dá um efeito de borda */
+    border: 3px solid #f0f0f0;
+    /* Dá um efeito de borda */
     transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555; /* Cor ao passar o mouse */
+    background: #555;
+    /* Cor ao passar o mouse */
 }
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -736,7 +739,8 @@ button:hover {
 }
 
 /* Estilização dos campos de data */
-#camposData, #linhas-nf {
+#camposData,
+#linhas-nf {
     margin-top: 10px;
     display: flex;
     flex-direction: column;
@@ -746,7 +750,7 @@ button:hover {
 .parcela,
 .linha-nf,
 .titulos-parcela,
-.campos-iniciais-nf{
+.campos-iniciais-nf {
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -754,7 +758,7 @@ button:hover {
     padding: 4px 0;
 }
 
-.parcela label{
+.parcela label {
     font-weight: bold;
     font-size: 90%;
     min-width: 85px;
@@ -837,7 +841,8 @@ button:hover {
     font-size: 90%;
 }
 
-.nomes-campos-nf, .linha-nf {
+.nomes-campos-nf,
+.linha-nf {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
     gap: 15px;
@@ -846,7 +851,8 @@ button:hover {
 }
 
 /* Ajuste na classificação para remover labels repetidos */
-.linha-classificacao, .nomes-campos-classificacao {
+.linha-classificacao,
+.nomes-campos-classificacao {
     display: grid;
     grid-template-columns: 0.5fr 1fr 1fr auto;
     gap: 15px;
@@ -921,10 +927,11 @@ button:hover {
     transform: translateY(-1px);
 }
 
-.transl-because-title{
+.transl-because-title {
     transform: translateY(8px);
 }
-.transl-because-title:hover{
+
+.transl-because-title:hover {
     transform: translateY(7px);
     filter: brightness(0.9);
 }
@@ -1001,13 +1008,17 @@ button:hover {
 
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Estilo unificado para campos de depósito e PIX */
-#campos-deposito
-{
+#campos-deposito {
     display: grid;
     gap: 10px;
     grid-template-columns: 1fr 1fr;
@@ -1018,13 +1029,11 @@ button:hover {
 
 /* Campos que ocupam linha inteira */
 #campos-deposito .campo:nth-child(1),
-#campos-deposito .campo:nth-child(4)
-{
+#campos-deposito .campo:nth-child(4) {
     grid-column: 1 / -1;
 }
 
-#campos-pix
-{
+#campos-pix {
     display: grid;
     gap: 10px;
     grid-template-columns: 0.5fr 1.5fr;
@@ -1033,13 +1042,12 @@ button:hover {
     margin-top: 10px;
 }
 
-#campos-pix .campo:nth-child(1)
-{
+#campos-pix .campo:nth-child(1) {
     grid-column: 1 / 2;
 
 }
-#campos-pix .campo:nth-child(2)
-{
+
+#campos-pix .campo:nth-child(2) {
     grid-column: 2 / 3;
 }
 
@@ -1167,88 +1175,126 @@ button:hover {
     padding: 0;
 }
 
-#botoes-e-totalizadores_parcelas, #botoes-e-totalizadores-classificacoes {
+#botoes-e-totalizadores_parcelas,
+#botoes-e-totalizadores-classificacoes {
     display: flex;
-    justify-content: space-between; /* Alinha os itens nas extremidades */
-    align-items: center; /* Centraliza verticalmente */
+    justify-content: space-between;
+    /* Alinha os itens nas extremidades */
+    align-items: center;
+    /* Centraliza verticalmente */
     margin-top: 8px;
 }
 
-#totalizadores_parcelas, #totalizadores-classificacoes {
+#totalizadores_parcelas,
+#totalizadores-classificacoes {
     display: flex;
-    align-items: center; /* Centraliza verticalmente */
+    align-items: center;
+    /* Centraliza verticalmente */
 }
 
-#valor-total-parcelas, #valor-total-classificacoes {
-    min-width: 120px; /* Define uma largura mínima para acomodar o valor */
-    text-align: right; /* Alinha o texto à direita */
+#valor-total-parcelas,
+#valor-total-classificacoes {
+    min-width: 120px;
+    /* Define uma largura mínima para acomodar o valor */
+    text-align: right;
+    /* Alinha o texto à direita */
 }
 
 .valor-igual {
-    color: green; /* Cor verde para indicar que os valores são iguais */
-    font-weight: bold; /* Deixa o texto em negrito */
+    color: green;
+    /* Cor verde para indicar que os valores são iguais */
+    font-weight: bold;
+    /* Deixa o texto em negrito */
 }
 
 .valor-diferente {
-    color: red; /* Cor vermelha para indicar que os valores são diferentes */
-    font-weight: bold; /* Deixa o texto em negrito */
+    color: red;
+    /* Cor vermelha para indicar que os valores são diferentes */
+    font-weight: bold;
+    /* Deixa o texto em negrito */
 }
 
 /* Estilo para o campo de texto do modal */
 #numeroPDC {
-    width: 100%; /* Largura total */
-    padding: 8px; /* Espaçamento interno */
-    border: 1px solid #ccc; /* Borda */
-    border-radius: 4px; /* Bordas arredondadas */
-    font-size: 90%; /* Tamanho da fonte */
-    box-sizing: border-box; /* Inclui padding e border na largura total */
-    height: 35px; /* Altura do campo */
-    margin-bottom: 15px; /* Espaçamento inferior */
+    width: 100%;
+    /* Largura total */
+    padding: 8px;
+    /* Espaçamento interno */
+    border: 1px solid #ccc;
+    /* Borda */
+    border-radius: 4px;
+    /* Bordas arredondadas */
+    font-size: 90%;
+    /* Tamanho da fonte */
+    box-sizing: border-box;
+    /* Inclui padding e border na largura total */
+    height: 35px;
+    /* Altura do campo */
+    margin-bottom: 15px;
+    /* Espaçamento inferior */
 }
 
 /* Estilo para os botões do modal */
 .customConfirm-confirmButton,
 .customConfirm-cancelButton {
-    padding: 8px 16px; /* Espaçamento interno */
-    border: 1px solid #ddd; /* Borda */
-    border-radius: 4px; /* Bordas arredondadas */
-    cursor: pointer; /* Cursor de ponteiro */
-    transition: background-color 0.3s; /* Transição suave para a cor de fundo */
+    padding: 8px 16px;
+    /* Espaçamento interno */
+    border: 1px solid #ddd;
+    /* Borda */
+    border-radius: 4px;
+    /* Bordas arredondadas */
+    cursor: pointer;
+    /* Cursor de ponteiro */
+    transition: background-color 0.3s;
+    /* Transição suave para a cor de fundo */
 }
 
 .customConfirm-confirmButton:hover,
 .customConfirm-cancelButton:hover {
-    background-color: #f1f1f1; /* Cor de fundo ao passar o mouse */
+    background-color: #f1f1f1;
+    /* Cor de fundo ao passar o mouse */
 }
 
 .disabled {
-    opacity: 0.5; /* Torna o botão semi-transparente */
-    pointer-events: none; /* Desabilita interações com o botão */
-    cursor: not-allowed; /* Muda o cursor para indicar que o botão está desabilitado */
+    opacity: 0.5;
+    /* Torna o botão semi-transparente */
+    pointer-events: none;
+    /* Desabilita interações com o botão */
+    cursor: not-allowed;
+    /* Muda o cursor para indicar que o botão está desabilitado */
+}
+.wait-file {
+    opacity: 0.5;
+    /* Torna o botão semi-transparente */
+    pointer-events: none;
+    /* Desabilita interações com o botão */
+    cursor: not-allowed;
+    /* Muda o cursor para indicar que o botão está desabilitado */
 }
 
 .hidden {
-    display: none !important; /* Força a ocultação do elemento */
+    display: none !important;
+    /* Força a ocultação do elemento */
 }
 
 .modal {
-    display: none; 
-    position: fixed; 
-    z-index: 1; 
+    display: none;
+    position: fixed;
+    z-index: 1;
     left: 0;
     top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgb(0,0,0); 
-    background-color: rgba(0,0,0,0.9); 
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
 }
 
 .modal-content {
     margin: auto;
     display: block;
-    width: 80%; 
-    max-width: 700px; 
+    width: 80%;
+    max-width: 700px;
 }
 
 .close {
@@ -1265,7 +1311,8 @@ button:hover {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    width: 400px; /* Ajuste conforme necessário */
+    width: 400px;
+    /* Ajuste conforme necessário */
 }
 
 .cabecalho-popup {
@@ -1276,44 +1323,62 @@ button:hover {
 }
 
 .modal-cadastro-fornecedor {
-    background-color: #fff; /* Cor de fundo */
-    border-radius: 8px; /* Bordas arredondadas */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
-    width: 650px; /* Largura do modal aumentada */
-    max-width: 90%; /* Largura máxima */
-    text-align: left; /* Alinhamento do texto à esquerda */
+    background-color: #fff;
+    /* Cor de fundo */
+    border-radius: 8px;
+    /* Bordas arredondadas */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Sombra */
+    width: 650px;
+    /* Largura do modal aumentada */
+    max-width: 90%;
+    /* Largura máxima */
+    text-align: left;
+    /* Alinhamento do texto à esquerda */
 }
 
-.cadastro-fornecedor-titulo
-{
+.cadastro-fornecedor-titulo {
     text-align: center;
     margin-top: 0px;
 }
 
 .modal-cadastro-fornecedor .campo {
-    display: flex; /* Usar flexbox para alinhar label e input */
-    align-items: center; /* Alinha verticalmente ao centro */
-    margin-bottom: 15px; /* Margem inferior entre os campos */
+    display: flex;
+    /* Usar flexbox para alinhar label e input */
+    align-items: center;
+    /* Alinha verticalmente ao centro */
+    margin-bottom: 15px;
+    /* Margem inferior entre os campos */
 }
 
 .modal-cadastro-fornecedor label {
-    margin-right: 10px; /* Margem à direita da label */
-    font-weight: bold; /* Negrito */
-    color: #333; /* Cor do texto */
-    flex: 0 0 80px; /* Largura fixa para a label */
+    margin-right: 10px;
+    /* Margem à direita da label */
+    font-weight: bold;
+    /* Negrito */
+    color: #333;
+    /* Cor do texto */
+    flex: 0 0 80px;
+    /* Largura fixa para a label */
 }
 
 .modal-cadastro-fornecedor input,
 .modal-cadastro-fornecedor select {
-    flex: 1; /* Faz o input ocupar o restante do espaço */
-    padding: 8px; /* Espaçamento interno */
-    border: 1px solid #ccc; /* Borda */
-    border-radius: 4px; /* Bordas arredondadas */
-    font-size: 90%; /* Tamanho da fonte */
+    flex: 1;
+    /* Faz o input ocupar o restante do espaço */
+    padding: 8px;
+    /* Espaçamento interno */
+    border: 1px solid #ccc;
+    /* Borda */
+    border-radius: 4px;
+    /* Bordas arredondadas */
+    font-size: 90%;
+    /* Tamanho da fonte */
 }
 
 .modal-cadastro-fornecedor .botao-salvar {
-    display: block; /* Exibe o botão como bloco */
+    display: block;
+    /* Exibe o botão como bloco */
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 20px;
@@ -1321,14 +1386,16 @@ button:hover {
 
 .form-colunas {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Cria 2 colunas de igual largura */
-    gap: 15px; /* Espaçamento entre os campos */
-    padding: 20px; /* Espaçamento interno */
+    grid-template-columns: repeat(2, 1fr);
+    /* Cria 2 colunas de igual largura */
+    gap: 15px;
+    /* Espaçamento entre os campos */
+    padding: 20px;
+    /* Espaçamento interno */
 }
 
-.gallery
-{
-    display:flex;
+.gallery {
+    display: flex;
     align-items: flex-start;
     justify-content: center;
 }
@@ -1347,78 +1414,77 @@ button:hover {
 }
 
 .fancybox-button--play {
-    display: none !important; /* Força a ocultação do botão de slideshow */
+    display: none !important;
+    /* Força a ocultação do botão de slideshow */
 }
+
 .fancybox-button--zoom {
-    display: none !important; /* Força a ocultação do botão de slideshow */
+    display: none !important;
+    /* Força a ocultação do botão de slideshow */
 }
+
 .fancybox-button--download {
-    display: block !important; /* Força a ocultação do botão de slideshow */
+    display: block !important;
+    /* Força a ocultação do botão de slideshow */
 }
-.fancybox-toolbar
-{
+
+.fancybox-toolbar {
     display: flex;
 }
 
-.remove-anexo-btn
-{
+.remove-anexo-btn {
     position: absolute;
     top: 8px;
     margin-bottom: 0px;
     margin-left: 90px;
     z-index: 1;
 }
-.botao-adicionar
-{
-    width:auto;
+
+.botao-adicionar {
+    width: auto;
     height: auto;
 }
 
-#campos-assinatura
-{
+#campos-assinatura {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    
+
 }
 
-#labels-assinatura
-{
+#labels-assinatura {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
 
 }
-.label-assinante
-{
+
+.label-assinante {
     width: 100%;
     text-align: center;
 }
 
-.assinantes
-{
+.assinantes {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
 
 }
 
-.assinante
-{
+.assinante {
     display: flex;
     flex-direction: row;
 }
 
-.input-assinante
-{
+.input-assinante {
     margin: 10px 3px;
 }
-.input-assinante:first-child
-{
+
+.input-assinante:first-child {
     margin-left: 0px;
 }
-.input-assinante:last-child
-{
+
+.input-assinante:last-child {
     margin-right: 0px;
 }
 
@@ -1432,16 +1498,15 @@ button:hover {
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-  }
-  
-  .placeholder-text {
+}
+.placeholder-text {
     font-size: 14px;
     font-weight: bold;
     text-align: center;
     padding: 10px;
-  }
+}
 
-  .error-modal {
+.error-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -1451,24 +1516,24 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  
-  .error-modal-content {
+}
+
+.error-modal-content {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  }
-  
-  .close-modal {
+}
+
+.close-modal {
     background-color: #4CAF50;
     color: #fff;
     border: none;
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
-  }
-  
-  .close-modal:hover {
+}
+
+.close-modal:hover {
     background-color: #3e8e41;
-  }
+}
