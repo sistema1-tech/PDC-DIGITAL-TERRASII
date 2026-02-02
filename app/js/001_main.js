@@ -246,8 +246,8 @@ async function executarProcessosParalelos() {
         //==========ATUALIZA TODOS OS OUVINTES DA PÁGINA==========\\
 
         //=====Cria o botão de Sol. Aprov. Síndico=====\\
-        preencherListaAnexosV2();
         criarBotao({ page: globais.pag });
+        preencherListaAnexosV2();
 
         if (globais.pag.includes('_DP') || globais.pag.includes("_controladoria") || globais.pag.includes("_asa_laranjeiras")) {
             if (globais.pag.includes('_DP')) {
@@ -307,7 +307,6 @@ async function processarDadosPDC() {
 
     globais.tipo = 'editar_pdc';
     preencherDadosPDC(respPDC[0]);
-       
 }
 
 async function processarDadosCotacao() {

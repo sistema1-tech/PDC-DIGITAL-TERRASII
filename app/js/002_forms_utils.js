@@ -1358,7 +1358,7 @@ export function calcularValorTotalPagar() {
 //====================ANEXOS====================//
 //==============================================//
 export async function preencherListaAnexosV2(anexos) {
-    const log = false;
+    const log = true;
     if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
     
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
@@ -1642,13 +1642,20 @@ export async function preencherListaAnexosV2(anexos) {
 
     //==========INICIANDO O FANCYBOX==========//
     await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-
-    const disabledElements = document.querySelectorAll('.wait-file');
-    disabledElements.forEach(el => el.classList.remove('wait-file'));
     // Adiciona o botão e o input ao DOM;
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
+
+    setTimeout(() => {
+        setTimeout(() => {
+            console.log("|||||||||||||||||||||||||||FANCYBOX INICIADO");
+            console.log("REMOVENDO CLASSE DE ESPERA DOS ELEMENTOS");
+            const disabledElements = document.querySelectorAll('.wait-file');
+            console.log(JSON.stringify(disabledElements));
+            disabledElements.forEach(el => el.classList.remove('wait-file'));
+        }, 1000);
+    }, 0);
 }
 //=================================================//
 //====================LINHAS NF====================//
