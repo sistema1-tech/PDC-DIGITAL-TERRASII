@@ -222,6 +222,10 @@ async function executarProcessosParalelos() {
                 });
             }
 
+            if (globais.pag.includes("checagem_final")) {
+                mostrarCamposRetencao();
+            }
+
         } else {
             //=====Remove todos os botões=====\\
             criarBotao({ removeExistingButtons: true });

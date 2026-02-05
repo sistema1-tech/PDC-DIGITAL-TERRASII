@@ -1358,7 +1358,7 @@ export function calcularValorTotalPagar() {
 //====================ANEXOS====================//
 //==============================================//
 export async function preencherListaAnexosV2(anexos) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
     
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
@@ -1649,8 +1649,6 @@ export async function preencherListaAnexosV2(anexos) {
 
     setTimeout(() => {
         setTimeout(() => {
-            console.log("|||||||||||||||||||||||||||FANCYBOX INICIADO");
-            console.log("REMOVENDO CLASSE DE ESPERA DOS ELEMENTOS");
             const disabledElements = document.querySelectorAll('.wait-file');
             console.log(JSON.stringify(disabledElements));
             disabledElements.forEach(el => el.classList.remove('wait-file'));
@@ -1716,8 +1714,8 @@ export function mostrarCamposRetencao() {
     camposNF.classList.remove("hidden");
 
     // Verifica se o tipo de solicitação é "SERVIÇO"
-    const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     camposNF.querySelector('.campos-iniciais-nf').classList.remove("hidden");
+    camposNF.querySelector('.campos-retencao-nf').classList.remove("hidden");
 }
 
 export function formatarCPFouCNPJ(elemento) {
