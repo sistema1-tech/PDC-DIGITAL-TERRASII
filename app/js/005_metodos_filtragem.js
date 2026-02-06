@@ -67,7 +67,6 @@ export function criarBotao({page = null, removeExistingButtons = false})
                 break;
 
             case "confirmar_compra":
-                console.log('Criando botão para confirmar compra');
                 configurarBotao('confirm-purchase-btn adjust-btn', 'Confirmar compra', page, null, "Deseja marcar essa solicitação como COMPRADA?");
                 setTimeout(() => criarBotao({page: "arquivar_cotacao"}), 0);
                 break;

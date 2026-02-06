@@ -593,7 +593,7 @@ function getItemData(base64String) {
 
 export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
-        const log = true;
+        const log = false;
         if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);

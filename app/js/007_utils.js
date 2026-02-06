@@ -1,5 +1,6 @@
 import { saveTableData_V3, enviarParaPaybox } from './006_save_utils.js';
 import {globais, eventConfig} from './999_config.js';
+import { atualizarLinhasDeAssinatura, verificarSeAssinanteAutorizado, buscarAssinaturas, data_atual_formatada } from './002_forms_utils.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
 //   //========================================\\
@@ -155,7 +156,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 }
 
 export function formatToBRL_V2(v, nd = 2, alt = true) {
-    const log = true;
+    const log = false;
     if (log) console.log("[+++++FORMATANDO PARA BRL+++++]");
     if (log) console.log("Número de decimais => ", nd);
     let ap_vlrOrig = null;
@@ -952,10 +953,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
         const parcelaCriadaElement = document.getElementsByName('parcela_criada')[0];
         let parcelaCriada = parcelaCriadaElement ? parcelaCriadaElement.checked : false;
-        const data_atual = moment();
-        const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
-        // Nova constante no formato 'aa-mmm-dd' com mês em inglês
-        //const data_atual_formatada_en = data_atual.format('DD-MMM-YYYY HH:mm:ss');
         let alcada_temp = null;
         
         if(acao === "autorizar_pagamento_subsindico")
@@ -978,7 +975,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             //{status: 404, statusText: 'error', responseText: '{"code":3100,"message":"No records found for the given criteria."}'}
         }
         
-        const paramExtra = {};
         const pgtoAnt = document.getElementById('pag_antecipado').checked;
     
         let stats_salvarCot = "Prop. criada";
@@ -994,128 +990,55 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             stats_salvarCot = "Chec. final";
 
         }
-    
         let apoio_paramExtras = {};
         apoio_paramExtras.Assinaturas = [];
-        let tudoAssinado = false;
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        const linhas_de_assinatura_atualizadas = await atualizarLinhasDeAssinatura();
+
+        console.log("==================================");
+        console.log("==================================");
+        console.log("==================================");
 
 
-        let ap_status_subsindico = "Ass. subsindico";
-    
-        if ([
-            "enviar_p_ass_control",
-            "enviar_p_assinatura",
-            "autorizar_pagamento_sindico",
-            "autorizar_pagamento_subsindico",
-            "confirmar_todas_as_assinaturas"
-        ].includes(acao)) {
-            const apoio_assin_inic = new Map();
-            apoio_assin_inic["Financeiro"] = 
-            {
-                Cargo: "Controladoria",
-                Funcao: "Auxiliar controladoria",
-                Usuario: "Maiara",
-                E_mail_usuario: "Controladoriatsj2@gmail.com",
-                IP: globais.userIP,
-                Data_da_assinatura: data_atual_formatada,
-                Assinado: true
-            }
-            
-            if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 3000)
-            {
-                apoio_assin_inic["Joana"]={
-                    Cargo: "Administrativo",
-                    Funcao: "Síndico",
-                    Usuario: "Joana",
-                    E_mail_usuario: "sindico@tsj2.com.br",
-                    IP: "",
-                    Data_da_assinatura: "",
-                    Assinado: false
-                }
-            }
-            
-            const assinaturasIniciais = {
-                "Weverton": {
-                    Cargo: "Administrativo",
-                    Funcao: "Gerente operacional",
-                    Usuario: "Weverton",
-                    E_mail_usuario: "controladoriatsj2@gmail.com",
-                    IP: "",
-                    Data_da_assinatura: "",
-                    Assinado: false
-                },
-                ...apoio_assin_inic,
-            }
-            if(log) console.log("assinaturasIniciais => ", JSON.stringify(assinaturasIniciais));
-            function buscarAssinaturas() {
-                const log = false;
-                if (log) console.log("++++++++++BUSCANDO ASSINATURAS++++++++++");
-    
-                const assinantes = document.querySelectorAll('.assinantes .assinante');
-                if (log) console.log("assinantes => ", assinantes);
-                assinantes.forEach((assinante) => {
-                    const dadosAssinante = {};
-                    if (log) console.log("assinante => ", assinante);
-                    assinante.querySelectorAll('input').forEach((input) => {
-                        if (log) console.log("nome => ", input.name, ", valor => ", input.value);
-                        if (input.name === "Assinado") {
-                            dadosAssinante[input.name] = input.checked;
-                        } else if (input.name === "Data_da_assinatura") {
-                            if (input.value) {
-                                //dadosAssinante[input.name] = moment(input.value, 'YYYY-MM-DDTHH:mm:ss').format('DD/MM/YYYY HH:mm:ss');
-                                dadosAssinante[input.name] = formatDate(input.value, 'DD/MM/YYYY HH:mm:ss');
-    
-                            } else {
-                                dadosAssinante[input.name] = ""; // ou você pode atribuir um valor padrão, como ""
-                            }
-                        }
-                        else {
-                            dadosAssinante[input.name] = input.value;
-                        }
-                    });
-    
-                    if (log) console.log("dadosAssinante => ", dadosAssinante);
-    
-                    apoio_paramExtras.Assinaturas.push({ ...dadosAssinante });
-                    if (log) console.log("assinaturas => ", JSON.stringify(apoio_paramExtras.Assinaturas));
-                });
-    
-            }
-    
-            if (acao === "enviar_p_assinatura" || acao === "enviar_p_ass_control") {
-                apoio_paramExtras.Assinaturas.push(...Object.values(assinaturasIniciais));
-    
-            } else {
-                buscarAssinaturas();
-                console.log("assinaturas j  criadas", apoio_paramExtras.Assinaturas);
-                if (acao === "autorizar_pagamento_subsindico") {
-                    const indice = 0;
-                    if (apoio_paramExtras.Assinaturas.length > indice) {
-                        apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-                        apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-                        apoio_paramExtras.Assinaturas[indice].Assinado = true;
-                    }
-                } else if (acao === "autorizar_pagamento_sindico") {
-                    const indice = 2;
-                    if (apoio_paramExtras.Assinaturas.length > indice) {
-                        apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-                        apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-                        apoio_paramExtras.Assinaturas[indice].Assinado = true;
-                    }
-                }
-            }
-            tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
-            ap_status_subsindico = tudoAssinado ? "Pag. aut." : ap_status_subsindico;
+        buscarAssinaturas();
+        // Se a etapa atual solicitar assinante, é verificado se o email do cliente atual é autorizado
+        console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2))
+        const assinante_autorizado = await verificarSeAssinanteAutorizado(acao, linhas_de_assinatura_atualizadas);
+        if (!assinante_autorizado){
+            console.log(`--ASSINATURA NEGADA PARA:\n${globais.emailUsuario}\nNa ação => ${acao}`);
+
+            const mensagem_erro = "Você não tem autorização para assinar este PDC!"
+            customModal_V2({
+                tipoAcao:'alert', 
+                titulo: "Autorização negada!🚫", 
+                mensagem:`<p>${mensagem_erro}</p>`,
+                confirmText: 'Ok!'
+            });
+            console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2))
+
+            return;
         }
-    
+        console.log("Apoio_paramExtras.Assinaturas")
+        console.log(JSON.stringify(linhas_de_assinatura_atualizadas , null, 2))
+        apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_atualizadas));
+        console.log("--Cliente autorizado na verificação da assinatura");
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        let tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
+        let ap_status_subsindico = tudoAssinado ? "Pag. aut." : "Ass. subsindico";
+
         const statusMap = {
             salvar_cot: {
-                status: stats_salvarCot
+                status: stats_salvarCot, 
+                paramsExtraPDC:  apoio_paramExtras
             },
             criar_cotacao: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
             editar_cot: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
             corrigir_erros: { status: globais.pag === "criar_numero_de_PDC" ? null : "Prop. criada" },
-            solicitar_aprovacao_sindico: { status: "Aguard. aprov. prop." },
+            solicitar_aprovacao_sindico: { 
+                status: "Aguard. aprov. prop.", 
+                paramsExtraPDC:  apoio_paramExtras
+            },
             ajustar_cot: { status: "Ajuste sol.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida } },
             aprov_cot: {
                 status:
@@ -1135,16 +1058,29 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 sepPorParc: tipoSolicitacao === 'SERVIÇO' || pgtoAnt || globais.perfilResponsavel.includes("Controladoria"),
                 paramsExtraPDC: {pag_antecipado: false}
             },
-            confirmar_recebimento: { status: "Chec. final", sepPorParc: true },
-            solicitar_ajuste_ao_compras: { status: "Ajuste sol. control.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }},
-            enviar_p_checagem_final: { status: "Chec. final" },
-            tratar_control: { paramsExtraPDC: { Status_controladoria: "Tratado" } },
+            confirmar_recebimento: { status: "Chec. final", paramsExtraPDC:  apoio_paramExtras, sepPorParc: true },
+
+            solicitar_ajuste_ao_compras: { 
+                status: "Ajuste sol. control.", 
+                paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }
+            },
+
+            enviar_p_checagem_final: { 
+                status: "Chec. final",
+                paramsExtraPDC: apoio_paramExtras
+             },
+
+            tratar_control: { 
+                paramsExtraPDC: { Status_controladoria: "Tratado" } 
+            },
+
             enviar_p_ass_control:
             {
                 status: "Prop. criada",
                 sepPorParc: apoio_sep_parcela,
                 paramsExtraPDC: apoio_paramExtras
             },
+
             enviar_p_assinatura: {
                 status: stats_salvarCot,
                 sepPorParc: apoio_sep_parcela,
@@ -1163,9 +1099,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 paramsExtraPDC: apoio_paramExtras
             },
             lancar_pdc_ahreas: { status: "Lanç. ERP", paramsExtraPDC: { Status_Guillaumon: "Lançado no ahreas", num_lanc_ahreas: infoInserida } },
-            confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada} },
+            confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada()} },
             suspender_pagamento: {status: "Pagamento suspenso"}
         };
+
+        console.log("params extras que foram adicionados no status map");
+        console.log(JSON.stringify(apoio_paramExtras, null, 2))
 
         if (acao in statusMap) {
             const params = statusMap[acao];
@@ -1227,6 +1166,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
                 } else if (pgtoAnt) {
                     await saveTableData_V3({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
+                    
                 }
     
                 const entidadeSelecionada = document.getElementById('entidade').value;
@@ -1675,3 +1615,89 @@ async function gerar_num_pdc()
         }
     });
 }
+
+
+// if (acao === "autorizar_pagamento_subsindico") {
+    // const indice = 0;
+    // if (apoio_paramExtras.Assinaturas.length > indice) {
+    //     apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+    //     apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+    //     apoio_paramExtras.Assinaturas[indice].Assinado = true;
+    // }
+// else if (acao === "autorizar_pagamento_sindico") {
+//                     const indice = 2;
+//                     if (apoio_paramExtras.Assinaturas.length > indice) {
+//                         apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+//                         apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+//                         apoio_paramExtras.Assinaturas[indice].Assinado = true;
+//                     }
+//                 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //     if (acao === "enviar_p_assinatura" || acao === "enviar_p_ass_control") {
+        //         // apoio_paramExtras.Assinaturas.push(...Object.values(assinaturasIniciais));
+        //         // apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_para_criar));
+        //     } else {
+        //         buscarAssinaturas();
+        //         console.log("assinaturas j  criadas", apoio_paramExtras.Assinaturas);
+        //         if (acao === "autorizar_pagamento_subsindico") {
+        //             // const indice = 0;
+        //             // if (apoio_paramExtras.Assinaturas.length > indice) {
+        //             //     apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+        //             //     apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+        //             //     apoio_paramExtras.Assinaturas[indice].Assinado = true;
+        //             // }
+        //             if (apoio_paramExtras.Assinaturas.length > 0){
+        //                 apoio_paramExtras.Assinaturas.forEach(assinatura =>{
+        //                     assinatura.IP = globais.userIP || "";
+        //                     assinatura.Data_da_assinatura = data_atual_formatada;
+        //                     assinatura.Assinado = true;
+        //                 })
+        //             }
+                    
+
+        //         } else if (acao === "autorizar_pagamento_sindico") {
+        //             const indice = 2;
+        //             if (apoio_paramExtras.Assinaturas.length > indice) {
+        //                 apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+        //                 apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+        //                 apoio_paramExtras.Assinaturas[indice].Assinado = true;
+        //             }
+        //         }
+        //     }
+        //     tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
+        //     ap_status_subsindico = tudoAssinado ? "Pag. aut." : ap_status_subsindico;
+        // }
+
+
+
+        //         if ([
+        //     "enviar_p_ass_control",
+        //     "enviar_p_assinatura",
+        //     "autorizar_pagamento_sindico",
+        //     "autorizar_pagamento_subsindico",
+        //     "confirmar_todas_as_assinaturas",
+        //     "solicitar_aprovacao_sindico"
+        // ]

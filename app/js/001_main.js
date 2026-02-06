@@ -24,7 +24,8 @@ import {criarBotao} from './005_metodos_filtragem.js';
 import {
     desabilitarCampos,
     executar_apiZoho,
-    setupEventListeners
+    setupEventListeners,
+    customModal_V2
 
 } from './007_utils.js'
 import {globais} from './999_config.js';
@@ -37,14 +38,16 @@ __INIT__().catch(error => {
 
 async function __INIT__() {
     try {
-        const log = false;
+        const log = true;
         if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
+        console.log("page => ", globais.pag);
+        console.log("globais => ", globais)
 
         // 2. Valida as entidades permitidas
         validarEntidadesPermitidas();
-        //buscarDadosUsuarioLogado();
+
 
         // 3. Cria a Promise que busca todas as bases
         const basesPromise = Promise.allSettled([
@@ -85,10 +88,8 @@ async function __INIT__() {
     }
 }
 
-async function buscarDadosUsuarioLogado() {
-    if (globais.id_usuario_logado)
-    {
-        const apoio_dados_usuario = new Map();
+export async function buscarDadosUsuarioLogado() {
+    if (globais.id_usuario_logado){
         //usuarioLogado
         const config = {
             tipo: "busc_reg",
@@ -96,29 +97,32 @@ async function buscarDadosUsuarioLogado() {
             nomeR: "Usuarios_API",
         }
 
-        const apoio_usuario = await executar_apiZoho(config);
+        const dados_usuario = await executar_apiZoho(config);
+        console.log(JSON.stringify(dados_usuario, null, 2))
 
-        apoio_dados_usuario.set("ID", apoio_usuario[0]?.ID || null);
-        apoio_dados_usuario.set("Nome_completo", apoio_usuario[0]?.Nome_completo || null);
-        apoio_dados_usuario.set("e_mail_pessoal", apoio_usuario[0]?.e_mail_pessoal || null);
-        apoio_dados_usuario.set("e_mail_profissional", apoio_usuario[0]?.e_mail_profissional || null);
-        apoio_dados_usuario.set("Cargo", apoio_usuario[0]?.Cargo || null);
-        apoio_dados_usuario.set("Departamento", apoio_usuario[0]?.Departamento || null);
-        apoio_dados_usuario.set("Entidades_permitidas", apoio_usuario[0]?.Entidades_permitidas.map(ent => ent.ID) || null);
+        const apoio_dados_usuario = new Map();
+        apoio_dados_usuario.set("ID", dados_usuario[0]?.ID || null);
+        apoio_dados_usuario.set("Nome_completo", dados_usuario[0]?.Nome_completo || null);
+        apoio_dados_usuario.set("e_mail_pessoal", dados_usuario[0]?.e_mail_pessoal || null);
+        apoio_dados_usuario.set("e_mail_profissional", dados_usuario[0]?.e_mail_profissional || null);
+        apoio_dados_usuario.set("Cargo", dados_usuario[0]?.Cargo || null);
+        apoio_dados_usuario.set("Departamento", dados_usuario[0]?.Departamento || null);
+        apoio_dados_usuario.set("Entidades_permitidas", dados_usuario[0]?.Entidades_permitidas.map(ent => ent.ID) || null);
 
-        console.log("apoio_usuario => ", apoio_usuario);
-        const ids_perfis = apoio_usuario[0]?.Perfil1.map(perfil => perfil.ID) || [];
-        console.log("ids_perfis => ", ids_perfis);
+        console.log("dados_usuario => ", dados_usuario);
+        return apoio_dados_usuario;
+        // const ids_perfis = dados_usuario[0]?.Perfil1.map(perfil => perfil.ID) || [];
+        // console.log("ids_perfis => ", ids_perfis);
 
-        const config_perfis = {
-            tipo: "busc_reg",
-            criterios: `ID in [${ids_perfis.join(",")}]`,
-            nomeR: "Perfis_criados_API",
-        }
+        // const config_perfis = {
+        //     tipo: "busc_reg",
+        //     criterios: `ID in [${ids_perfis.join(",")}]`,
+        //     nomeR: "Perfis_criados_API",
+        // }
 
-        console.log("config_perfis => ", config_perfis);
-        const perfis = await executar_apiZoho(config_perfis);
-        console.log("perfis => ", perfis);
+        // console.log("config_perfis => ", config_perfis);
+        // const perfis = await executar_apiZoho(config_perfis);
+        // console.log("perfis => ", perfis);
     }
 }
 
@@ -311,6 +315,7 @@ async function processarDadosPDC() {
 
     globais.tipo = 'editar_pdc';
     preencherDadosPDC(respPDC[0]);
+       
 }
 
 async function processarDadosCotacao() {
@@ -359,6 +364,62 @@ async function searchPageParams() {
         id_usuario_logado: globais.id_usuario_logado // Adicionado
     });
     if (log) console.log("----------PARÂMETROS DA PÁGINA DEFINIDOS----------");
+
+    const dados_usuario_logado = await buscarDadosUsuarioAtual();
+    if(!dados_usuario_logado){
+        const mensagem_erro = "Não foi possível autenticar o usuário logado. Por gentileza recarregue a página!"
+        customModal_V2({
+            tipoAcao:'alert', 
+            titulo: "Login não reconhecido!🚫", 
+            mensagem:`<p>${mensagem_erro}</p>`,
+            confirmText: 'Ok!'
+        });
+
+        return
+    }
+}
+
+
+async function atualizarEmailUsuario(){
+    for (let i = 0; i < 3; i++) {
+        const initParams = await ZOHO.CREATOR.UTIL.getInitParams() || {};
+        console.log(JSON.stringify(initParams, null, 2));
+
+        globais.emailUsuario = initParams.loginUser ?? null;
+        if (globais.emailUsuario) return;
+    }
+
+    console.log("ERRO - NÃO FOI POSSÍVEL ATUALIZAR O EMAIL DO USUÁRIO")
+}
+
+
+export async function buscarDadosUsuarioAtual(){
+
+    if(!globais.emailUsuario){ await atualizarEmailUsuario() }
+    if(!globais.emailUsuario){ return false }
+
+    console.log("Usuário logado:", globais.emailUsuario);
+
+    const config = {
+        tipo: "busc_reg",
+        criterios: `(e_mail_pessoal=="${globais.emailUsuario}")`,
+        nomeR: "Usuarios_API",
+    }
+    const retorno_usuarios_api = await executar_apiZoho(config);
+    const dados_usuario = retorno_usuarios_api[0];
+
+    let apoio_dados_usuario = new Map();
+    apoio_dados_usuario["ID"] = dados_usuario.ID;
+    apoio_dados_usuario["Nome_completo"] = dados_usuario.Nome_completo;
+    apoio_dados_usuario["e_mail_pessoal"] = dados_usuario.e_mail_pessoal;
+    apoio_dados_usuario["e_mail_profissional"] = dados_usuario.e_mail_profissional;
+    apoio_dados_usuario["Cargo"] = dados_usuario.Cargo;
+    apoio_dados_usuario["Departamento"] = dados_usuario.Departamento;
+    apoio_dados_usuario["Entidades_permitidas"] = dados_usuario.Entidades_permitidas;
+
+    console.log("Dados do usuário logado:");
+    console.log(JSON.stringify(apoio_dados_usuario, null, 2));
+    return apoio_dados_usuario;
 }
 
 // Adicionar esta nova função
