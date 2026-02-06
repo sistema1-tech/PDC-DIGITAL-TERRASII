@@ -1,6 +1,6 @@
 import { globais } from './999_config.js';
 import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho } from './007_utils.js';
-
+import { buscarDadosUsuarioAtual } from './001_main.js'
 
 let numeroParcela = 1;
 let numParcelaInicial = null;
@@ -108,7 +108,8 @@ export async function validarEntidadesPermitidas() {
  * - Preenche as datas de vencimento, recriando os campos necessários
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
-export function preencherDadosPDC(data) {
+export async function preencherDadosPDC(data) {
+    console.log("PRENCHENDO DADOS PDC=========================================")
     const log = false;
     if (log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if (log) console.log("data => ", JSON.stringify(data));
@@ -117,6 +118,10 @@ export function preencherDadosPDC(data) {
     globais.idPDC = data.ID;
     globais.numPDC = data.Numero_do_PDC;
     globais.perfilResponsavel = data.Perfil_responsavel;
+    globais.assinaturas = data.Assinaturas;
+    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
+    console.log(data.Perfil_responsavel);
+    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
     globais.numSolicPDC = data.num_sol;
     if (data.Perfil_responsavel) {
         globais.perfilResponsavel = data.Perfil_responsavel;
@@ -311,87 +316,12 @@ export function preencherDadosPDC(data) {
     if (log) console.log("||||||||||||||||||||||||||||||||||||||||||");
     const assinantes = data.Assinaturas ? data.Assinaturas : [];
 
-    function criarAssinante(assinante) {
-        const cargo = assinante.Cargo;
-        const funcao = assinante.Funcao;
-        const usuario = assinante.Usuario;
-        const email = assinante.E_mail_usuario;
-        const ip = assinante.IP;
-        const dataAssinatura = assinante.Data_da_assinatura;
-        const assinado = assinante.Assinado;
 
-        const elementAssinante = document.createElement('div');
-        elementAssinante.classList.add('assinante');
+    // let resposta_Z = await executar_apiZoho({tipo: "busc_reg", nomeR: "Validacoes_criadas"})
+    // console.log("RESPOSTA ZOHO__________________________")
+    // console.log(JSON.stringify(resposta_Z, null, 2));
 
-        //=====CARGO=====\\
-        const inputCargo = document.createElement('input');
-        inputCargo.classList.add('input-assinante');
-        inputCargo.type = 'text';
-        inputCargo.name = 'Cargo';
-        inputCargo.value = cargo || "";
-        elementAssinante.appendChild(inputCargo);
-
-        //=====FUNCAO=====\\
-        const inputFuncao = document.createElement('input');
-        inputFuncao.classList.add('input-assinante');
-        inputFuncao.type = 'text';
-        inputFuncao.name = 'Funcao';
-        inputFuncao.value = funcao || "";
-        elementAssinante.appendChild(inputFuncao);
-
-        //=====USUARIO=====\\
-        const inputUsuario = document.createElement('input');
-        inputUsuario.classList.add('input-assinante');
-        inputUsuario.type = 'text';
-        inputUsuario.name = 'Usuario';
-        inputUsuario.value = usuario || "";
-        elementAssinante.appendChild(inputUsuario);
-
-        //=====EMAIL USUARIO=====\\
-        const inputEmailUsuario = document.createElement('input');
-        inputEmailUsuario.classList.add('input-assinante');
-        inputEmailUsuario.type = 'email';
-        inputEmailUsuario.name = 'E_mail_usuario';
-        inputEmailUsuario.value = email || "";
-        elementAssinante.appendChild(inputEmailUsuario);
-
-        //=====IP=====\\
-        const inputIP = document.createElement('input');
-        inputIP.classList.add('input-assinante');
-        inputIP.type = 'text';
-        inputIP.name = 'IP';
-        inputIP.value = ip || "";
-        elementAssinante.appendChild(inputIP);
-
-        //=====DATA ASSINATURA=====\\
-        const inputDataAssinatura = document.createElement('input');
-        inputDataAssinatura.classList.add('input-assinante');
-        inputDataAssinatura.type = 'datetime-local';
-        inputDataAssinatura.name = 'Data_da_assinatura';
-
-        if (dataAssinatura) {
-            const dataUTC = moment(dataAssinatura, 'DD/MM/YYYY HH:mm:ss').local();
-            const segundos = dataUTC.seconds();
-            if (segundos === 0) {
-                dataUTC.add(1, 'second');
-            }
-            inputDataAssinatura.value = dataUTC.format('YYYY-MM-DDTHH:mm:ss');
-        } else {
-            inputDataAssinatura.value = ''; // ou algum valor padrão que você queira
-        }
-
-        elementAssinante.appendChild(inputDataAssinatura);
-
-        //=====ASSINADO=====\\
-        const inputAssinado = document.createElement('input');
-        inputAssinado.classList.add('input-assinante');
-        inputAssinado.type = 'checkbox';
-        inputAssinado.name = 'Assinado';
-        inputAssinado.checked = assinado === "true";
-        elementAssinante.appendChild(inputAssinado);
-
-        return elementAssinante;
-    }
+    console.log("-----------------------ENTROU PREENCHER PDC-----------------------")
 
     if (assinantes.length > 0) {
 
@@ -425,6 +355,370 @@ export function preencherDadosPDC(data) {
     atualizarValorOrcado();
 }
 
+
+export function criarAssinante(assinante) {
+    const cargo = assinante.Cargo;
+    const funcao = assinante.Funcao;
+    const usuario = assinante.Usuario;
+    const email = assinante.E_mail_usuario;
+    const ip = assinante.IP;
+    const dataAssinatura = assinante.Data_da_assinatura;
+    const assinado = assinante.Assinado;
+
+    const elementAssinante = document.createElement('div');
+    elementAssinante.classList.add('assinante');
+
+    //=====CARGO=====\\
+    const inputCargo = document.createElement('input');
+    inputCargo.classList.add('input-assinante');
+    inputCargo.type = 'text';
+    inputCargo.name = 'Cargo';
+    inputCargo.value = cargo || "";
+    elementAssinante.appendChild(inputCargo);
+
+    //=====FUNCAO=====\\
+    const inputFuncao = document.createElement('input');
+    inputFuncao.classList.add('input-assinante');
+    inputFuncao.type = 'text';
+    inputFuncao.name = 'Funcao';
+    inputFuncao.value = funcao || "";
+    elementAssinante.appendChild(inputFuncao);
+
+    //=====USUARIO=====\\
+    const inputUsuario = document.createElement('input');
+    inputUsuario.classList.add('input-assinante');
+    inputUsuario.type = 'text';
+    inputUsuario.name = 'Usuario';
+    inputUsuario.value = usuario || "";
+    elementAssinante.appendChild(inputUsuario);
+
+    //=====EMAIL USUARIO=====\\
+    const inputEmailUsuario = document.createElement('input');
+    inputEmailUsuario.classList.add('input-assinante');
+    inputEmailUsuario.type = 'email';
+    inputEmailUsuario.name = 'E_mail_usuario';
+    inputEmailUsuario.value = email || "";
+    elementAssinante.appendChild(inputEmailUsuario);
+
+    //=====IP=====\\
+    const inputIP = document.createElement('input');
+    inputIP.classList.add('input-assinante');
+    inputIP.type = 'text';
+    inputIP.name = 'IP';
+    inputIP.value = ip || "";
+    elementAssinante.appendChild(inputIP);
+
+    //=====DATA ASSINATURA=====\\
+    const inputDataAssinatura = document.createElement('input');
+    inputDataAssinatura.classList.add('input-assinante');
+    inputDataAssinatura.type = 'datetime-local';
+    inputDataAssinatura.name = 'Data_da_assinatura';
+
+    if (dataAssinatura) {
+        const dataUTC = moment(dataAssinatura, 'DD/MM/YYYY HH:mm:ss').local();
+        const segundos = dataUTC.seconds();
+        if (segundos === 0) {
+            dataUTC.add(1, 'second');
+        }
+        inputDataAssinatura.value = dataUTC.format('YYYY-MM-DDTHH:mm:ss');
+    } else {
+        inputDataAssinatura.value = ''; // ou algum valor padrão que você queira
+    }
+
+    elementAssinante.appendChild(inputDataAssinatura);
+
+    //=====ASSINADO=====\\
+    const inputAssinado = document.createElement('input');
+    inputAssinado.classList.add('input-assinante');
+    inputAssinado.type = 'checkbox';
+    inputAssinado.name = 'Assinado';
+    inputAssinado.checked = assinado === "true";
+    elementAssinante.appendChild(inputAssinado);
+
+    return elementAssinante;
+}
+
+
+  //==============================================================================//
+ //========================FUNÇÕES PARA TRATAR ASSINATURAS=======================//
+//==============================================================================//
+async function buscarAssinaturasZohoAPI(){
+    // Conjunto de regras para validar se um cargo ou uma pessoa deve assinar o PDC
+    let validacoes_de_assinatura = await executar_apiZoho({tipo: "busc_reg", nomeR: "Validacoes_criadas"});
+    // console.log(JSON.stringify(validacoes_de_assinatura))
+
+    // Lista de regras que estão associadas as validações
+    let regras_de_assinatura = await executar_apiZoho({tipo: "busc_reg", nomeR: "condicoes_de_assinatura_salvas"});
+    // console.log(JSON.stringify(condicoes_de_assinatura_salvas))
+
+    return { validacoes_de_assinatura, regras_de_assinatura }
+}
+
+// Reescreve as linhas de assinaturas do PDC selecionado, enquanto mantém as linhas que já foram assinadas
+export async function atualizarLinhasDeAssinatura(){
+    const { validacoes_de_assinatura, regras_de_assinatura } = await buscarAssinaturasZohoAPI();
+    // Funciona: Pega as validações no zoho, valida o valor do pdc e forma de pagamento, cria as linhas de assinatura se a condição for validada
+    // Não foi feito: Considerar outros parâmetros além de valor e forma de pagamento, considerar condições relacionais de E/OU
+    const assinaturas_solicitadas = await mesclarValidacaoComRegra(validacoes_de_assinatura, regras_de_assinatura);
+    // Manter as linhas que já foram assinadas, e incluí-las na lista de linhas que serão salvas
+    const lista_com_assinadas_incluidas = await incluirLinhasJaAssinadas(assinaturas_solicitadas);
+
+    const linhas_de_assinatura_para_criar = {};
+    if (lista_com_assinadas_incluidas){
+        lista_com_assinadas_incluidas.forEach(solicitacao => {
+            linhas_de_assinatura_para_criar[solicitacao.Cargo] = solicitacao
+        });
+    }
+
+    return linhas_de_assinatura_para_criar;
+}
+
+
+export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condicoes_de_assinatura){
+    console.log("=================================")
+    console.log("======VALIDANDO ASSINATURAS======")
+    console.log("=================================")
+
+    let assinaturas_solicitadas = new Map();
+    validacoes_de_assinatura.forEach(validacao => {
+        const permitir_criacao_da_linha_de_assinatura = tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura);
+        if(!permitir_criacao_da_linha_de_assinatura){
+            console.log("--Criação da linha de assinatura não permitida");
+            return false
+        }
+
+        // Validação genérica para qualquer funcionário do mesmo departamento poder assinar
+        assinaturas_solicitadas[validacao.Cargo] = {
+            Etapa_de_validacao: validacao.Etapa_de_validacao,
+            Cargo: validacao.Cargo,
+            Funcao: "",
+            Usuario: "",
+            E_mail_usuario: "",
+            Assinado: false
+        };
+
+        // Especificar o usuário q deve assinar se tiver o nome de usuário pedido na validação
+        if(validacao["Funcionario.Nome_completo"] !== ""){   
+            assinaturas_solicitadas[validacao.Cargo].Funcao = validacao["Funcao"];
+            assinaturas_solicitadas[validacao.Cargo].Usuario = validacao["Funcionario.Nome_completo"];
+            assinaturas_solicitadas[validacao.Cargo].E_mail_usuario = validacao["Funcionario.e_mail_pessoal"];
+        }
+
+        console.log("--Autorizada criação da linha de assinatura para:");
+        console.log(JSON.stringify(assinaturas_solicitadas[validacao.Cargo], null, 2));
+
+    });
+
+    return assinaturas_solicitadas
+}
+
+
+export function incluirLinhasJaAssinadas(assinaturas_solicitadas){
+    const assinaturas_ja_criadas = globais.assinaturas ? globais.assinaturas : [];
+
+    const linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado=="true");
+
+    // Deletando ID e display value atual pois esses campos dão erro ao tentar subir no zoho
+    linhas_a_serem_criadas.forEach(linha =>{
+        linha.Assinado = true;
+        delete linha.ID;
+        delete linha.zc_display_value;    
+    });
+
+    Object.values(assinaturas_solicitadas).forEach(item_solicitado  => {
+        const ja_existe = linhas_a_serem_criadas.some(linha => 
+            linha.Cargo === item_solicitado.Cargo &&
+            linha.E_mail_usuario === item_solicitado.E_mail_usuario
+        );
+
+        if(!ja_existe){
+            linhas_a_serem_criadas.push(item_solicitado);
+        }
+    });
+
+    return linhas_a_serem_criadas;
+}
+
+//  Analisa os dados do PDC para determinar quais setores/pessoas devem assiná-lo
+function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas){
+
+    function printarValidacaoSendoAnalisada(validacao){
+        let log_assinante_esperado = `${validacao.Cargo}`;
+
+        if(validacao.Funcionario){ 
+            log_assinante_esperado += ` | ${validacao.Funcionario}`;
+        }
+
+        console.log("---------------------------------------------------------------")
+        console.log(`Validação encontrada para solicitar\n 
+            assinatura de ${log_assinante_esperado}\n 
+            na etapa ${validacao.Etapa_de_validacao}`
+        );
+    }
+    // Printar no console quem deve assinar o pdc caso seja validado
+    printarValidacaoSendoAnalisada(validacao);
+
+    // Trazer apenas condições que pertencem a validação atual
+    const condicoes_de_assinatura_da_validacao_atual = condicoes_de_assinatura_salvas.filter(condicao =>
+        condicao.Condicao_ativa == "Sim" 
+        &&
+        condicao.id_temporario == validacao.id_temporario 
+    );
+
+    console.log(`Numero de condições encontradas para essa validação: ${condicoes_de_assinatura_da_validacao_atual.length}`)
+
+    // Cada validação pode ter várias condições...
+    // Garantir que todas as condições estão validadas para poder permitir a criação da linha de assinatura
+    let permitir_criacao_da_linha_de_assinatura = true;
+    condicoes_de_assinatura_da_validacao_atual.forEach(condicao => {
+
+        const condicao_validada = validarAssinanteSolicitado(condicao);
+        if(!condicao_validada) permitir_criacao_da_linha_de_assinatura = false;
+    });
+
+    return permitir_criacao_da_linha_de_assinatura;
+}
+
+
+function validarAssinanteSolicitado(condicao){
+    const lista_operadores_disponiveis = {
+        "Igual": (valor_pdc, valor_condicional) => valor_pdc === valor_condicional,
+        "Diferente": (valor_pdc, valor_condicional) => valor_pdc !== valor_condicional,
+        "Maior que": (valor_pdc, valor_condicional) => valor_pdc > valor_condicional,
+        "Menor que": (valor_pdc, valor_condicional) => valor_pdc < valor_condicional,
+        "Não contém": (valor_pdc, valor_condicional) => !valor_pdc.includes(valor_condicional),
+        "Contém": (valor_pdc, valor_condicional) => valor_pdc.includes(valor_condicional)
+    }
+
+    try {
+        console.log("\n\n--------------------\nValidando condição encontrada:\n--------------------\n\n");
+        // Parametros retorna o valor pedido no html do pdc, e o valor que ele deve ser comparado 
+        let parametros = buscarValoresDeComparacao(condicao);
+        console.log(`${condicao.Fator_1.Nome_do_campo} tem que ser\n\n${condicao.Operador} | ${parametros.valor_da_condicao} \n\nValor encontrado | ${parametros.valor_do_pdc}`)
+
+        const operador_valido = Object.keys(lista_operadores_disponiveis).find(key => condicao.Operador.includes(key))
+        if(operador_valido){
+            const validar = lista_operadores_disponiveis[operador_valido]
+            const resultado = validar(parametros.valor_do_pdc, parametros.valor_da_condicao);
+
+            return resultado;
+        }
+
+    } catch (error) {
+        console.log("Erro na validação da assinatura: ", error);
+        return false;
+    }
+}
+
+
+// traz os dados do pdc através de html 
+// e determina qual tipo de dado da condição de assinatura deve ser comparado com ele 
+function buscarValoresDeComparacao(condicao){
+    let valor_do_pdc, valor_da_condicao;
+
+    switch (condicao.Fator_1.Nome_do_campo) {
+
+        case "Valor":
+            valor_da_condicao = Number(condicao.Valor_decimal.replace(",", "."));
+            const elemento_da_parcela = document.querySelector('.valor-parcela')
+            valor_do_pdc = Number(elemento_da_parcela.getAttribute("data-valor_original").replace(",", "."));
+            break;
+            
+        case "Forma de pagamento":
+            valor_da_condicao = condicao.Valor_predefinido;
+            valor_do_pdc = document.querySelector('input[name="Forma_de_pagamento"]:checked').value;
+            break;
+    
+        default:
+            console.log(`ERRO: O fator 1 procurado: "${condicao.Fator_1.Nome_do_campo}" não está no switch case em buscarValoresDeComparacao();`)
+            console.log("", JSON.stringify({"valor_do_pdc": valor_do_pdc, "valor_da_condicao":valor_da_condicao}, null, 2));
+            throw new Error("Erro ao buscar o valor de validação no html do PDC, ou valor da condição");
+    }        
+    
+    const parametros = {"valor_do_pdc": valor_do_pdc, "valor_da_condicao":valor_da_condicao};
+    return parametros;
+}
+
+
+export async function buscarAssinaturas() {
+    const log = false;
+    if (log) console.log("++++++++++BUSCANDO ASSINATURAS++++++++++");
+
+    const assinantes = document.querySelectorAll('.assinantes .assinante');
+    if (log) console.log("assinantes => ", assinantes);
+    assinantes.forEach((assinante) => {
+        const dadosAssinante = {};
+        if (log) console.log("assinante => ", assinante);
+        assinante.querySelectorAll('input').forEach((input) => {
+            if (log) console.log("nome => ", input.name, ", valor => ", input.value);
+            if (input.name === "Assinado") {
+                dadosAssinante[input.name] = input.checked;
+            } else if (input.name === "Data_da_assinatura") {
+                if (input.value) {
+                    //dadosAssinante[input.name] = moment(input.value, 'YYYY-MM-DDTHH:mm:ss').format('DD/MM/YYYY HH:mm:ss');
+                    dadosAssinante[input.name] = formatDate(input.value, 'DD/MM/YYYY HH:mm:ss');
+
+                } else {
+                    dadosAssinante[input.name] = ""; // ou você pode atribuir um valor padrão, como ""
+                }
+            }
+            else {
+                dadosAssinante[input.name] = input.value;
+            }
+        });
+
+        if (log) console.log("dadosAssinante => ", dadosAssinante);
+
+    });
+
+}
+
+
+export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas){
+    const usuario_logado = await buscarDadosUsuarioAtual();
+
+    for (const assinatura of Object.values(lista_assinaturas)) {
+        if (assinatura.Etapa_de_validacao == acao){
+            console.log(`--Encontrado validação`)
+            const credenciais_autorizadas = await validarCredenciaisAssinante(assinatura, usuario_logado);
+            if(!credenciais_autorizadas){
+                return false;
+            }
+
+            // Dados preenchidos depois de confirmar a assinatura
+            assinatura.E_mail_usuario = usuario_logado.e_mail_pessoal;
+            assinatura.Usuario = usuario_logado.Nome_completo;
+            assinatura.IP = globais.userIP || "";
+            assinatura.Data_da_assinatura = data_atual_formatada();
+            assinatura.Assinado = true;
+
+            console.log(`$$$$$$$$$$$$$$$$$$$$$$$$$$$`);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(assinatura, null, 2)}`);
+            console.log(`$$$$$$$$$$$$$$$$$$$$$$$$$$$`);
+            return true;
+        }
+    }
+    // Se não foi encontrado nenhuma validação para a etapa atual, o assinante é autorizado
+    return true;
+}
+
+
+async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado){
+    console.log(JSON.stringify(usuario_logado, null, 2));
+    let credenciais_autorizadas = false;
+
+    console.log("==================VALIDANDO==================")
+    console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Cargo} Email:${requisitos_assinatura.E_mail_usuario} `);
+    console.log(`DADOS ENCONTRADOS\nCargo: ${usuario_logado.Cargo} Email:${usuario_logado.e_mail_pessoal.toString()} `);
+
+   if((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == usuario_logado.e_mail_pessoal) &&
+    requisitos_assinatura.Cargo == usuario_logado.Cargo){
+        credenciais_autorizadas = true
+    }
+
+    return credenciais_autorizadas;
+
+}
 //==============================================================================//
 //====================FUNÇÕES PARA TRATAR CAMPOS DE PARCELAS====================//
 //==============================================================================//
@@ -470,7 +764,15 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
     novoInputValor.name = 'Valor';
     novoInputValor.classList.add('input-number', 'valor-parcela');
     novoInputValor.placeholder = 'R$ 0,00';
-    if (valor) novoInputValor.value = formatToBRL_V2(valor);
+
+    // if (valor) novoInputValor.value = formatToBRL_V2(valor);
+    if (valor) {
+        // const inputValor = document.querySelector('input[name="Valor"]');
+        // inputValor.dataset.valor_original = formatToBRL_V2({ target: { value: valor } }); 
+        novoInputValor.value = formatToBRL_V2(valor);
+        novoInputValor.dataset.valor_original = formatToBRL_V2({target: {value: valor}})
+    }
+
     novoInputValor.addEventListener('blur', () => {
         formatToBRL_V2(novoInputValor);
         atualizarValorTotalParcelas();
@@ -1531,7 +1833,7 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
     return {file_container, file_field, file_name, remove_btn, loading_spinner};
 }
 
-export async function preencherListaAnexosV2(anexos) {
+export async function preencherListaAnexos(anexos) {
     const log = false;
     if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
 
@@ -1715,8 +2017,8 @@ export async function preencherListaAnexosV2(anexos) {
 
 
 
-export async function preencherListaAnexos(anexos) {
-    const log = true;
+export async function preencherListaAnexosV2(anexos)  {
+    const log = false;
     if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
 
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
@@ -2007,11 +2309,16 @@ export async function preencherListaAnexos(anexos) {
 
 
 
+export function data_atual_formatada(){
+    const data_atual = moment();
+    const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
 
+    return data_atual_formatada
+}
 
-
-
-
+export function printar_formatado(string){
+    console.log(JSON.stringify(string, null, 2));
+}
 
 
 //=================================================//
