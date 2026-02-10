@@ -109,7 +109,6 @@ export async function validarEntidadesPermitidas() {
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
 export async function preencherDadosPDC(data) {
-    console.log("PRENCHENDO DADOS PDC=========================================")
     const log = false;
     if (log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if (log) console.log("data => ", JSON.stringify(data));
@@ -439,23 +438,23 @@ export function criarAssinante(assinante) {
 }
 
 
-  //==============================================================================//
- //========================FUNÇÕES PARA TRATAR ASSINATURAS=======================//
 //==============================================================================//
-async function buscarAssinaturasZohoAPI(){
+//========================FUNÇÕES PARA TRATAR ASSINATURAS=======================//
+//==============================================================================//
+async function buscarAssinaturasZohoAPI() {
     // Conjunto de regras para validar se um cargo ou uma pessoa deve assinar o PDC
-    let validacoes_de_assinatura = await executar_apiZoho({tipo: "busc_reg", nomeR: "Validacoes_criadas"});
+    let validacoes_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "Validacoes_criadas" });
     // console.log(JSON.stringify(validacoes_de_assinatura))
 
     // Lista de regras que estão associadas as validações
-    let regras_de_assinatura = await executar_apiZoho({tipo: "busc_reg", nomeR: "condicoes_de_assinatura_salvas"});
+    let regras_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "condicoes_de_assinatura_salvas" });
     // console.log(JSON.stringify(condicoes_de_assinatura_salvas))
 
     return { validacoes_de_assinatura, regras_de_assinatura }
 }
 
 // Reescreve as linhas de assinaturas do PDC selecionado, enquanto mantém as linhas que já foram assinadas
-export async function atualizarLinhasDeAssinatura(){
+export async function atualizarLinhasDeAssinatura() {
     const { validacoes_de_assinatura, regras_de_assinatura } = await buscarAssinaturasZohoAPI();
     // Funciona: Pega as validações no zoho, valida o valor do pdc e forma de pagamento, cria as linhas de assinatura se a condição for validada
     // Não foi feito: Considerar outros parâmetros além de valor e forma de pagamento, considerar condições relacionais de E/OU
@@ -464,7 +463,7 @@ export async function atualizarLinhasDeAssinatura(){
     const lista_com_assinadas_incluidas = await incluirLinhasJaAssinadas(assinaturas_solicitadas);
 
     const linhas_de_assinatura_para_criar = {};
-    if (lista_com_assinadas_incluidas){
+    if (lista_com_assinadas_incluidas) {
         lista_com_assinadas_incluidas.forEach(solicitacao => {
             linhas_de_assinatura_para_criar[solicitacao.Cargo] = solicitacao
         });
@@ -474,7 +473,7 @@ export async function atualizarLinhasDeAssinatura(){
 }
 
 
-export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condicoes_de_assinatura){
+export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condicoes_de_assinatura) {
     console.log("=================================")
     console.log("======VALIDANDO ASSINATURAS======")
     console.log("=================================")
@@ -482,7 +481,7 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
     let assinaturas_solicitadas = new Map();
     validacoes_de_assinatura.forEach(validacao => {
         const permitir_criacao_da_linha_de_assinatura = tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura);
-        if(!permitir_criacao_da_linha_de_assinatura){
+        if (!permitir_criacao_da_linha_de_assinatura) {
             console.log("--Criação da linha de assinatura não permitida");
             return false
         }
@@ -498,7 +497,7 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
         };
 
         // Especificar o usuário q deve assinar se tiver o nome de usuário pedido na validação
-        if(validacao["Funcionario.Nome_completo"] !== ""){   
+        if (validacao["Funcionario.Nome_completo"] !== "") {
             assinaturas_solicitadas[validacao.Cargo].Funcao = validacao["Funcao"];
             assinaturas_solicitadas[validacao.Cargo].Usuario = validacao["Funcionario.Nome_completo"];
             assinaturas_solicitadas[validacao.Cargo].E_mail_usuario = validacao["Funcionario.e_mail_pessoal"];
@@ -513,25 +512,25 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
 }
 
 
-export function incluirLinhasJaAssinadas(assinaturas_solicitadas){
+export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
     const assinaturas_ja_criadas = globais.assinaturas ? globais.assinaturas : [];
 
-    const linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado=="true");
+    const linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado == "true");
 
     // Deletando ID e display value atual pois esses campos dão erro ao tentar subir no zoho
-    linhas_a_serem_criadas.forEach(linha =>{
+    linhas_a_serem_criadas.forEach(linha => {
         linha.Assinado = true;
         delete linha.ID;
-        delete linha.zc_display_value;    
+        delete linha.zc_display_value;
     });
 
-    Object.values(assinaturas_solicitadas).forEach(item_solicitado  => {
-        const ja_existe = linhas_a_serem_criadas.some(linha => 
+    Object.values(assinaturas_solicitadas).forEach(item_solicitado => {
+        const ja_existe = linhas_a_serem_criadas.some(linha =>
             linha.Cargo === item_solicitado.Cargo &&
             linha.E_mail_usuario === item_solicitado.E_mail_usuario
         );
 
-        if(!ja_existe){
+        if (!ja_existe) {
             linhas_a_serem_criadas.push(item_solicitado);
         }
     });
@@ -540,12 +539,12 @@ export function incluirLinhasJaAssinadas(assinaturas_solicitadas){
 }
 
 //  Analisa os dados do PDC para determinar quais setores/pessoas devem assiná-lo
-function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas){
+function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas) {
 
-    function printarValidacaoSendoAnalisada(validacao){
+    function printarValidacaoSendoAnalisada(validacao) {
         let log_assinante_esperado = `${validacao.Cargo}`;
 
-        if(validacao.Funcionario){ 
+        if (validacao.Funcionario) {
             log_assinante_esperado += ` | ${validacao.Funcionario}`;
         }
 
@@ -560,9 +559,9 @@ function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas){
 
     // Trazer apenas condições que pertencem a validação atual
     const condicoes_de_assinatura_da_validacao_atual = condicoes_de_assinatura_salvas.filter(condicao =>
-        condicao.Condicao_ativa == "Sim" 
+        condicao.Condicao_ativa == "Sim"
         &&
-        condicao.id_temporario == validacao.id_temporario 
+        condicao.id_temporario == validacao.id_temporario
     );
 
     console.log(`Numero de condições encontradas para essa validação: ${condicoes_de_assinatura_da_validacao_atual.length}`)
@@ -573,14 +572,14 @@ function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas){
     condicoes_de_assinatura_da_validacao_atual.forEach(condicao => {
 
         const condicao_validada = validarAssinanteSolicitado(condicao);
-        if(!condicao_validada) permitir_criacao_da_linha_de_assinatura = false;
+        if (!condicao_validada) permitir_criacao_da_linha_de_assinatura = false;
     });
 
     return permitir_criacao_da_linha_de_assinatura;
 }
 
 
-function validarAssinanteSolicitado(condicao){
+function validarAssinanteSolicitado(condicao) {
     const lista_operadores_disponiveis = {
         "Igual": (valor_pdc, valor_condicional) => valor_pdc === valor_condicional,
         "Diferente": (valor_pdc, valor_condicional) => valor_pdc !== valor_condicional,
@@ -597,7 +596,7 @@ function validarAssinanteSolicitado(condicao){
         console.log(`${condicao.Fator_1.Nome_do_campo} tem que ser\n\n${condicao.Operador} | ${parametros.valor_da_condicao} \n\nValor encontrado | ${parametros.valor_do_pdc}`)
 
         const operador_valido = Object.keys(lista_operadores_disponiveis).find(key => condicao.Operador.includes(key))
-        if(operador_valido){
+        if (operador_valido) {
             const validar = lista_operadores_disponiveis[operador_valido]
             const resultado = validar(parametros.valor_do_pdc, parametros.valor_da_condicao);
 
@@ -613,7 +612,7 @@ function validarAssinanteSolicitado(condicao){
 
 // traz os dados do pdc através de html 
 // e determina qual tipo de dado da condição de assinatura deve ser comparado com ele 
-function buscarValoresDeComparacao(condicao){
+function buscarValoresDeComparacao(condicao) {
     let valor_do_pdc, valor_da_condicao;
 
     switch (condicao.Fator_1.Nome_do_campo) {
@@ -623,19 +622,18 @@ function buscarValoresDeComparacao(condicao){
             const elemento_da_parcela = document.querySelector('.valor-parcela')
             valor_do_pdc = Number(elemento_da_parcela.getAttribute("data-valor_original").replace(",", "."));
             break;
-            
         case "Forma de pagamento":
             valor_da_condicao = condicao.Valor_predefinido;
             valor_do_pdc = document.querySelector('input[name="Forma_de_pagamento"]:checked').value;
             break;
-    
+
         default:
             console.log(`ERRO: O fator 1 procurado: "${condicao.Fator_1.Nome_do_campo}" não está no switch case em buscarValoresDeComparacao();`)
-            console.log("", JSON.stringify({"valor_do_pdc": valor_do_pdc, "valor_da_condicao":valor_da_condicao}, null, 2));
+            console.log("", JSON.stringify({ "valor_do_pdc": valor_do_pdc, "valor_da_condicao": valor_da_condicao }, null, 2));
             throw new Error("Erro ao buscar o valor de validação no html do PDC, ou valor da condição");
-    }        
-    
-    const parametros = {"valor_do_pdc": valor_do_pdc, "valor_da_condicao":valor_da_condicao};
+    }
+
+    const parametros = { "valor_do_pdc": valor_do_pdc, "valor_da_condicao": valor_da_condicao };
     return parametros;
 }
 
@@ -674,14 +672,14 @@ export async function buscarAssinaturas() {
 }
 
 
-export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas){
+export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
     const usuario_logado = await buscarDadosUsuarioAtual();
 
     for (const assinatura of Object.values(lista_assinaturas)) {
-        if (assinatura.Etapa_de_validacao == acao){
+        if (assinatura.Etapa_de_validacao == acao) {
             console.log(`--Encontrado validação`)
             const credenciais_autorizadas = await validarCredenciaisAssinante(assinatura, usuario_logado);
-            if(!credenciais_autorizadas){
+            if (!credenciais_autorizadas) {
                 return false;
             }
 
@@ -703,7 +701,7 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas){
 }
 
 
-async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado){
+async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado) {
     console.log(JSON.stringify(usuario_logado, null, 2));
     let credenciais_autorizadas = false;
 
@@ -711,8 +709,8 @@ async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado
     console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Cargo} Email:${requisitos_assinatura.E_mail_usuario} `);
     console.log(`DADOS ENCONTRADOS\nCargo: ${usuario_logado.Cargo} Email:${usuario_logado.e_mail_pessoal.toString()} `);
 
-   if((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == usuario_logado.e_mail_pessoal) &&
-    requisitos_assinatura.Cargo == usuario_logado.Cargo){
+    if ((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == usuario_logado.e_mail_pessoal) &&
+        requisitos_assinatura.Cargo == usuario_logado.Cargo) {
         credenciais_autorizadas = true
     }
 
@@ -770,7 +768,7 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
         // const inputValor = document.querySelector('input[name="Valor"]');
         // inputValor.dataset.valor_original = formatToBRL_V2({ target: { value: valor } }); 
         novoInputValor.value = formatToBRL_V2(valor);
-        novoInputValor.dataset.valor_original = formatToBRL_V2({target: {value: valor}})
+        novoInputValor.dataset.valor_original = formatToBRL_V2({ target: { value: valor } })
     }
 
     novoInputValor.addEventListener('blur', () => {
@@ -1269,10 +1267,9 @@ function preencherLinhaInicialClassificacao() {
 
     }
     //Adiciona valor de fornecedor aprovado na linha de classificação
-    if (globais.idFornAprovado) {
+    if (globais.idFornAprovado && valorInput.value == "") {
         if (log) console.log("Fornecedor aprovado, preenchendo valor na linha de classificação");
         valorInput.value = formatToBRL_V2(total);
-
     }
 }
 
@@ -1700,7 +1697,7 @@ function createLoadingSpinner() {
     return loadingSpinnerContainer;
 }
 
-async function createFileMiniature({galeria= null ,file = null, origem = null}) {
+async function createFileMiniature({ galeria = null, file = null, origem = null }) {
     const { typesToView, convertTypes, elLibConfig } = anexos_controller();
     const log = false;
 
@@ -1708,7 +1705,7 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
-    
+
     //==========LOADING SPINNER==========//
     const loading_spinner = createLoadingSpinner();
     file_container.appendChild(loading_spinner);
@@ -1735,8 +1732,7 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
     file_name.style.display = 'none';
 
     let name = "";
-    if(origem == 'zoho')
-    {
+    if (origem == 'zoho') {
         file_field.classList.add('anexo-zoho');
         console.log("Antes de começar a tratar");
         ZOHO.CREATOR.UTIL.setImageData(file_field, file);
@@ -1756,9 +1752,8 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
         //==========SETANDO NOME DO ARQUIVO==========//
         const ap_name = file.split('?filepath=')[1];
         name = ap_name.slice(ap_name.indexOf('_') + 1, ap_name.length);
-        
-    }else if(origem == 'novo')
-    {
+
+    } else if (origem == 'novo') {
         file_field.classList.add('anexo-novo');
 
         //==========SETANDO NOME DO ARQUIVO==========//
@@ -1777,12 +1772,12 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
     const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
     const fileType = convertTypes[file.split('.').pop().toLowerCase()] || file.split('.').pop().toUpperCase() || '';
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////
     console.log("typesToView => ", typesToView);
     console.log("fileType => ", fileType);
     console.log("fileSize => ", fileSize);
     if (typesToView.includes(fileType) && fileSize < 20) {
-        
+
         if (fileType === 'PDF') {
             file_field.setAttribute('data-type', 'iframe');
             file_field.setAttribute('data-download-url', `${initUrl}${file}`);
@@ -1790,7 +1785,7 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
         } else {
             file_field.setAttribute('data-download-src', file_field.src);
         }
-    }else{
+    } else {
         const clone_file_field = file_field.cloneNode(true);
         clone_file_field.style.width = '100px';
         clone_file_field.style.height = '100px';
@@ -1830,7 +1825,7 @@ async function createFileMiniature({galeria= null ,file = null, origem = null}) 
     file_container.appendChild(remove_btn);
     file_container.appendChild(file_field);
     file_container.appendChild(file_name);
-    return {file_container, file_field, file_name, remove_btn, loading_spinner};
+    return { file_container, file_field, file_name, remove_btn, loading_spinner };
 }
 
 export async function preencherListaAnexos(anexos) {
@@ -1855,7 +1850,7 @@ export async function preencherListaAnexos(anexos) {
                 const newAnexo = anexo.Arquivo;
 
                 //==========NOVO ELEMENTO DA GALERIA==========//
-                let { file_container, file_field, file_name, remove_btn, loading_spinner } = await createFileMiniature({galeria: galleryElement, file: newAnexo, origem: 'zoho'});
+                let { file_container, file_field, file_name, remove_btn, loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: newAnexo, origem: 'zoho' });
                 file_field.style.display = 'block';
                 file_name.style.display = 'block';
                 remove_btn.style.display = 'block';
@@ -1867,7 +1862,7 @@ export async function preencherListaAnexos(anexos) {
 
         }
 
-        
+
         await Promise.all(promises);
 
     } else {
@@ -2017,7 +2012,7 @@ export async function preencherListaAnexos(anexos) {
 
 
 
-export async function preencherListaAnexosV2(anexos)  {
+export async function preencherListaAnexosV2(anexos) {
     const log = false;
     if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
 
@@ -2163,7 +2158,6 @@ export async function preencherListaAnexosV2(anexos)  {
 
                         newLoadingSpinner.remove();
 
-
                         // Adiciona um evento de clique ao elemento
                         console.log('Adicinoando botão direito');
                         const opcaoDownload = document.createElement('a');
@@ -2234,6 +2228,8 @@ export async function preencherListaAnexosV2(anexos)  {
 
     // Evento de mudança no input, para processar o arquivo selecionado
     inputFile.addEventListener('change', async (event) => {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => button.classList.add('wait-file'));
         const files = event.target.files;
         if (files.length > 0) {
             const file = files[0];
@@ -2295,28 +2291,43 @@ export async function preencherListaAnexosV2(anexos)  {
             if (mensagemAnexos) {
                 mensagemAnexos.remove();
             }
+            setTimeout(() => {
+                setTimeout(() => {
+                    const disabledElements = document.querySelectorAll('.wait-file');
+                    console.log(JSON.stringify(disabledElements));
+                    disabledElements.forEach(el => el.classList.remove('wait-file'));
+                }, 1000);
+            }, 0);
         }
     });
 
     //==========INICIANDO O FANCYBOX==========//
     await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-
+    
     // Adiciona o botão e o input ao DOM;
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
+
+    setTimeout(() => {
+        setTimeout(() => {
+            const disabledElements = document.querySelectorAll('.wait-file');
+            console.log(JSON.stringify(disabledElements));
+            disabledElements.forEach(el => el.classList.remove('wait-file'));
+        }, 1000);
+    }, 0);
 }
 
 
 
-export function data_atual_formatada(){
+export function data_atual_formatada() {
     const data_atual = moment();
     const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
 
     return data_atual_formatada
 }
 
-export function printar_formatado(string){
+export function printar_formatado(string) {
     console.log(JSON.stringify(string, null, 2));
 }
 

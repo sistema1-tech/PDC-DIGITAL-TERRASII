@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Levantamento de Preços</title>
+
+    <!-- Incluindo o jQuery e o Fancybox -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.1/jquery.fancybox.min.js"></script>
+    <!-- Incluindo o CSS do Fancybox -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.1/jquery.fancybox.min.css" />
+
+    <!-- Incluindo o moment.js -->
+    <script src="./libs/moment.min.js"></script>
+
+    <link rel="stylesheet" href="./styles/main_styles.css">
+    <link rel="stylesheet" href="./styles/mobile_styles.css">
+    <script type="text/javascript"
+        src="https://js.zohostatic.com/creator/widgets/version/2.0/widgetsdk-min.js"></script>
+    <script type="module" src="./js/001_main.js"></script>
+</head>
+
+<body class="meu-body hidden">
+    <div class="container " id="container">
+
+        <div class="section-header">
+            <h2 class="titulos">DADOS DO PEDIDO</h2>
+            <button class="toggle-section"></button>
+        </div>
+        <div class="form-compra section" id="section1">
+            <div class="form-container">
+                <form action="#" method="post" id="dados-PDC">
+                    <label for="entidade">Entidade:</label>
+                    <select type="text" id="entidade" name="Entidade" class="entidade">
+                    </select>
+
+                    <label for="tipo">Tipo:</label>
+                    <select type="text" id="tipo" name="Tipo_de_solicitacao" class="tipo">
+                        <option value="" disabled selected class="invalid">Selecione um tipo de compra...</option>
+                        <option value="3938561000104974027">PRODUTO</option>
+                        <option value="3938561000104974031">SERVIÇO</option>
+                    </select>
+
+                    <div id="container-campos-texto">
+                        <div class="campos-texto">
+
+                            <label for="Descricao_da_compra">Descrição da Compra/Serviço:</label>
+                            <textarea id="descricao" name="Descricao_da_compra" rows="4"></textarea>
+                        </div>
+
+                        <div class="campos-texto">
+
+                            <label for="Utilizacao">Utilização:</label>
+                            <textarea id="utilizacao" name="Utilizacao" rows="4"></textarea>
+                        </div>
+
+                        <div class="campos-texto-mais-largos">
+
+                            <label for="Justificativa">Ocorrências:</label>
+                            <textarea type="text" name="Justificativa" id="justificativa" class="justificativa"rows="2"></textarea>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <h2 class="titulos">LEVANTAMENTO DE PREÇOS</h2>
+            <button class="toggle-section"></button>
+        </div>
+        
+        <div class="tabela-cotacoes section" id="section2">
+            <table id="priceTable" class="tabela">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qtd.</th>
+                        <th>Unid.</th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th class="action-buttons">
+                            <button class="add-supplier-btn add-btn add-icon">
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="linha-inicial" data-id_produto="1">
+                        <td contenteditable="true" data-idProd="1"></td>
+                        <td contenteditable="true" class="numeric-cell quantidade"></td>
+                        <td contenteditable="true"></td>
+                        <td class="action-buttons">
+                            <button class="remove-btn remove-product-btn">
+                                <i class="trash-icon icons"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="linha-frete" class="linhas-totalizadoras">
+                        <td contenteditable="false" colspan="3">Frete</td>
+                        <td class="action-buttons">
+                        </td>
+                    </tr>
+                    <tr id="linha-descontos" class="linhas-totalizadoras">
+                        <td contenteditable="false" colspan="3">Descontos</td>
+                        <td class="action-buttons">
+                        </td>
+                    </tr>
+                    <tr id="linha-valor-total" class="linhas-totalizadoras">
+                        <td contenteditable="false" colspan="3">Valor total</td>
+                        <td class="action-buttons">
+
+                        </td>
+                    </tr>
+                    <tr class="borda-oculta">
+                        <td class="borda-oculta">
+                            <button class="add-product-btn add-btn add-icon"></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 class="titulos">DETALHES DAS PROPOSTAS</h4>
+            <table id="otherDataTable" class="tabela">
+                <thead>
+                    <tr>
+                        <th>Fornecedor</th>
+                        <th>Condições de pagamento</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="height: 35px;">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+        <!--FORM DE DADOS DA NOTA FISCAL-->
+        <div class="section-header hidden">
+            <h2 class="titulos">DADOS DA NOTA FISCAL</h2>
+            <button class="toggle-section"></button>
+        </div>
+        <div class="section form-dados-nf hidden" id="section5">
+            <div class="form-container">
+                <form action="#" id="dados-nf">
+                    <!--NOVOS DOCUMENTOS-->
+                    <div id="linhas-nf" class="campos-iniciais-nf hidden">
+                        <div class="nomes-campos-nf">
+                            <label for="data-emissao-nf" class="form-dados-nf-label">Data da emissão da NF:</label>
+                            <label for="numero-nf" class="form-dados-nf-label">Número da NF:</label>
+                            <label for="" id="label-toButton" width="20px"></label>
+                        </div>
+                        <div class="linha-nf">
+                            <input type="date" id="data-emissao-nf" name="Data_emissao_N_Fiscal">
+                            <input type="text" id="numero-nf" class="input-number" name="Numero_N_Fiscal">
+                            <button type="button" class="remover-linha-nf close-icon remove-btn" name="botao_remover"></button>
+                        </div>
+                    </div>
+                    <div id="botoes-e-totalizadores_parcelas">
+                        <button type="button" id="adicionarCampo" class="add-linha-nf add-btn add-icon"></button>
+                    </div>
+                    <!--NOVOS DOCUMENTOS-->
+
+                    <table class="campos-retencao-nf hidden">
+                        <thead>
+                            <tr>
+                                <th colspan="2">DESCONTOS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="font-weight: bold;">
+                                <td>Valor original:</td>
+                                <td id="valor-original" class="numeric-cell" style="text-align: right;"
+                                    name="Valor_original">0,00</td>
+                            </tr>
+                            <tr>
+                                <td>INSS:</td>
+                                <td><input type="text" id="inss" class="input-number campos-ret-desc" name="INSS"></td>
+                            </tr>
+                            <tr>
+                                <td>ISS:</td>
+                                <td><input type="text" id="iss" class="input-number campos-ret-desc" name="ISS"></td>
+                            </tr>
+                            <tr>
+                                <td>PIS, CONFINS, CSSL:</td>
+                                <td><input type="text" id="pis-confins-cssl" class="input-number campos-ret-desc"
+                                        name="PIS_COFINS_CSSL"></td>
+                            </tr>
+                            <tr>
+                                <td>Desconto comercial ou parcela:</td>
+                                <td><input type="text" id="desconto-comercial" class="input-number campos-ret-desc"
+                                        name="Desconto_comercial_ou_parcela"></td>
+                            </tr>
+                            <tr style="font-weight: bold;">
+                                <td>DESCONTOS (total):</td>
+                                <td id="descontos-total" class="numeric-cell campos-ret-total-desc"
+                                    style="text-align: right;" name="Total_de_descontos">0,00</td>
+                            </tr>
+                            <tr>
+                                <td>ACRESCIMO (tarifa bancária):</td>
+                                <td><input type="text" id="acrescimo" class="input-number campos-ret-acr"
+                                        name="Acrescimo_tarifa_bancaria"></td>
+                            </tr>
+                            <tr style="font-weight: bold;">
+                                <td>VALOR TOTAL A PAGAR:</td>
+                                <td id="valor-total-pagar" class="numeric-cell" style="text-align: right;"
+                                    name="Valor_total_a_pagar">0,00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+        <!--FORM DE DADOS DE PAGAMENTO-->
+        <div class="section-header">
+            <h2 class="titulos">DADOS DE PAGAMENTO</h2>
+            <button class="toggle-section"></button>
+        </div>
+        <div class="section form-pagamento" id="section3">
+            <div class="form-container">
+                <form action="#" id="form-pagamento">
+                    <label>Forma de Pagamento:</label>
+                    <div class="radio-group" name="tipo-pag">
+                        <input type="radio" id="boleto" name="Forma_de_pagamento" value="Boleto"
+                            class="formas-pagamento">
+                        <label for="boleto">Boleto</label>
+                        <input type="radio" id="dep_cc" name="Forma_de_pagamento" value="Dep. em CC"
+                            class="formas-pagamento">
+                        <label for="dep_cc">Dep. em CC</label>
+                        <input type="radio" id="dep_cp" name="Forma_de_pagamento" value="Dep. em CP"
+                            class="formas-pagamento">
+                        <label for="dep_cp">Dep. em CP</label>
+                        <input type="radio" id="cheque" name="Forma_de_pagamento" value="Cartão de Crédito"
+                            class="formas-pagamento">
+                        <label for="cheque">Cartão de Crédito</label>
+                        <input type="radio" id="pix" name="Forma_de_pagamento" value="Pix" class="formas-pagamento">
+                        <label for="pix">Pix</label>
+                    </div>
+                    <div id="campos-deposito">
+                        <div class="campo hidden">
+
+                            <label for="banco">Banco:</label>
+                            <input type="text" id="banco" name="Banco">
+                        </div>
+                        <div class="campo hidden">
+
+                            <label for="agencia">Agência:</label>
+                            <input type="text" id="agencia" name="AG">
+                        </div>
+                        <div class="campo hidden">
+
+                            <label for="conta">Número da Conta:</label>
+                            <input type="text" id="conta" name="N_Conta">
+                        </div>
+                        <div class="campo hidden">
+
+                            <label for="favorecido-deposito">Favorecido:</label>
+                            <input type="text" id="favorecido-deposito" name="Favorecido">
+                        </div>
+                        <div class="campo hidden">
+
+                            <label for="cpf_cnpj_favorecido">CPF/CNPJ:</label>
+                            <input type="text" id="cpf_cnpj_favorecido" class="cpf_cnpj_favorecido" name="CPF_CNPJ_do_favorecido">
+                        </div>
+                        
+                    </div>
+                    <div id="campos-pix" >
+                        <div class="campo hidden">
+                            <label for="tipo-pix" >Tipo de Pix:</label>
+                            <select id="tipo-pix" name="Tipo_de_chave_pix">
+                                <option name="Tipo_de_chave_pix" value="CPF">Cpf</option>
+                                <option name="Tipo_de_chave_pix" value="CNPJ">Cnpj</option>
+                                <option name="Tipo_de_chave_pix" value="Email">Email</option>
+                                <option name="Tipo_de_chave_pix" value="Telefone">Telefone</option>
+                                <option name="Tipo_de_chave_pix" value="Chave Aleatória">Chave Aleatória</option>
+                            </select>
+                        </div>
+
+                        <div class="campo hidden">
+                            <label for="pix-chave" >Chave Pix:</label>
+                            <input type="text" id="pix-chave" name="Chave_pix">
+                        </div>
+                    </div>
+                    <label for="camposData" style="padding-top: 50px;">Vencimento previsto:</label>
+                    <div id="camposData">
+                        <div class="check-pag-antecipado">
+                            <input type="checkbox" name="pag_antecipado" id="pag_antecipado">
+                            <label for="pag_antecipado" class="label-pag-antecipado">Pagamento de sinal</label>
+                        </div>
+                        <div class="parcela">
+                            <label name="numero_parcela">Parcela nº 1:</label>
+                            <input type="date" name="Datas" placeholder="Venc. prev. (dd/mm/aaaa)" class="campo-datas" />
+                            <input type="text" name="Valor" class="input-number valor-parcela campo-datas"
+                                placeholder="R$ 0,00" />
+                            <button type="button" class="remover-parcela close-icon remove-btn" name="botao_remover"></button>
+                            <input type="checkbox" name="parcela_criada" class="campo-datas hidden"/>
+                        </div>
+                    </div>
+                    <div id="botoes-e-totalizadores_parcelas">
+                        <button type="button" id="adicionarCampo" class="add-parcela add-btn add-icon"></button>
+                        <div id="totalizadores_parcelas">
+                            <label>Total restante:</label>
+                            <label id="valor-total-parcelas">0,00</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!--FORM DE CLASSIFICAÇÃO CONTÁBIL-->
+        <div class="section-header">
+            <h2 class="titulos">CLASSIFICAÇÃO CONTÁBIL</h2>
+            <button class="toggle-section"></button>
+        </div>
+        <div class="form-classificacao section" id="section4">
+            <div class="form-container">
+                <form action="#" method="post" id="form-classificacao">
+                    <div id="camposClassificacao">
+                        <div id="label-classificacao" class="nomes-campos-classificacao">
+                            <label for="conta" id="label-conta">Conta a debitar:</label>
+                            <label for="centro" id="label-centro" class = "hidden">Centro de custo:</label>
+                            <label for="classe" id="label-classe">Classe operacional:</label>
+                            <label for="valor" id="label-valor">Valor:</label>
+                            <label for="" id="label-toButton" style="width: 20px;"></label>
+                        </div>
+                    </div>
+                    <div id="botoes-e-totalizadores-classificacoes">
+                        <button type="button" id="adicionarClassificacao"
+                            class="add-classificacao add-btn add-icon"></button>
+                        <div id="totalizadores-classificacoes">
+                            <label>Total restante:</label>
+                            <label id="valor-total-classificacoes">0,00</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!--FORM DE ANEXOS-->
+        <div class="section-header">
+            <h2 class="titulos">ANEXOS</h2>
+            <button class="toggle-section"></button>
+        </div>
+        <div class="gallery-section section" id="section-anexos">
+            <div id="gallery" class="gallery">
+                <!-- As imagens serão inseridas dinamicamente aqui -->
+            </div>
+        </div>
+        <!--FORM DE ASSINATURAS-->
+        <div class="section-header hidden">
+            <h2 class="titulos">ASSINATURAS</h2>
+            <button class="toggle-section"></button>
+        </div>
+
+        <div class="form-assinaturas section hidden" id="section5">
+            <div class="form-container">
+                <form action="#" method="post" id="form-assinatura">
+                    <div id="campos-assinatura">
+                        <div id="labels-assinatura">
+                            <label for="Cargo" id="label-cargo" class="label-assinante">Cargo:</label>
+                            <label for="Funcao" id="label-funcao" class="label-assinante">Função:</label>
+                            <label for="Usuario" id="label-usuario" class="label-assinante">Usuário:</label>
+                            <label for="E_mail" id="label-email" class="label-assinante">E-mail:</label>
+                            <label for="IP" id="label-ip" class="label-assinante">IP:</label>
+                            <label for="Data_da_assinatura" id="label-data-assinatura" class="label-assinante">Assinado em:</label>
+                            <label for="Assinado" id="label-assinado" class="label-assinante">Assinado:</label>
+                        </div>
+                    </div>
+                    <div id="botoes">
+                        <button type="button" id="adicionarAssinante"
+                            class="add-assinante add-btn add-icon"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!--BOTÃO SALVAR-->
+        <div class="section section-buttons" id="section-final">
+            <div class="save-btn-container">
+                <button class="save-btn">Salvar</button>
+            </div>
+        </div>
+    </div>
+    <!--
+    <div class="section-indicator">
+
+        <div class="dot" data-section="1"></div>
+        <div class="dot" data-section="2"></div>
+    </div>
+    -->
+</body>
+
+</html>

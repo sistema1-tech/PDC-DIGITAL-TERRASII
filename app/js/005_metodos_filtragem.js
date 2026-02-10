@@ -24,7 +24,7 @@ export function criarBotao({page = null, removeExistingButtons = false})
 
         // Função para configurar o botão
         const configurarBotao = (classe, texto, tipo, titulo, msg) => {
-            newButton.className = classe;
+            newButton.className = classe + ' wait-file';
             newButton.textContent = texto;
             type = tipo;
             title = titulo;

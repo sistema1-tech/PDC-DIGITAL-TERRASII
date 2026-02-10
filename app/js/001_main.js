@@ -226,6 +226,10 @@ async function executarProcessosParalelos() {
                 });
             }
 
+            if (globais.pag.includes("checagem_final")) {
+                mostrarCamposRetencao();
+            }
+
         } else {
             //=====Remove todos os botões=====\\
             criarBotao({ removeExistingButtons: true });
@@ -250,8 +254,8 @@ async function executarProcessosParalelos() {
         //==========ATUALIZA TODOS OS OUVINTES DA PÁGINA==========\\
 
         //=====Cria o botão de Sol. Aprov. Síndico=====\\
-        preencherListaAnexosV2();
         criarBotao({ page: globais.pag });
+        preencherListaAnexosV2();
 
         if (globais.pag.includes('_DP') || globais.pag.includes("_controladoria") || globais.pag.includes("_asa_laranjeiras")) {
             if (globais.pag.includes('_DP')) {
