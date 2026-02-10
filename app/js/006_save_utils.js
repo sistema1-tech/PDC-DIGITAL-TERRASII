@@ -130,7 +130,7 @@ async function meshData(status = null) {
  */
 function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
     
-    const log = false;
+    const log = true;
 
     if(log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
 
@@ -593,7 +593,7 @@ function getItemData(base64String) {
 
 export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
-        const log = false;
+        const log = true;
         if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);
@@ -687,7 +687,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 //====================CRIA O REGISTRO DOS ARQUIVOS GALERIA================\\
                 if(log) console.log("|||||||||||||||||||||||||||||||||||||");
                 if(log) console.log("|||||SUBINDO ARQUIVOS DA GALERIA|||||");
-                if(log) console.log("|||||||||||||||||||||||||||||||||||||"); 
+                if(log) console.log("|||||||||||||||||||||||||||||||||||||");
                 //ACRESCENTA ARQUIVOS DA GALERIA NOS ARQUIVOS JÁ EXISTENTES//
                 let qtdFiles = globais.arquivosGaleria.length;
                 
@@ -725,13 +725,22 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             } else {
                                 blob = globais.arquivosGaleria[indexFile++];
                             }
+                            
+                            if(log) console.log("id => ", id);
+                            if(log)  console.log("blob => ", blob);
                             const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
                             if(log) console.log("respFileUpload => ", respFileUpload);
                             if (respFileUpload.code !== 3000) {
                                 console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
+                                await customModal_V2({
+                                    tipoAcao:'alert', 
+                                    titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
+                                    mensagem:`<p>${respFileUpload.code}</p><p style="max-width: 500px; word-wrap: break-word;">${respFileUpload}</p>`,
+                                    confirmText: 'Ok!'
+                                });
                             }
                         }
-    
+
                     } else {
                         console.log("Erro ao criar o registro de arquivos, erro: ", respFilesRec);
                     }
@@ -755,7 +764,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
         return ids_pdcs_criados;
     } catch (error) {
         rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-        customModal_V2({
+        await customModal_V2({
             tipoAcao:'alert', 
             titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
             mensagem:`<p>${error.message}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,

@@ -109,7 +109,6 @@ export async function validarEntidadesPermitidas() {
  * - Ajusta a visibilidade dos campos conforme a forma de pagamento
  */
 export async function preencherDadosPDC(data) {
-    console.log("PRENCHENDO DADOS PDC=========================================")
     const log = false;
     if (log) console.log("++++++++++PREENCHENDO DADOS DO PDC++++++++++");
     if (log) console.log("data => ", JSON.stringify(data));
@@ -2160,7 +2159,6 @@ export async function preencherListaAnexosV2(anexos) {
 
                         newLoadingSpinner.remove();
 
-
                         // Adiciona um evento de clique ao elemento
                         console.log('Adicinoando botão direito');
                         const opcaoDownload = document.createElement('a');
@@ -2231,6 +2229,8 @@ export async function preencherListaAnexosV2(anexos) {
 
     // Evento de mudança no input, para processar o arquivo selecionado
     inputFile.addEventListener('change', async (event) => {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => button.classList.add('wait-file'));
         const files = event.target.files;
         if (files.length > 0) {
             const file = files[0];
@@ -2292,6 +2292,13 @@ export async function preencherListaAnexosV2(anexos) {
             if (mensagemAnexos) {
                 mensagemAnexos.remove();
             }
+            setTimeout(() => {
+                setTimeout(() => {
+                    const disabledElements = document.querySelectorAll('.wait-file');
+                    console.log(JSON.stringify(disabledElements));
+                    disabledElements.forEach(el => el.classList.remove('wait-file'));
+                }, 1000);
+            }, 0);
         }
     });
 

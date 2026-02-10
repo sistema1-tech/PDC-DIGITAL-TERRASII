@@ -943,7 +943,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 async function prepararParaSalvar(acao, infoInserida = null) {
 
     try {
-        const log = true;
+        const log = false;
     
         if (log) console.log("++++++++++PREPARANDO PARA SALVAR++++++++++");
         if (log) console.log("acao => ", acao);
@@ -979,6 +979,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
         let stats_salvarCot = "Prop. criada";
         let apoio_sep_parcela = globais.perfilResponsavel.includes("Controladoria");
+
         if (globais.pag === "criar_numero_de_PDC") {
             stats_salvarCot = null;
 
@@ -986,7 +987,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             stats_salvarCot = parcelaCriada? "Ass. control." : "Chec. final";
             apoio_sep_parcela = false;
 
-        } else if (globais.pag === "checagem_final") {
+        } 
+        else if (acao === "enviar_p_ass_control") {
+            stats_salvarCot = parcelaCriada? "Ass. control." : "Prop. criada";
+            apoio_sep_parcela = parcelaCriada?false:true;
+
+        }else if (globais.pag === "checagem_final") {
             stats_salvarCot = "Chec. final";
 
         }
@@ -1076,7 +1082,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
             enviar_p_ass_control:
             {
-                status: "Prop. criada",
+                status: stats_salvarCot,
                 sepPorParc: apoio_sep_parcela,
                 paramsExtraPDC: apoio_paramExtras
             },
@@ -1108,11 +1114,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         if (acao in statusMap) {
             const params = statusMap[acao];
-            if(["aprov_cot", "enviar_p_ass_control"].includes(acao))
+            if(["aprov_cot", "enviar_p_ass_control"].includes(acao) && globais.numPDC == null)
             {
                 await gerar_num_pdc();
             }
-
+            console.log(`params: ${JSON.stringify(params, null, 2)}`);
             const ids_pdcs_criados = await saveTableData_V3(params);
 
             if (acao.includes("finalizar_provisionamento")) {
@@ -1182,7 +1188,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             } else if (acao === 'confirmar_recebimento') {
                 await saveTableData_V3({ status: "Separado em parcelas" });
             }
-            else if(acao === 'enviar_p_ass_control')
+            else if(acao === 'enviar_p_ass_control' && apoio_sep_parcela)
             {
                 const resp = await executar_apiZoho({tipo: "atualizar_reg", ID: ids_pdcs_criados[0], corpo: {Status_geral: "Ass. control."}, nomeR: globais.nomeRelPDC});
                 if(globais.tipo === "editar_pdc")
