@@ -704,14 +704,22 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
 async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado) {
     console.log(JSON.stringify(usuario_logado, null, 2));
     let credenciais_autorizadas = false;
+    for(const acesso_usuario of usuario_logado){
+        console.log("==================VALIDANDO==================")
+        console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Cargo} Email:${requisitos_assinatura.E_mail_usuario} `);
+        console.log(`DADOS ENCONTRADOS\nCargo: ${acesso_usuario.Cargo} Email:${acesso_usuario.e_mail_pessoal.toString()} `);
 
-    console.log("==================VALIDANDO==================")
-    console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Cargo} Email:${requisitos_assinatura.E_mail_usuario} `);
-    console.log(`DADOS ENCONTRADOS\nCargo: ${usuario_logado.Cargo} Email:${usuario_logado.e_mail_pessoal.toString()} `);
+        console.log(JSON.stringify(acesso_usuario, null, 2));
+        console.log(JSON.stringify(acesso_usuario.Cargo, null, 2));
+        console.log(JSON.stringify(acesso_usuario.e_mail_pessoal, null, 2));
 
-    if ((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == usuario_logado.e_mail_pessoal) &&
-        requisitos_assinatura.Cargo == usuario_logado.Cargo) {
-        credenciais_autorizadas = true
+        if ((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == acesso_usuario.e_mail_pessoal) &&
+            requisitos_assinatura.Cargo == acesso_usuario.Cargo) {
+            credenciais_autorizadas = true
+            console.log("passou pel ponto")
+        }
+
+        console.log(credenciais_autorizadas)
     }
 
     return credenciais_autorizadas;

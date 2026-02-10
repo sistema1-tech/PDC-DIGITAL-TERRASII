@@ -100,17 +100,17 @@ export async function buscarDadosUsuarioLogado() {
         const dados_usuario = await executar_apiZoho(config);
         console.log(JSON.stringify(dados_usuario, null, 2))
 
-        const apoio_dados_usuario = new Map();
-        apoio_dados_usuario.set("ID", dados_usuario[0]?.ID || null);
-        apoio_dados_usuario.set("Nome_completo", dados_usuario[0]?.Nome_completo || null);
-        apoio_dados_usuario.set("e_mail_pessoal", dados_usuario[0]?.e_mail_pessoal || null);
-        apoio_dados_usuario.set("e_mail_profissional", dados_usuario[0]?.e_mail_profissional || null);
-        apoio_dados_usuario.set("Cargo", dados_usuario[0]?.Cargo || null);
-        apoio_dados_usuario.set("Departamento", dados_usuario[0]?.Departamento || null);
-        apoio_dados_usuario.set("Entidades_permitidas", dados_usuario[0]?.Entidades_permitidas.map(ent => ent.ID) || null);
+        const mapa_dados_usuario = new Map();
+        mapa_dados_usuario.set("ID", dados_usuario[0]?.ID || null);
+        mapa_dados_usuario.set("Nome_completo", dados_usuario[0]?.Nome_completo || null);
+        mapa_dados_usuario.set("e_mail_pessoal", dados_usuario[0]?.e_mail_pessoal || null);
+        mapa_dados_usuario.set("e_mail_profissional", dados_usuario[0]?.e_mail_profissional || null);
+        mapa_dados_usuario.set("Cargo", dados_usuario[0]?.Cargo || null);
+        mapa_dados_usuario.set("Departamento", dados_usuario[0]?.Departamento || null);
+        mapa_dados_usuario.set("Entidades_permitidas", dados_usuario[0]?.Entidades_permitidas.map(ent => ent.ID) || null);
 
         console.log("dados_usuario => ", dados_usuario);
-        return apoio_dados_usuario;
+        return mapa_dados_usuario;
         // const ids_perfis = dados_usuario[0]?.Perfil1.map(perfil => perfil.ID) || [];
         // console.log("ids_perfis => ", ids_perfis);
 
@@ -405,21 +405,29 @@ export async function buscarDadosUsuarioAtual(){
         criterios: `(e_mail_pessoal=="${globais.emailUsuario}")`,
         nomeR: "Usuarios_API",
     }
+    
     const retorno_usuarios_api = await executar_apiZoho(config);
-    const dados_usuario = retorno_usuarios_api[0];
+    const lista_de_acessos = [];
 
-    let apoio_dados_usuario = new Map();
-    apoio_dados_usuario["ID"] = dados_usuario.ID;
-    apoio_dados_usuario["Nome_completo"] = dados_usuario.Nome_completo;
-    apoio_dados_usuario["e_mail_pessoal"] = dados_usuario.e_mail_pessoal;
-    apoio_dados_usuario["e_mail_profissional"] = dados_usuario.e_mail_profissional;
-    apoio_dados_usuario["Cargo"] = dados_usuario.Cargo;
-    apoio_dados_usuario["Departamento"] = dados_usuario.Departamento;
-    apoio_dados_usuario["Entidades_permitidas"] = dados_usuario.Entidades_permitidas;
+    for(const dados_usuario of retorno_usuarios_api){
+        // const dados_usuario = retorno_usuarios_api[0];
+
+        let mapa_dados_usuario = new Map();
+        mapa_dados_usuario["ID"] = dados_usuario.ID;
+        mapa_dados_usuario["Nome_completo"] = dados_usuario.Nome_completo;
+        mapa_dados_usuario["e_mail_pessoal"] = dados_usuario.e_mail_pessoal;
+        mapa_dados_usuario["e_mail_profissional"] = dados_usuario.e_mail_profissional;
+        mapa_dados_usuario["Cargo"] = dados_usuario.Cargo;
+        mapa_dados_usuario["Departamento"] = dados_usuario.Departamento;
+        mapa_dados_usuario["Entidades_permitidas"] = dados_usuario.Entidades_permitidas;
+
+        lista_de_acessos.push(mapa_dados_usuario)
+    }
+
 
     console.log("Dados do usuário logado:");
-    console.log(JSON.stringify(apoio_dados_usuario, null, 2));
-    return apoio_dados_usuario;
+    console.log(JSON.stringify(lista_de_acessos, null, 2));
+    return lista_de_acessos;
 }
 
 // Adicionar esta nova função
