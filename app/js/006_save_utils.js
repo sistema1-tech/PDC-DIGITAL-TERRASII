@@ -687,7 +687,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 //====================CRIA O REGISTRO DOS ARQUIVOS GALERIA================\\
                 if(log) console.log("|||||||||||||||||||||||||||||||||||||");
                 if(log) console.log("|||||SUBINDO ARQUIVOS DA GALERIA|||||");
-                if(log) console.log("|||||||||||||||||||||||||||||||||||||");
+                if(log) console.log("|||||||||||||||||||||||||||||||||||||"); 
                 //ACRESCENTA ARQUIVOS DA GALERIA NOS ARQUIVOS JÁ EXISTENTES//
                 let qtdFiles = globais.arquivosGaleria.length;
                 
@@ -725,7 +725,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             } else {
                                 blob = globais.arquivosGaleria[indexFile++];
                             }
-                            
+                                
                             if(log) console.log("id => ", id);
                             if(log)  console.log("blob => ", blob);
                             const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
@@ -740,7 +740,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                                 });
                             }
                         }
-
+    
                     } else {
                         console.log("Erro ao criar o registro de arquivos, erro: ", respFilesRec);
                     }
