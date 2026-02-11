@@ -1116,7 +1116,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         if (acao in statusMap) {
             const params = statusMap[acao];
-            if(["aprov_cot", "enviar_p_ass_control"].includes(acao) && globais.numPDC == null)
+            if(["aprov_cot", "enviar_p_ass_control"].includes(acao) && !globais.numPDC)
             {
                 await gerar_num_pdc();
             }
