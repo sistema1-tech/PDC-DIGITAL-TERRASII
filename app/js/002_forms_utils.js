@@ -1717,14 +1717,14 @@ export async function preencherListaAnexos(anexos) {
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
-
+    
     //==========CRIANDO BOTÃO DE REMOVER==========//
     for (const item of galleryElement.children) {
         console.log('file container => ', item);
         if (item !== galleryElement.lastElementChild) {
             const removeButton = document.createElement('button');
             removeButton.classList.add('remove-anexo-btn', 'close-icon');
-
+            
             item.prepend(removeButton);
 
         }
@@ -2101,8 +2101,8 @@ export function mostrarCamposRetencao() {
     camposNF.classList.remove("hidden");
 
     // Verifica se o tipo de solicitação é "SERVIÇO"
-    const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     camposNF.querySelector('.campos-iniciais-nf').classList.remove("hidden");
+    camposNF.querySelector('.campos-retencao-nf').classList.remove("hidden");
 }
 
 export function formatarCPFouCNPJ(elemento) {
