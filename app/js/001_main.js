@@ -2,6 +2,7 @@ import {
     atualizarValorTotalClassificacoes,
     atualizarValorTotalParcelas,
     adicionarLinhaClassificacao,
+    buscarAssinaturas,
     validarEntidadesPermitidas,
     calcularValorTotalPagar,
     atualizarValorOriginal,
@@ -42,8 +43,10 @@ async function __INIT__() {
         if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
+        console.log("assinaturas => ", globais.assinaturas)
         console.log("page => ", globais.pag);
         console.log("globais => ", globais)
+        // await buscarAssinaturas()
 
         // 2. Valida as entidades permitidas
         validarEntidadesPermitidas();
@@ -106,6 +109,7 @@ export async function buscarDadosUsuarioLogado() {
         mapa_dados_usuario.set("e_mail_pessoal", dados_usuario[0]?.e_mail_pessoal || null);
         mapa_dados_usuario.set("e_mail_profissional", dados_usuario[0]?.e_mail_profissional || null);
         mapa_dados_usuario.set("Cargo", dados_usuario[0]?.Cargo || null);
+        mapa_dados_usuario.set("Funcao", dados_usuario[0]?.Funcao || null);
         mapa_dados_usuario.set("Departamento", dados_usuario[0]?.Departamento || null);
         mapa_dados_usuario.set("Entidades_permitidas", dados_usuario[0]?.Entidades_permitidas.map(ent => ent.ID) || null);
 
@@ -394,7 +398,6 @@ async function atualizarEmailUsuario(){
 
 
 export async function buscarDadosUsuarioAtual(){
-
     if(!globais.emailUsuario){ await atualizarEmailUsuario() }
     if(!globais.emailUsuario){ return false }
 
@@ -408,6 +411,7 @@ export async function buscarDadosUsuarioAtual(){
     
     const retorno_usuarios_api = await executar_apiZoho(config);
     const lista_de_acessos = [];
+    console.log(JSON.stringify(retorno_usuarios_api, null, 2));
 
     for(const dados_usuario of retorno_usuarios_api){
         // const dados_usuario = retorno_usuarios_api[0];
@@ -418,6 +422,7 @@ export async function buscarDadosUsuarioAtual(){
         mapa_dados_usuario["e_mail_pessoal"] = dados_usuario.e_mail_pessoal;
         mapa_dados_usuario["e_mail_profissional"] = dados_usuario.e_mail_profissional;
         mapa_dados_usuario["Cargo"] = dados_usuario.Cargo;
+        mapa_dados_usuario["Funcao"] = dados_usuario.Cargo;
         mapa_dados_usuario["Departamento"] = dados_usuario.Departamento;
         mapa_dados_usuario["Entidades_permitidas"] = dados_usuario.Entidades_permitidas;
 

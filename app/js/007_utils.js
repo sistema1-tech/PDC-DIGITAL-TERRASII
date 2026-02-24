@@ -1007,28 +1007,27 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         console.log("==================================");
 
 
-        buscarAssinaturas();
+        await buscarAssinaturas();
         // Se a etapa atual solicitar assinante, é verificado se o email do cliente atual é autorizado
-        console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2))
+        console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2));
         const assinante_autorizado = await verificarSeAssinanteAutorizado(acao, linhas_de_assinatura_atualizadas);
         if (!assinante_autorizado){
             console.log(`--ASSINATURA NEGADA PARA:\n${globais.emailUsuario}\nNa ação => ${acao}`);
 
-            const mensagem_erro = "Você não tem autorização para assinar este PDC!"
+            const mensagem_erro = "Você não tem autorização para assinar este PDC!";
             customModal_V2({
                 tipoAcao:'alert', 
                 titulo: "Autorização negada!🚫", 
                 mensagem:`<p>${mensagem_erro}</p>`,
                 confirmText: 'Ok!'
             });
-            console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2))
-
-            return;
+            console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2));
+            return
         }
-        console.log("Apoio_paramExtras.Assinaturas")
-        console.log(JSON.stringify(linhas_de_assinatura_atualizadas , null, 2))
-        apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_atualizadas));
+
+        console.log(JSON.stringify(linhas_de_assinatura_atualizadas , null, 2));
         console.log("--Cliente autorizado na verificação da assinatura");
+        apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_atualizadas));
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         let tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
         let ap_status_subsindico = tudoAssinado ? "Pag. aut." : "Ass. subsindico";

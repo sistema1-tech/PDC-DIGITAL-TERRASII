@@ -121,6 +121,7 @@ export async function preencherDadosPDC(data) {
     console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
     console.log(data.Perfil_responsavel);
     console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
+    console.log(globais.assinaturas)
     globais.numSolicPDC = data.num_sol;
     if (data.Perfil_responsavel) {
         globais.perfilResponsavel = data.Perfil_responsavel;
@@ -444,7 +445,7 @@ export function criarAssinante(assinante) {
 async function buscarAssinaturasZohoAPI() {
     // Conjunto de regras para validar se um cargo ou uma pessoa deve assinar o PDC
     let validacoes_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "Validacoes_criadas" });
-    // console.log(JSON.stringify(validacoes_de_assinatura))
+    console.log(JSON.stringify(validacoes_de_assinatura))
 
     // Lista de regras que estão associadas as validações
     let regras_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "condicoes_de_assinatura_salvas" });
@@ -465,7 +466,7 @@ export async function atualizarLinhasDeAssinatura() {
     const linhas_de_assinatura_para_criar = {};
     if (lista_com_assinadas_incluidas) {
         lista_com_assinadas_incluidas.forEach(solicitacao => {
-            linhas_de_assinatura_para_criar[solicitacao.Cargo] = solicitacao
+            linhas_de_assinatura_para_criar[solicitacao.Funcao] = solicitacao
         });
     }
 
@@ -487,10 +488,9 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
         }
 
         // Validação genérica para qualquer funcionário do mesmo departamento poder assinar
-        assinaturas_solicitadas[validacao.Cargo] = {
+        assinaturas_solicitadas[validacao.Funcao] = {
             Etapa_de_validacao: validacao.Etapa_de_validacao,
-            Cargo: validacao.Cargo,
-            Funcao: "",
+            Funcao: validacao.Funcao,
             Usuario: "",
             E_mail_usuario: "",
             Assinado: false
@@ -498,13 +498,13 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
 
         // Especificar o usuário q deve assinar se tiver o nome de usuário pedido na validação
         if (validacao["Funcionario.Nome_completo"] !== "") {
-            assinaturas_solicitadas[validacao.Cargo].Funcao = validacao["Funcao"];
-            assinaturas_solicitadas[validacao.Cargo].Usuario = validacao["Funcionario.Nome_completo"];
-            assinaturas_solicitadas[validacao.Cargo].E_mail_usuario = validacao["Funcionario.e_mail_pessoal"];
+            assinaturas_solicitadas[validacao.Funcao].Funcao = validacao["Funcao"];
+            assinaturas_solicitadas[validacao.Funcao].Usuario = validacao["Funcionario.Nome_completo"];
+            assinaturas_solicitadas[validacao.Funcao].E_mail_usuario = validacao["Funcionario.e_mail_profissional"];
         }
 
         console.log("--Autorizada criação da linha de assinatura para:");
-        console.log(JSON.stringify(assinaturas_solicitadas[validacao.Cargo], null, 2));
+        console.log(JSON.stringify(assinaturas_solicitadas[validacao.Funcao], null, 2));
 
     });
 
@@ -512,10 +512,15 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
 }
 
 
-export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
-    const assinaturas_ja_criadas = globais.assinaturas ? globais.assinaturas : [];
 
+
+
+export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
+    console.log(JSON.stringify("+++++++++++++++++++++++++++++++++++\nincluirLinhasJaAssinadas\n+++++++++++++++++++++++++++++++++++"))
+    const assinaturas_ja_criadas = globais.assinaturas ? globais.assinaturas : [];
+    console.log(JSON.stringify(assinaturas_ja_criadas))
     const linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado == "true");
+    console.log(JSON.stringify(linhas_a_serem_criadas))
 
     // Deletando ID e display value atual pois esses campos dão erro ao tentar subir no zoho
     linhas_a_serem_criadas.forEach(linha => {
@@ -524,16 +529,28 @@ export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
         delete linha.zc_display_value;
     });
 
+    console.log("VALIDANDO ITENS SOLICITADOS")
     Object.values(assinaturas_solicitadas).forEach(item_solicitado => {
+        console.log(JSON.stringify("COMPARANDO-----------------------"))
+        console.log(JSON.stringify(linhas_a_serem_criadas))
+        console.log(JSON.stringify(item_solicitado))
+
         const ja_existe = linhas_a_serem_criadas.some(linha =>
-            linha.Cargo === item_solicitado.Cargo &&
-            linha.E_mail_usuario === item_solicitado.E_mail_usuario
+            linha.Funcao === item_solicitado.Funcao &&
+            (linha.E_mail_usuario === item_solicitado.E_mail_usuario || item_solicitado.E_mail_usuario == "")
         );
+        console.log("RESULTADO:")
+        console.log(JSON.stringify(ja_existe))
+
 
         if (!ja_existe) {
+            console.log("----ADICIONADO ITEM:");
+            console.log(JSON.stringify(item_solicitado));
             linhas_a_serem_criadas.push(item_solicitado);
         }
     });
+
+    
 
     return linhas_a_serem_criadas;
 }
@@ -542,7 +559,7 @@ export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
 function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas) {
 
     function printarValidacaoSendoAnalisada(validacao) {
-        let log_assinante_esperado = `${validacao.Cargo}`;
+        let log_assinante_esperado = `${validacao.Funcao}`;
 
         if (validacao.Funcionario) {
             log_assinante_esperado += ` | ${validacao.Funcionario}`;
@@ -639,7 +656,7 @@ function buscarValoresDeComparacao(condicao) {
 
 
 export async function buscarAssinaturas() {
-    const log = false;
+    const log = true;
     if (log) console.log("++++++++++BUSCANDO ASSINATURAS++++++++++");
 
     const assinantes = document.querySelectorAll('.assinantes .assinante');
@@ -672,6 +689,17 @@ export async function buscarAssinaturas() {
 }
 
 
+async function escolherAcessoDoUsuario(usuario_logado, requisitos_assinatura){
+    for (const dados_usuario of usuario_logado) {
+        if (dados_usuario.Cargo == requisitos_assinatura.Funcao){
+            return dados_usuario
+        }
+    }
+    console.log("--ERRO: Não foi encontrado nenhum acesso do usuário para a acao atual. Retornando primeiro parametro encontrado");
+    return usuario_logado[0]
+}
+
+
 export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
     const usuario_logado = await buscarDadosUsuarioAtual();
 
@@ -683,9 +711,17 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
                 return false;
             }
 
+            const acesso_do_usuario = await escolherAcessoDoUsuario(usuario_logado, assinatura);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario, null, 2)}`);
+
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.Nome_completo, null, 2)}`);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.e_mail_profissional, null, 2)}`);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.Departamento, null, 2)}`);
+
             // Dados preenchidos depois de confirmar a assinatura
-            assinatura.E_mail_usuario = usuario_logado.e_mail_pessoal;
-            assinatura.Usuario = usuario_logado.Nome_completo;
+            assinatura.E_mail_usuario = acesso_do_usuario.e_mail_profissional;
+            assinatura.Usuario = acesso_do_usuario.Nome_completo;
+            assinatura.Cargo = acesso_do_usuario.Departamento;
             assinatura.IP = globais.userIP || "";
             assinatura.Data_da_assinatura = data_atual_formatada();
             assinatura.Assinado = true;
@@ -703,20 +739,20 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
 
 async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado) {
     console.log(JSON.stringify(usuario_logado, null, 2));
+    console.log(JSON.stringify(requisitos_assinatura, null, 2));
     let credenciais_autorizadas = false;
-    for(const acesso_usuario of usuario_logado){
+    for(const acesso_do_usuario of usuario_logado){
         console.log("==================VALIDANDO==================")
-        console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Cargo} Email:${requisitos_assinatura.E_mail_usuario} `);
-        console.log(`DADOS ENCONTRADOS\nCargo: ${acesso_usuario.Cargo} Email:${acesso_usuario.e_mail_pessoal.toString()} `);
+        console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Funcao} Email:${requisitos_assinatura.E_mail_usuario} `);
+        console.log(`DADOS ENCONTRADOS\nCargo: ${acesso_do_usuario.Funcao} Email:${acesso_do_usuario.e_mail_profissional.toString()} `);
 
-        console.log(JSON.stringify(acesso_usuario, null, 2));
-        console.log(JSON.stringify(acesso_usuario.Cargo, null, 2));
-        console.log(JSON.stringify(acesso_usuario.e_mail_pessoal, null, 2));
+        console.log(JSON.stringify(acesso_do_usuario, null, 2));
+        console.log(JSON.stringify(acesso_do_usuario.Funcao, null, 2));
+        console.log(JSON.stringify(acesso_do_usuario.e_mail_pessoal, null, 2));
 
-        if ((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == acesso_usuario.e_mail_pessoal) &&
-            requisitos_assinatura.Cargo == acesso_usuario.Cargo) {
+        if ((requisitos_assinatura.E_mail_usuario == "" || requisitos_assinatura.E_mail_usuario == acesso_do_usuario.e_mail_profissional) &&
+            requisitos_assinatura.Funcao == acesso_do_usuario.Funcao) {
             credenciais_autorizadas = true
-            console.log("passou pel ponto")
         }
 
         console.log(credenciais_autorizadas)
