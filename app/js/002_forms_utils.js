@@ -455,13 +455,13 @@ async function buscarAssinaturasZohoAPI() {
 }
 
 // Reescreve as linhas de assinaturas do PDC selecionado, enquanto mantém as linhas que já foram assinadas
-export async function atualizarLinhasDeAssinatura() {
+export async function atualizarLinhasDeAssinatura(acao) {
     const { validacoes_de_assinatura, regras_de_assinatura } = await buscarAssinaturasZohoAPI();
     // Funciona: Pega as validações no zoho, valida o valor do pdc e forma de pagamento, cria as linhas de assinatura se a condição for validada
     // Não foi feito: Considerar outros parâmetros além de valor e forma de pagamento, considerar condições relacionais de E/OU
     const assinaturas_solicitadas = await mesclarValidacaoComRegra(validacoes_de_assinatura, regras_de_assinatura);
     // Manter as linhas que já foram assinadas, e incluí-las na lista de linhas que serão salvas
-    const lista_com_assinadas_incluidas = await incluirLinhasJaAssinadas(assinaturas_solicitadas);
+    const lista_com_assinadas_incluidas = await incluirLinhasJaAssinadas(assinaturas_solicitadas, acao);
 
     const linhas_de_assinatura_para_criar = {};
     if (lista_com_assinadas_incluidas) {
@@ -512,22 +512,62 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
 }
 
 
+function retornarIndiceDaAcao(acao){
+    const acoes_de_avanco = {
+        0: "salvar_cot",
+        0: "criar_cotacao",
+        0: "editar_cot",
+        0: "corrigir_erros",
+
+        1: "solicitar_aprovacao_sindico",
+        1: "ajustar_cot",
+
+        2: "aprov_cot",
+        2: "arquivar_cot",
+
+        3: "finalizar_provisionamento",
+        4: "confirmar_compra",
+
+        5: "confirmar_recebimento",
+        5: "solicitar_ajuste_ao_compras",
+        5: "enviar_p_checagem_final",
+        5: "tratar_control",
+        6: "enviar_p_ass_control",
+        6: "enviar_p_assinatura", 
+        7: "autorizar_pagamento_subsindico", 
+        8: "autorizar_pagamento_sindico",
+
+        20: "confirmar_todas_as_assinaturas",
+        20: "lancar_pdc_ahreas",
+        20: "confirmar_pag_ahreas",
+        20: "suspender_pagamento",
+    }
+
+    for(const [indice_acao, nome_acao] of Object.entries(acoes_de_avanco)) {
+        if(nome_acao == acao){
+            return indice_acao
+        }
+    }
+    console.log("--Não foi encontrado o índice da acao solicitada. Retornando 0")
+    return 0
+}
 
 
-
-export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
-    console.log(JSON.stringify("+++++++++++++++++++++++++++++++++++\nincluirLinhasJaAssinadas\n+++++++++++++++++++++++++++++++++++"))
+export function incluirLinhasJaAssinadas(assinaturas_solicitadas, acao) {
     const assinaturas_ja_criadas = globais.assinaturas ? globais.assinaturas : [];
-    console.log(JSON.stringify(assinaturas_ja_criadas))
-    const linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado == "true");
-    console.log(JSON.stringify(linhas_a_serem_criadas))
-
     // Deletando ID e display value atual pois esses campos dão erro ao tentar subir no zoho
-    linhas_a_serem_criadas.forEach(linha => {
-        linha.Assinado = true;
+    assinaturas_ja_criadas.forEach(linha => {
         delete linha.ID;
         delete linha.zc_display_value;
-    });
+    });    
+    console.log(JSON.stringify(assinaturas_ja_criadas))
+
+
+    // Retorna o indice de prioridade da ação
+    let indice_acao_atual = retornarIndiceDaAcao(acao);
+    let linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado == "true");
+
+    console.log(JSON.stringify(linhas_a_serem_criadas))
 
     console.log("VALIDANDO ITENS SOLICITADOS")
     Object.values(assinaturas_solicitadas).forEach(item_solicitado => {
@@ -535,22 +575,28 @@ export function incluirLinhasJaAssinadas(assinaturas_solicitadas) {
         console.log(JSON.stringify(linhas_a_serem_criadas))
         console.log(JSON.stringify(item_solicitado))
 
-        const ja_existe = linhas_a_serem_criadas.some(linha =>
-            linha.Funcao === item_solicitado.Funcao &&
-            (linha.E_mail_usuario === item_solicitado.E_mail_usuario || item_solicitado.E_mail_usuario == "")
-        );
-        console.log("RESULTADO:")
-        console.log(JSON.stringify(ja_existe))
+        const indice_assinatura_analisada = retornarIndiceDaAcao(item_solicitado.Etapa_de_validacao);
+        console.log(`INDICE ACAO=> ${indice_acao_atual}`)
+        console.log(`INDICE indice_assinatura_analisada=> ${indice_assinatura_analisada}`)
 
+        if (indice_acao_atual <= indice_assinatura_analisada){
+        
+            const ja_existe = linhas_a_serem_criadas.some(linha =>
+                linha.Funcao === item_solicitado.Funcao &&
+                (linha.E_mail_usuario === item_solicitado.E_mail_usuario || item_solicitado.E_mail_usuario == "")
+            );
+            console.log("RESULTADO:")
+            console.log(JSON.stringify(ja_existe))
 
-        if (!ja_existe) {
-            console.log("----ADICIONADO ITEM:");
-            console.log(JSON.stringify(item_solicitado));
-            linhas_a_serem_criadas.push(item_solicitado);
+            if (!ja_existe) {
+                console.log("----ADICIONADO ITEM:");
+                console.log(JSON.stringify(item_solicitado));
+                linhas_a_serem_criadas.push(item_solicitado);
+            }
         }
-    });
 
-    
+
+    });
 
     return linhas_a_serem_criadas;
 }
@@ -656,7 +702,7 @@ function buscarValoresDeComparacao(condicao) {
 
 
 export async function buscarAssinaturas() {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++BUSCANDO ASSINATURAS++++++++++");
 
     const assinantes = document.querySelectorAll('.assinantes .assinante');
@@ -702,8 +748,17 @@ async function escolherAcessoDoUsuario(usuario_logado, requisitos_assinatura){
 
 export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
     const usuario_logado = await buscarDadosUsuarioAtual();
+    console.log(`LISTA DE ASSINATURAS Q CHEGOU: ${JSON.stringify(lista_assinaturas, null, 2)}`);
 
     for (const assinatura of Object.values(lista_assinaturas)) {
+        console.log("---")
+        console.log(assinatura.Etapa_de_validacao)
+        console.log(acao)
+        // if(assinaturaZoho.etapa == ""){
+        //     assina antigo
+        // } else [
+        //     MODELO NOVO
+        // ]
         if (assinatura.Etapa_de_validacao == acao) {
             console.log(`--Encontrado validação`)
             const credenciais_autorizadas = await validarCredenciaisAssinante(assinatura, usuario_logado);
@@ -733,6 +788,7 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
         }
     }
     // Se não foi encontrado nenhuma validação para a etapa atual, o assinante é autorizado
+    console.log("--não foi encontrado nenhuma validação para a etapa atual, o assinante é autorizado")
     return true;
 }
 

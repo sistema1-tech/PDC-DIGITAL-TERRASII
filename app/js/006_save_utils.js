@@ -130,7 +130,7 @@ async function meshData(status = null) {
  */
 function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
     
-    const log = true;
+    const log = false;
 
     if(log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
 

@@ -2,7 +2,6 @@ import {
     atualizarValorTotalClassificacoes,
     atualizarValorTotalParcelas,
     adicionarLinhaClassificacao,
-    buscarAssinaturas,
     validarEntidadesPermitidas,
     calcularValorTotalPagar,
     atualizarValorOriginal,

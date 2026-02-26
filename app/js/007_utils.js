@@ -1000,16 +1000,18 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         apoio_paramExtras.Assinaturas = [];
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        const linhas_de_assinatura_atualizadas = await atualizarLinhasDeAssinatura();
+        const linhas_de_assinatura_atualizadas = await atualizarLinhasDeAssinatura(acao);
 
         console.log("==================================");
         console.log("==================================");
         console.log("==================================");
+        console.log(`LOGANDO AÇÃO: ${acao}`)
+        console.log("==================================");
+        console.log("==================================");
+        console.log("==================================");
 
-
-        await buscarAssinaturas();
+        // await buscarAssinaturas();
         // Se a etapa atual solicitar assinante, é verificado se o email do cliente atual é autorizado
-        console.log(JSON.stringify(linhas_de_assinatura_atualizadas, null, 2));
         const assinante_autorizado = await verificarSeAssinanteAutorizado(acao, linhas_de_assinatura_atualizadas);
         if (!assinante_autorizado){
             console.log(`--ASSINATURA NEGADA PARA:\n${globais.emailUsuario}\nNa ação => ${acao}`);
