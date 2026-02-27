@@ -1434,6 +1434,18 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
 
     //==========ADICIONANDO A GALERIA==========//
     galeria.appendChild(file_container);
+    /*
+    if (galeria && galeria.children.length > 0) {
+        const lastElement = galeria.children[galeria.children.length - 1];
+        if (lastElement.classList.contains('add-btn')) {
+            galeria.insertBefore(file_container, lastElement);
+        } else {
+            galeria.appendChild(file_container);
+        }
+    } else {
+        galeria.appendChild(file_container);
+    }
+    */
 
     //==========ELEMENTO PARA ARQUIVO==========//
     let file_field = document.createElement('img');
@@ -1492,7 +1504,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     console.log("SAIU DO IF");
     console.log("fileField.src => ", file_field.src);
     const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
-    const fileType = convertTypes[file.split('.').pop().toLowerCase()] || file.split('.').pop().toUpperCase() || '';
+    const fileType = convertTypes[name.split('.').pop().toLowerCase()] || name.split('.').pop().toUpperCase() || '';
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     console.log("typesToView => ", typesToView);
@@ -1527,6 +1539,11 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     remove_btn.classList.add('remove-anexo-btn', 'close-icon');
     remove_btn.style.display = 'none';
     if (log) console.log("remove_btn => ", remove_btn);
+
+    remove_btn.addEventListener('click', function () {
+        console.log("remove_btn => ", remove_btn);
+        file_container.remove();
+    })
 
     //==========EVENTOS==========//
     //=====BAIXAR ARQUIVO=====//
@@ -1584,7 +1601,6 @@ export async function preencherListaAnexos(anexos) {
 
         }
 
-
         await Promise.all(promises);
 
     } else {
@@ -1634,94 +1650,49 @@ export async function preencherListaAnexos(anexos) {
         const files = event.target.files;
         if (files.length > 0) {
             const file = files[0];
-            const fileName = file.name;
+            //==========NOVO ELEMENTO DA GALERIA==========//
+            let { 
+                file_container, 
+                file_field, 
+                file_name, 
+                remove_btn, 
+                loading_spinner 
+            } = await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo' });
 
-            globais.arquivosGaleria.push(file);
-            const fileType = file.name.split('.').pop().toUpperCase();
-
-            // Cria o container para o arquivo
-            const fileContainer = document.createElement('div');
-            fileContainer.classList.add('gallery-item');
-            galleryElement.insertBefore(fileContainer, btnContainer);
-
-            const blobUrl = URL.createObjectURL(file);
-
-            const newLoadingSpinner = createLoadingSpinner();
-            fileContainer.appendChild(newLoadingSpinner);
-
-            let fileElement = document.createElement('img');
-            fileElement.classList.add('novo-anexo');
-            fileElement.style.display = 'none';
-
-            if (typesToView.includes(fileType)) {
-
-                fileElement.alt = 'Minitatura do arquivo';
-                fileElement.setAttribute('data-fancybox', 'gallery');
-                fileElement.setAttribute('data-src', blobUrl);
-                fileElement.setAttribute('data-download-src', blobUrl); // Permitir download
-
-                if (fileType === 'PDF') {
-                    fileElement.setAttribute('data-type', 'iframe'); // Define como iframe no Fancybox
-                    fileElement.src = 'https://placehold.co/150?text=PDF';
-                } else {
-                    fileElement.src = blobUrl;
-                }
-
-            } else {
-                const cloneFileElement = fileElement.cloneNode(true);
-                cloneFileElement.classList.add('novo-anexo');
-                cloneFileElement.style.width = '100px';
-                cloneFileElement.style.height = '100px';
-                cloneFileElement.style.display = 'block';
-                cloneFileElement.src = 'https://placehold.co/100?text=' + fileType;
-
-                fileElement = document.createElement('a');
-                fileElement.display = 'none';
-                fileElement.href = blobUrl;
-                fileElement.download = file.name;
-                fileElement.appendChild(cloneFileElement);
-
-            }
-            //==========CRIANDO UM ELEMENTO COM O NOME DO ARQUIVO==========//
-            const fileNameElement = document.createElement('p');
-            fileNameElement.style.maxWidth = '100px';
-            fileNameElement.style.fontSize = '11pt';
-            fileNameElement.style.marginLeft = 'auto';
-            fileNameElement.style.marginRight = 'auto';
-            fileNameElement.style.wordBreak = 'break-word';
-            fileNameElement.classList.add('file-name');
-            fileNameElement.textContent = fileName.slice(fileName.indexOf('_') + 1, fileName.length);
-
-            fileContainer.appendChild(fileElement);
-            fileContainer.appendChild(fileNameElement);
-            fileElement.style.display = 'block';
-            newLoadingSpinner.remove();
-            $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-
-            const removeButton = document.createElement('button');
-            removeButton.classList.add('remove-anexo-btn', 'close-icon');
-
-            fileContainer.prepend(removeButton);
+            file_field.style.display = 'block';
+            file_name.style.display = 'block';
+            remove_btn.style.display = 'block';
+            file_container.style.display = 'block';
+            loading_spinner.remove();
 
             // Remove a mensagem de anexos
             const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
             if (mensagemAnexos) {
                 mensagemAnexos.remove();
             }
+            
+            setTimeout(() => {
+                setTimeout(() => {
+                    const disabledElements = document.querySelectorAll('.wait-file');
+                    console.log(JSON.stringify(disabledElements));
+                    disabledElements.forEach(el => el.classList.remove('wait-file'));
+                }, 1000);
+            }, 0);
         }
     });
 
     //==========INICIANDO O FANCYBOX==========//
     await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-    // Adiciona o botão e o input ao DOM;
+    //Adiciona o botão e o input ao DOM;
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
     
     //==========CRIANDO BOTÃO DE REMOVER==========//
+    /*
     for (const item of galleryElement.children) {
         console.log('file container => ', item);
-        if (item !== galleryElement.lastElementChild) {
+        if (item !== galleryElement.lastElementChild && !item.classList.contains('mensagem-anexos-container')) {
             const removeButton = document.createElement('button');
             removeButton.classList.add('remove-anexo-btn', 'close-icon');
             
@@ -1729,10 +1700,16 @@ export async function preencherListaAnexos(anexos) {
 
         }
     }
+        */
 
+    setTimeout(() => {
+        setTimeout(() => {
+            const disabledElements = document.querySelectorAll('.wait-file');
+            console.log(JSON.stringify(disabledElements));
+            disabledElements.forEach(el => el.classList.remove('wait-file'));
+        }, 1000);
+    }, 0);
 }
-
-
 
 export async function preencherListaAnexosV2(anexos) {
     const log = false;
@@ -2042,6 +2019,7 @@ export async function preencherListaAnexosV2(anexos) {
         }, 1000);
     }, 0);
 }
+
 //=================================================//
 //====================LINHAS NF====================//
 //=================================================//
