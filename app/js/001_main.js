@@ -429,8 +429,8 @@ export async function buscarDadosUsuarioAtual(){
     }
 
 
-    console.log("Dados do usuário logado:");
-    console.log(JSON.stringify(lista_de_acessos, null, 2));
+    // console.log("Dados do usuário logado:");
+    // console.log(JSON.stringify(lista_de_acessos, null, 2));
     return lista_de_acessos;
 }
 

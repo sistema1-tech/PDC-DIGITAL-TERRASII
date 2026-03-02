@@ -1027,7 +1027,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             return
         }
 
-        console.log(JSON.stringify(linhas_de_assinatura_atualizadas , null, 2));
         console.log("--Cliente autorizado na verificação da assinatura");
         apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_atualizadas));
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

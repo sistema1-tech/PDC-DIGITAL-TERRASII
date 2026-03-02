@@ -118,10 +118,8 @@ export async function preencherDadosPDC(data) {
     globais.numPDC = data.Numero_do_PDC;
     globais.perfilResponsavel = data.Perfil_responsavel;
     globais.assinaturas = data.Assinaturas;
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
-    console.log(data.Perfil_responsavel);
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
-    console.log(globais.assinaturas)
+    // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n", JSON.stringify(data.Assinaturas));
+    // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n", JSON.stringify(globais.assinaturas));
     globais.numSolicPDC = data.num_sol;
     if (data.Perfil_responsavel) {
         globais.perfilResponsavel = data.Perfil_responsavel;
@@ -445,7 +443,7 @@ export function criarAssinante(assinante) {
 async function buscarAssinaturasZohoAPI() {
     // Conjunto de regras para validar se um cargo ou uma pessoa deve assinar o PDC
     let validacoes_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "Validacoes_criadas" });
-    console.log(JSON.stringify(validacoes_de_assinatura))
+    // console.log(JSON.stringify(validacoes_de_assinatura))
 
     // Lista de regras que estão associadas as validações
     let regras_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "condicoes_de_assinatura_salvas" });
@@ -514,42 +512,42 @@ export async function mesclarValidacaoComRegra(validacoes_de_assinatura, condico
 
 function retornarIndiceDaAcao(acao){
     const acoes_de_avanco = {
-        0: "salvar_cot",
-        0: "criar_cotacao",
-        0: "editar_cot",
-        0: "corrigir_erros",
+        salvar_cot: 0,
+        criar_cotacao: 0,
+        editar_cot: 0,
+        corrigir_erros: 0,
 
-        1: "solicitar_aprovacao_sindico",
-        1: "ajustar_cot",
+        solicitar_aprovacao_sindico: 1,
+        ajustar_cot: 1,
 
-        2: "aprov_cot",
-        2: "arquivar_cot",
+        aprov_cot: 2,
+        arquivar_cot: 2,
 
-        3: "finalizar_provisionamento",
-        4: "confirmar_compra",
+        finalizar_provisionamento: 3,
+        confirmar_compra: 4,
 
-        5: "confirmar_recebimento",
-        5: "solicitar_ajuste_ao_compras",
-        5: "enviar_p_checagem_final",
-        5: "tratar_control",
-        6: "enviar_p_ass_control",
-        6: "enviar_p_assinatura", 
-        7: "autorizar_pagamento_subsindico", 
-        8: "autorizar_pagamento_sindico",
+        confirmar_recebimento: 5,
+        solicitar_ajuste_ao_compras: 5,
+        enviar_p_checagem_final: 5,
+        tratar_control: 5,
+        enviar_p_ass_control: 6,
+        enviar_p_assinatura: 6, 
+        autorizar_pagamento_subsindico: 7, 
+        autorizar_pagamento_sindico: 8,
 
-        20: "confirmar_todas_as_assinaturas",
-        20: "lancar_pdc_ahreas",
-        20: "confirmar_pag_ahreas",
-        20: "suspender_pagamento",
+        confirmar_todas_as_assinaturas: 20,
+        lancar_pdc_ahreas: 20,
+        confirmar_pag_ahreas: 20,
+        suspender_pagamento: 20,
     }
 
-    for(const [indice_acao, nome_acao] of Object.entries(acoes_de_avanco)) {
+    for(const [nome_acao, indice_acao] of Object.entries(acoes_de_avanco)) {
         if(nome_acao == acao){
             return indice_acao
         }
     }
-    console.log("--Não foi encontrado o índice da acao solicitada. Retornando 0")
-    return 0
+    console.log("--Não foi encontrado o índice da acao solicitada. Retornando 99")
+    return 99
 }
 
 
@@ -560,24 +558,26 @@ export function incluirLinhasJaAssinadas(assinaturas_solicitadas, acao) {
         delete linha.ID;
         delete linha.zc_display_value;
     });    
-    console.log(JSON.stringify(assinaturas_ja_criadas))
+    // console.log("ASSINATURAS JÁ CRIADAS RETORNADAS DO GLOBAL")
+    // console.log(JSON.stringify(assinaturas_ja_criadas))
 
 
     // Retorna o indice de prioridade da ação
     let indice_acao_atual = retornarIndiceDaAcao(acao);
     let linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado == "true");
 
-    console.log(JSON.stringify(linhas_a_serem_criadas))
+    // console.log(JSON.stringify(linhas_a_serem_criadas))
 
-    console.log("VALIDANDO ITENS SOLICITADOS")
+    // console.log("VALIDANDO ITENS SOLICITADOS")
     Object.values(assinaturas_solicitadas).forEach(item_solicitado => {
-        console.log(JSON.stringify("COMPARANDO-----------------------"))
-        console.log(JSON.stringify(linhas_a_serem_criadas))
-        console.log(JSON.stringify(item_solicitado))
+        // console.log(JSON.stringify("------------COMPARANDO-----------"))
+        // console.log(JSON.stringify(linhas_a_serem_criadas))
+        // console.log(JSON.stringify(item_solicitado))
+        // console.log(JSON.stringify("---------------------------------"))
 
         const indice_assinatura_analisada = retornarIndiceDaAcao(item_solicitado.Etapa_de_validacao);
-        console.log(`INDICE ACAO=> ${indice_acao_atual}`)
-        console.log(`INDICE indice_assinatura_analisada=> ${indice_assinatura_analisada}`)
+        // console.log(`INDICE ACAO=> ${indice_acao_atual}`)
+        // console.log(`INDICE indice_assinatura_analisada=> ${indice_assinatura_analisada}`)
 
         if (indice_acao_atual <= indice_assinatura_analisada){
         
@@ -585,21 +585,19 @@ export function incluirLinhasJaAssinadas(assinaturas_solicitadas, acao) {
                 linha.Funcao === item_solicitado.Funcao &&
                 (linha.E_mail_usuario === item_solicitado.E_mail_usuario || item_solicitado.E_mail_usuario == "")
             );
-            console.log("RESULTADO:")
-            console.log(JSON.stringify(ja_existe))
+            // console.log("RESULTADO:")
+            // console.log(JSON.stringify(ja_existe))
 
             if (!ja_existe) {
-                console.log("----ADICIONADO ITEM:");
-                console.log(JSON.stringify(item_solicitado));
+                // console.log("----ADICIONADO ITEM:");
                 linhas_a_serem_criadas.push(item_solicitado);
             }
         }
-
-
     });
 
     return linhas_a_serem_criadas;
 }
+
 
 //  Analisa os dados do PDC para determinar quais setores/pessoas devem assiná-lo
 function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas) {
@@ -612,9 +610,7 @@ function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas) 
         }
 
         console.log("---------------------------------------------------------------")
-        console.log(`Validação encontrada para solicitar\n 
-            assinatura de ${log_assinante_esperado}\n 
-            na etapa ${validacao.Etapa_de_validacao}`
+        console.log(`Validação encontrada para solicitar\nassinatura de ${log_assinante_esperado}\nna etapa ${validacao.Etapa_de_validacao}`
         );
     }
     // Printar no console quem deve assinar o pdc caso seja validado
@@ -748,7 +744,6 @@ async function escolherAcessoDoUsuario(usuario_logado, requisitos_assinatura){
 
 export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
     const usuario_logado = await buscarDadosUsuarioAtual();
-    console.log(`LISTA DE ASSINATURAS Q CHEGOU: ${JSON.stringify(lista_assinaturas, null, 2)}`);
 
     for (const assinatura of Object.values(lista_assinaturas)) {
         console.log("---")
@@ -767,11 +762,6 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
             }
 
             const acesso_do_usuario = await escolherAcessoDoUsuario(usuario_logado, assinatura);
-            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario, null, 2)}`);
-
-            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.Nome_completo, null, 2)}`);
-            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.e_mail_profissional, null, 2)}`);
-            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.Departamento, null, 2)}`);
 
             // Dados preenchidos depois de confirmar a assinatura
             assinatura.E_mail_usuario = acesso_do_usuario.e_mail_profissional;
