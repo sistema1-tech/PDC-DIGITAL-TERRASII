@@ -1155,35 +1155,6 @@ export function setupPixValidation() {
         errorMessage.style.display = 'none';
         chavePix.classList.remove('invalid');
     });
-
-    /*
-    chavePix.addEventListener('input', (e) => {
-        const tipo = tipoPix.value;
-        let valor = e.target.value;
-
-        if (!formatacoes[tipo].validacao.test(valor)) {
-            valor = valor.slice(0, -1);
-        }
-
-        e.target.value = formatacoes[tipo].mascara(valor);
-    });
-
-    // Adiciona validação no blur (quando o campo perde o foco)
-    chavePix.addEventListener('blur', (e) => {
-        const tipo = tipoPix.value;
-        const valor = e.target.value;
-
-        if (valor && !formatacoes[tipo].validacaoCompleta.test(valor)) {
-            errorMessage.textContent = formatacoes[tipo].mensagemErro;
-            errorMessage.style.display = 'block';
-            chavePix.classList.add('invalid');
-        } else {
-            errorMessage.style.display = 'none';
-            chavePix.classList.remove('invalid');
-        }
-    });
-    */
-
 }
 
 

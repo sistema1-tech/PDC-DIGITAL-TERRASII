@@ -732,13 +732,12 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             for (let i = 0; i < 3; i++) {
                                 const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
                                 if(log) console.log("respFileUpload => ", respFileUpload);
-                                
-                                if (respFileUpload.code !== 3000) {
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                if (respFileUpload.code && respFileUpload.code !== 3000) {
                                     console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
                                     if (i !== 2) {
                                         console.log("Tentando novamente...");
                                         await new Promise(resolve => setTimeout(resolve, 1000));
-                                        continue;
                                     } else {
                                         await customModal_V2({
                                             tipoAcao:'alert', 
