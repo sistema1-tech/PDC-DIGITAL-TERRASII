@@ -728,16 +728,26 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                                 
                             if(log) console.log("id => ", id);
                             if(log)  console.log("blob => ", blob);
-                            const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
-                            if(log) console.log("respFileUpload => ", respFileUpload);
-                            if (respFileUpload.code !== 3000) {
-                                console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
-                                await customModal_V2({
-                                    tipoAcao:'alert', 
-                                    titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
-                                    mensagem:`<p>${respFileUpload.code}</p><p style="max-width: 500px; word-wrap: break-word;">${respFileUpload}</p>`,
-                                    confirmText: 'Ok!'
-                                });
+                            let tentativas = 3;
+                            for (let i = 0; i < 3; i++) {
+                                const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
+                                if(log) console.log("respFileUpload => ", respFileUpload);
+                                
+                                if (respFileUpload.code !== 3000) {
+                                    console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
+                                    if (i !== 2) {
+                                        console.log("Tentando novamente...");
+                                        await new Promise(resolve => setTimeout(resolve, 1000));
+                                        continue;
+                                    } else {
+                                        await customModal_V2({
+                                            tipoAcao:'alert', 
+                                            titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
+                                            mensagem:`<p>${respFileUpload.code}</p><p style="max-width: 500px; word-wrap: break-word;">${respFileUpload}</p>`,
+                                            confirmText: 'Ok!'
+                                        });
+                                    }
+                                }
                             }
                         }
     
@@ -770,7 +780,6 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
             mensagem:`<p>${error.message}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,
             confirmText: 'Ok!'
         });
-        
     }
 }
 

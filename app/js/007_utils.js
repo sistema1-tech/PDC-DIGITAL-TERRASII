@@ -1348,7 +1348,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         customModal_V2({
             tipoAcao:'alert', 
             titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
-            mensagem:`<p>${error.message}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,
+            mensagem:`<p>${error}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,
             confirmText: 'Ok!'
         });
     }
