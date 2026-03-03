@@ -943,7 +943,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 async function prepararParaSalvar(acao, infoInserida = null) {
 
     try {
-        const log = false;
+        const log = true;
     
         if (log) console.log("++++++++++PREPARANDO PARA SALVAR++++++++++");
         if (log) console.log("acao => ", acao);
@@ -1027,6 +1027,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             return
         }
 
+        console.log(JSON.stringify(linhas_de_assinatura_atualizadas , null, 2));
         console.log("--Cliente autorizado na verificação da assinatura");
         apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_atualizadas));
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1623,89 +1624,3 @@ async function gerar_num_pdc()
         }
     });
 }
-
-
-// if (acao === "autorizar_pagamento_subsindico") {
-    // const indice = 0;
-    // if (apoio_paramExtras.Assinaturas.length > indice) {
-    //     apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-    //     apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-    //     apoio_paramExtras.Assinaturas[indice].Assinado = true;
-    // }
-// else if (acao === "autorizar_pagamento_sindico") {
-//                     const indice = 2;
-//                     if (apoio_paramExtras.Assinaturas.length > indice) {
-//                         apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-//                         apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-//                         apoio_paramExtras.Assinaturas[indice].Assinado = true;
-//                     }
-//                 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //     if (acao === "enviar_p_assinatura" || acao === "enviar_p_ass_control") {
-        //         // apoio_paramExtras.Assinaturas.push(...Object.values(assinaturasIniciais));
-        //         // apoio_paramExtras.Assinaturas.push(...Object.values(linhas_de_assinatura_para_criar));
-        //     } else {
-        //         buscarAssinaturas();
-        //         console.log("assinaturas j  criadas", apoio_paramExtras.Assinaturas);
-        //         if (acao === "autorizar_pagamento_subsindico") {
-        //             // const indice = 0;
-        //             // if (apoio_paramExtras.Assinaturas.length > indice) {
-        //             //     apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-        //             //     apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-        //             //     apoio_paramExtras.Assinaturas[indice].Assinado = true;
-        //             // }
-        //             if (apoio_paramExtras.Assinaturas.length > 0){
-        //                 apoio_paramExtras.Assinaturas.forEach(assinatura =>{
-        //                     assinatura.IP = globais.userIP || "";
-        //                     assinatura.Data_da_assinatura = data_atual_formatada;
-        //                     assinatura.Assinado = true;
-        //                 })
-        //             }
-                    
-
-        //         } else if (acao === "autorizar_pagamento_sindico") {
-        //             const indice = 2;
-        //             if (apoio_paramExtras.Assinaturas.length > indice) {
-        //                 apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-        //                 apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-        //                 apoio_paramExtras.Assinaturas[indice].Assinado = true;
-        //             }
-        //         }
-        //     }
-        //     tudoAssinado = apoio_paramExtras.Assinaturas.every(assinatura => assinatura.Assinado);
-        //     ap_status_subsindico = tudoAssinado ? "Pag. aut." : ap_status_subsindico;
-        // }
-
-
-
-        //         if ([
-        //     "enviar_p_ass_control",
-        //     "enviar_p_assinatura",
-        //     "autorizar_pagamento_sindico",
-        //     "autorizar_pagamento_subsindico",
-        //     "confirmar_todas_as_assinaturas",
-        //     "solicitar_aprovacao_sindico"
-        // ]

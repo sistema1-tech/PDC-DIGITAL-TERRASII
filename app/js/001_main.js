@@ -114,18 +114,6 @@ export async function buscarDadosUsuarioLogado() {
 
         console.log("dados_usuario => ", dados_usuario);
         return mapa_dados_usuario;
-        // const ids_perfis = dados_usuario[0]?.Perfil1.map(perfil => perfil.ID) || [];
-        // console.log("ids_perfis => ", ids_perfis);
-
-        // const config_perfis = {
-        //     tipo: "busc_reg",
-        //     criterios: `ID in [${ids_perfis.join(",")}]`,
-        //     nomeR: "Perfis_criados_API",
-        // }
-
-        // console.log("config_perfis => ", config_perfis);
-        // const perfis = await executar_apiZoho(config_perfis);
-        // console.log("perfis => ", perfis);
     }
 }
 
@@ -318,7 +306,6 @@ async function processarDadosPDC() {
 
     globais.tipo = 'editar_pdc';
     preencherDadosPDC(respPDC[0]);
-       
 }
 
 async function processarDadosCotacao() {
@@ -429,8 +416,8 @@ export async function buscarDadosUsuarioAtual(){
     }
 
 
-    // console.log("Dados do usuário logado:");
-    // console.log(JSON.stringify(lista_de_acessos, null, 2));
+    console.log("Dados do usuário logado:");
+    console.log(JSON.stringify(lista_de_acessos, null, 2));
     return lista_de_acessos;
 }
 

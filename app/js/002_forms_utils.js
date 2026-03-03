@@ -1,5 +1,5 @@
 import { globais } from './999_config.js';
-import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho } from './007_utils.js';
+import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho} from './007_utils.js';
 import { buscarDadosUsuarioAtual } from './001_main.js'
 
 let numeroParcela = 1;
@@ -118,8 +118,9 @@ export async function preencherDadosPDC(data) {
     globais.numPDC = data.Numero_do_PDC;
     globais.perfilResponsavel = data.Perfil_responsavel;
     globais.assinaturas = data.Assinaturas;
-    // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n", JSON.stringify(data.Assinaturas));
-    // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n", JSON.stringify(globais.assinaturas));
+    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
+    console.log(data.Perfil_responsavel);
+    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
     globais.numSolicPDC = data.num_sol;
     if (data.Perfil_responsavel) {
         globais.perfilResponsavel = data.Perfil_responsavel;
@@ -443,7 +444,7 @@ export function criarAssinante(assinante) {
 async function buscarAssinaturasZohoAPI() {
     // Conjunto de regras para validar se um cargo ou uma pessoa deve assinar o PDC
     let validacoes_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "Validacoes_criadas" });
-    // console.log(JSON.stringify(validacoes_de_assinatura))
+    console.log(JSON.stringify(validacoes_de_assinatura))
 
     // Lista de regras que estão associadas as validações
     let regras_de_assinatura = await executar_apiZoho({ tipo: "busc_reg", nomeR: "condicoes_de_assinatura_salvas" });
@@ -550,54 +551,53 @@ function retornarIndiceDaAcao(acao){
     return 99
 }
 
-
 export function incluirLinhasJaAssinadas(assinaturas_solicitadas, acao) {
     const assinaturas_ja_criadas = globais.assinaturas ? globais.assinaturas : [];
     // Deletando ID e display value atual pois esses campos dão erro ao tentar subir no zoho
     assinaturas_ja_criadas.forEach(linha => {
         delete linha.ID;
         delete linha.zc_display_value;
-    });    
-    // console.log("ASSINATURAS JÁ CRIADAS RETORNADAS DO GLOBAL")
-    // console.log(JSON.stringify(assinaturas_ja_criadas))
+    });
+    console.log(JSON.stringify(assinaturas_ja_criadas))
 
 
     // Retorna o indice de prioridade da ação
     let indice_acao_atual = retornarIndiceDaAcao(acao);
     let linhas_a_serem_criadas = assinaturas_ja_criadas.filter(linha => linha.Assinado == "true");
 
-    // console.log(JSON.stringify(linhas_a_serem_criadas))
+    console.log(JSON.stringify(linhas_a_serem_criadas))
 
-    // console.log("VALIDANDO ITENS SOLICITADOS")
+    console.log("VALIDANDO ITENS SOLICITADOS")
     Object.values(assinaturas_solicitadas).forEach(item_solicitado => {
-        // console.log(JSON.stringify("------------COMPARANDO-----------"))
-        // console.log(JSON.stringify(linhas_a_serem_criadas))
-        // console.log(JSON.stringify(item_solicitado))
-        // console.log(JSON.stringify("---------------------------------"))
+        console.log(JSON.stringify("COMPARANDO-----------------------"))
+        console.log(JSON.stringify(linhas_a_serem_criadas))
+        console.log(JSON.stringify(item_solicitado))
 
         const indice_assinatura_analisada = retornarIndiceDaAcao(item_solicitado.Etapa_de_validacao);
-        // console.log(`INDICE ACAO=> ${indice_acao_atual}`)
-        // console.log(`INDICE indice_assinatura_analisada=> ${indice_assinatura_analisada}`)
+        console.log(`INDICE ACAO=> ${indice_acao_atual}`)
+        console.log(`INDICE indice_assinatura_analisada=> ${indice_assinatura_analisada}`)
 
-        if (indice_acao_atual <= indice_assinatura_analisada){
-        
+        if (indice_acao_atual <= indice_assinatura_analisada) {
+
             const ja_existe = linhas_a_serem_criadas.some(linha =>
                 linha.Funcao === item_solicitado.Funcao &&
                 (linha.E_mail_usuario === item_solicitado.E_mail_usuario || item_solicitado.E_mail_usuario == "")
             );
-            // console.log("RESULTADO:")
-            // console.log(JSON.stringify(ja_existe))
+            console.log("RESULTADO:")
+            console.log(JSON.stringify(ja_existe))
 
             if (!ja_existe) {
-                // console.log("----ADICIONADO ITEM:");
+                console.log("----ADICIONADO ITEM:");
+                console.log(JSON.stringify(item_solicitado));
                 linhas_a_serem_criadas.push(item_solicitado);
             }
         }
+
+
     });
 
     return linhas_a_serem_criadas;
 }
-
 
 //  Analisa os dados do PDC para determinar quais setores/pessoas devem assiná-lo
 function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas) {
@@ -610,7 +610,9 @@ function tratarCondicoesDeAssinatura(validacao, condicoes_de_assinatura_salvas) 
         }
 
         console.log("---------------------------------------------------------------")
-        console.log(`Validação encontrada para solicitar\nassinatura de ${log_assinante_esperado}\nna etapa ${validacao.Etapa_de_validacao}`
+        console.log(`Validação encontrada para solicitar\n 
+            assinatura de ${log_assinante_esperado}\n 
+            na etapa ${validacao.Etapa_de_validacao}`
         );
     }
     // Printar no console quem deve assinar o pdc caso seja validado
@@ -731,9 +733,9 @@ export async function buscarAssinaturas() {
 }
 
 
-async function escolherAcessoDoUsuario(usuario_logado, requisitos_assinatura){
+async function escolherAcessoDoUsuario(usuario_logado, requisitos_assinatura) {
     for (const dados_usuario of usuario_logado) {
-        if (dados_usuario.Cargo == requisitos_assinatura.Funcao){
+        if (dados_usuario.Cargo == requisitos_assinatura.Funcao) {
             return dados_usuario
         }
     }
@@ -744,6 +746,7 @@ async function escolherAcessoDoUsuario(usuario_logado, requisitos_assinatura){
 
 export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
     const usuario_logado = await buscarDadosUsuarioAtual();
+    console.log(`LISTA DE ASSINATURAS Q CHEGOU: ${JSON.stringify(lista_assinaturas, null, 2)}`);
 
     for (const assinatura of Object.values(lista_assinaturas)) {
         console.log("---")
@@ -762,6 +765,11 @@ export async function verificarSeAssinanteAutorizado(acao, lista_assinaturas) {
             }
 
             const acesso_do_usuario = await escolherAcessoDoUsuario(usuario_logado, assinatura);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario, null, 2)}`);
+
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.Nome_completo, null, 2)}`);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.e_mail_profissional, null, 2)}`);
+            console.log(`ASSINATURA REGISTRADA: ${JSON.stringify(acesso_do_usuario.Departamento, null, 2)}`);
 
             // Dados preenchidos depois de confirmar a assinatura
             assinatura.E_mail_usuario = acesso_do_usuario.e_mail_profissional;
@@ -787,7 +795,7 @@ async function validarCredenciaisAssinante(requisitos_assinatura, usuario_logado
     console.log(JSON.stringify(usuario_logado, null, 2));
     console.log(JSON.stringify(requisitos_assinatura, null, 2));
     let credenciais_autorizadas = false;
-    for(const acesso_do_usuario of usuario_logado){
+    for (const acesso_do_usuario of usuario_logado) {
         console.log("==================VALIDANDO==================")
         console.log(`DADOS ESPERADOS\nCargo: ${requisitos_assinatura.Funcao} Email:${requisitos_assinatura.E_mail_usuario} `);
         console.log(`DADOS ENCONTRADOS\nCargo: ${acesso_do_usuario.Funcao} Email:${acesso_do_usuario.e_mail_profissional.toString()} `);
@@ -1802,6 +1810,18 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
 
     //==========ADICIONANDO A GALERIA==========//
     galeria.appendChild(file_container);
+    /*
+    if (galeria && galeria.children.length > 0) {
+        const lastElement = galeria.children[galeria.children.length - 1];
+        if (lastElement.classList.contains('add-btn')) {
+            galeria.insertBefore(file_container, lastElement);
+        } else {
+            galeria.appendChild(file_container);
+        }
+    } else {
+        galeria.appendChild(file_container);
+    }
+    */
 
     //==========ELEMENTO PARA ARQUIVO==========//
     let file_field = document.createElement('img');
@@ -1860,7 +1880,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     console.log("SAIU DO IF");
     console.log("fileField.src => ", file_field.src);
     const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
-    const fileType = convertTypes[file.split('.').pop().toLowerCase()] || file.split('.').pop().toUpperCase() || '';
+    const fileType = convertTypes[name.split('.').pop().toLowerCase()] || name.split('.').pop().toUpperCase() || '';
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
     console.log("typesToView => ", typesToView);
@@ -1895,6 +1915,12 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     remove_btn.classList.add('remove-anexo-btn', 'close-icon');
     remove_btn.style.display = 'none';
     if (log) console.log("remove_btn => ", remove_btn);
+    /*
+    remove_btn.addEventListener('click', function () {
+        console.log("remove_btn => ", remove_btn);
+        file_container.remove();
+    })
+        */
 
     //==========EVENTOS==========//
     //=====BAIXAR ARQUIVO=====//
@@ -1951,7 +1977,6 @@ export async function preencherListaAnexos(anexos) {
             }));
 
         }
-
 
         await Promise.all(promises);
 
@@ -2076,6 +2101,14 @@ export async function preencherListaAnexos(anexos) {
             if (mensagemAnexos) {
                 mensagemAnexos.remove();
             }
+            
+            setTimeout(() => {
+                setTimeout(() => {
+                    const disabledElements = document.querySelectorAll('.wait-file');
+                    console.log(JSON.stringify(disabledElements));
+                    disabledElements.forEach(el => el.classList.remove('wait-file'));
+                }, 1000);
+            }, 0);
         }
     });
 
@@ -2087,6 +2120,7 @@ export async function preencherListaAnexos(anexos) {
     galleryElement.appendChild(btnContainer);
 
     //==========CRIANDO BOTÃO DE REMOVER==========//
+    /*
     for (const item of galleryElement.children) {
         console.log('file container => ', item);
         if (item !== galleryElement.lastElementChild) {
@@ -2097,10 +2131,8 @@ export async function preencherListaAnexos(anexos) {
 
         }
     }
-
+    */
 }
-
-
 
 export async function preencherListaAnexosV2(anexos) {
     const log = false;
@@ -2228,7 +2260,7 @@ export async function preencherListaAnexosV2(anexos) {
                             fileElement.appendChild(cloneFileElement);
                         }
                         fileElement.setAttribute('data-src', imgEl.src);
-                        fileElement.insertAdjacentText('afterend', fileName.slice(fileName.indexOf('_') + 1, fileName.length));
+                        fileElement.insertAdjacentText('afterend',fileName.slice(fileName.indexOf('_')+1,fileName.length));
 
                         //==========CRIANDO UM ELEMENTO COM O NOME DO ARQUIVO==========//
                         const fileNameElement = document.createElement('p');
@@ -2393,7 +2425,7 @@ export async function preencherListaAnexosV2(anexos) {
 
     //==========INICIANDO O FANCYBOX==========//
     await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-    
+
     // Adiciona o botão e o input ao DOM;
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);
@@ -2480,9 +2512,8 @@ export function mostrarCamposRetencao() {
 
     camposNF.classList.remove("hidden");
 
-    // Verifica se o tipo de solicitação é "SERVIÇO"
-    const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     camposNF.querySelector('.campos-iniciais-nf').classList.remove("hidden");
+    camposNF.querySelector('.campos-retencao-nf').classList.remove("hidden");
 }
 
 export function formatarCPFouCNPJ(elemento) {
@@ -2557,11 +2588,11 @@ function validarCNPJ(cnpj) {
     let soma = 0;
     let pos = tamanho - 7;
 
-    if (log) console.log("tamanho: " + tamanho);
-    if (log) console.log("numeros: " + numeros);
-    if (log) console.log("digitos: " + digitos);
-    if (log) console.log("soma: " + soma);
-    if (log) console.log("pos: " + pos);
+    if(log) console.log("tamanho: " + tamanho);
+    if(log) console.log("numeros: " + numeros);
+    if(log) console.log("digitos: " + digitos);
+    if(log) console.log("soma: " + soma);
+    if(log) console.log("pos: " + pos);
 
     for (let i = tamanho; i >= 1; i--) {
         soma += numeros.charAt(tamanho - i) * pos--;

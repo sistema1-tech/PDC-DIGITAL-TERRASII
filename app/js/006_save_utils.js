@@ -130,7 +130,7 @@ async function meshData(status = null) {
  */
 function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
     
-    const log = false;
+    const log = true;
 
     if(log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
 
@@ -725,7 +725,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             } else {
                                 blob = globais.arquivosGaleria[indexFile++];
                             }
-                            
+
                             if(log) console.log("id => ", id);
                             if(log)  console.log("blob => ", blob);
                             const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
