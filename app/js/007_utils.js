@@ -1096,16 +1096,15 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 console.log("assinaturas j  criadas", apoio_paramExtras.Assinaturas);
                 if (acao === "autorizar_pagamento_subsindico") {
                     let indice = 1;
-                    if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 3000)
+                    if(apoio_paramExtras.Assinaturas.length >2)
                     {
                         indice = 2;
                     }
+
+                    apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
+                    apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
+                    apoio_paramExtras.Assinaturas[indice].Assinado = true;
                     
-                    if (apoio_paramExtras.Assinaturas.length > indice) {
-                        apoio_paramExtras.Assinaturas[indice].IP = globais.userIP || "";
-                        apoio_paramExtras.Assinaturas[indice].Data_da_assinatura = data_atual_formatada;
-                        apoio_paramExtras.Assinaturas[indice].Assinado = true;
-                    }
                 } else if (acao === "autorizar_pagamento_sindico") {
                     const indice = 1;
                     if (apoio_paramExtras.Assinaturas.length > indice) {

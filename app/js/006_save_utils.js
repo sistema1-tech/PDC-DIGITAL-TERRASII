@@ -593,7 +593,7 @@ function getItemData(base64String) {
 
 export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
-        const log = false;
+        const log = true;
         if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);
@@ -654,7 +654,47 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 if(log) console.log("1. dadostabPrecos => ", dadostabPrecos);
                 if(log) console.log("2. dadosPDC => ", JSON.stringify(dadosPDC, null, 2));
                 if(log) console.log("3. arquivos => ", arquivos);
-    
+                
+                //MESCLA OS ARQUIVOS EXISTENTES COM OS NOVOS ARQUIVOS ADICIONADOS\\
+                let qtdFiles = globais.arquivosGaleria.length;
+                if(sepPorParc === true)
+                {
+                    let qtd_docs = Object.keys(arquivos).length;
+                    for (let i = 0; i < globais.arquivosGaleria.length; i++) {
+                        console.log("globais.arquivosGaleria[i] => ", globais.arquivosGaleria[i]);
+                        arquivos[qtd_docs] = { type: `${globais.arquivosGaleria[i].name}`, data: globais.arquivosGaleria[i]};
+                        qtd_docs++;
+                    }
+                    qtdFiles = Object.keys(arquivos).length;
+                }
+                if(log) console.log("Quantidade de arquivos => ", qtdFiles);
+                
+                //VALIDA SE TODOS OS ARQUIVOS ESTÃO PRONTOS PARA SEREM ENVIADOS, CASO CONTRÁRIO, TENTA AGUARDAR POR 2 SEGUNDOS ANTES DE DAR ERRO\\
+                /*
+                let tent_rest = 2;
+                let allFilesLoaded = true;
+                if(log) console.log("Validando se todos os arquivos estão prontos para serem enviados...");
+
+                do {
+                    for (let fileKey of Object.keys(arquivos)) {
+                        if(log) console.log(`Verificando arquivo ${fileKey} => `, arquivos[fileKey]);
+                        if (!arquivos[fileKey].data) {
+                            allFilesLoaded = false;
+                            break;
+                        }
+                    }
+                    if (!allFilesLoaded) {
+                        if(log) console.log("Nem todos os arquivos estão prontos, tentando novamente em 1 segundo...");
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                } while (tent_rest-- >= 0 || allFilesLoaded);
+
+                if (!allFilesLoaded) {
+                    console.error("Erro ao criar o PDC: Todos os arquivos devem estar carregados");
+                    rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                    throw new Error("Erro ao criar o PDC: Todos os arquivos devem estar carregados");
+                }
+                */
                 let respPDC;
                 let idNovoPDC = null;
                 if (globais.tipo === 'editar_pdc') {
@@ -689,19 +729,6 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 if(log) console.log("|||||SUBINDO ARQUIVOS DA GALERIA|||||");
                 if(log) console.log("|||||||||||||||||||||||||||||||||||||"); 
                 //ACRESCENTA ARQUIVOS DA GALERIA NOS ARQUIVOS JÁ EXISTENTES//
-                let qtdFiles = globais.arquivosGaleria.length;
-                
-                if(sepPorParc === true)
-                {
-                    let qtd_docs = Object.keys(arquivos).length;
-                    for (let i = 0; i < globais.arquivosGaleria.length; i++) {
-                        console.log("globais.arquivosGaleria[i] => ", globais.arquivosGaleria[i]);
-                        arquivos[qtd_docs] = { type: `${globais.arquivosGaleria[i].name}`, data: globais.arquivosGaleria[i]};
-                        qtd_docs++;
-                    }
-                    qtdFiles = Object.keys(arquivos).length;
-                }
-                if(log) console.log("Quantidade de arquivos => ", qtdFiles);
                 if (qtdFiles > 0) {
                     const dataList = [];
     
@@ -725,7 +752,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             } else {
                                 blob = globais.arquivosGaleria[indexFile++];
                             }
-                                
+                            
                             if(log) console.log("id => ", id);
                             if(log)  console.log("blob => ", blob);
                             let tentativas = 3;
