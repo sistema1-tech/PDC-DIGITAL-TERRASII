@@ -755,7 +755,6 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             
                             if(log) console.log("id => ", id);
                             if(log)  console.log("blob => ", blob);
-                            let tentativas = 3;
                             for (let i = 0; i < 3; i++) {
                                 const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
                                 if(log) console.log("respFileUpload => ", respFileUpload);
@@ -773,10 +772,12 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                                             confirmText: 'Ok!'
                                         });
                                     }
+                                }else 
+                                {
+                                    break;
                                 }
                             }
                         }
-    
                     } else {
                         console.log("Erro ao criar o registro de arquivos, erro: ", respFilesRec);
                     }
