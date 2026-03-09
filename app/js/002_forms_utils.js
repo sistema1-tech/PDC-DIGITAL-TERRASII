@@ -803,7 +803,7 @@ export function removerLinhaClassificacao(botao) {
 //====================PREENCHE OS DADOS DE CLASSIFICAÇÃO CONTÁBIL====================//
 //===================================================================================//
 function preencherDadosClassificacao(classificacoes) {
-    const log = true;
+    const log = false;
     if(log) console.log("++++++++++PREENCHENDO DADOS DE CLASSIFICAÇÃO++++++++++");
     if(log) console.log("classificacoes => ", JSON.stringify(classificacoes));
     const formClassificacao = document.querySelector('#form-classificacao');
@@ -951,7 +951,7 @@ export function popularSelects(classificacoes, centrosCusto) {
 }
 
 function preencherLinhaInicialClassificacao() {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++PREENCHENDO LINHA INICIAL DE CLASSIFICAÇÃO++++++++++");
 
     let linhasClassificacao = document.querySelectorAll('#form-classificacao .linha-classificacao');
@@ -1416,7 +1416,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     } else {
         galeria.appendChild(file_container);
     }
-    */
+*/
 
     //==========ELEMENTO PARA ARQUIVO==========//
     let file_field = document.createElement('img');
@@ -1445,7 +1445,6 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
 
         await new Promise(resolve => {
             const checkSrcInterval = setInterval(() => {
-                console.log("Tratando");
                 if (file_field && file_field.src && file_field.src !== "") {
                     file_field.setAttribute('data-src', file_field.src)
                     console.log("Tratado");

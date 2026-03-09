@@ -1180,7 +1180,32 @@ export function atualizarOuvintesTabDetlhesForn() {
  *   - Observações
  */
 export async function prenchTabCot(data) {
-    if (data.length > 0) {
+    const log = true;
+     if(log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
+
+    // Filtra data para manter apenas os registros mais recentes para cada combinação única de id_fornecedor e id_produto
+    const filteredData = Array.from(
+        data.reduce((map, item) => {
+            const key = `${item.id_fornecedor}_${item.id_produto}`;
+            const existing = map.get(key);
+            
+            if (!existing) {
+                map.set(key, item);
+            } else {
+                // Compara Added_Time e mantém o mais recente
+                const existingTime = new Date(existing.Added_Time);
+                const currentTime = new Date(item.Added_Time);
+                if (currentTime > existingTime) {
+                    map.set(key, item);
+                }
+            }
+            return map;
+        }, new Map()).values()
+    );
+
+    if (filteredData.length > 0) {
+        if(log) console.log("Dados recebidos: ", filteredData);
+
 
         globais.cotacaoExiste = true;
         const table = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
@@ -1190,20 +1215,19 @@ export async function prenchTabCot(data) {
         }
 
         //=====Preparando dados da cotação (Fornecedores, produtos, valores e etc...)=====//
-
-        const idProdutos = [...new Set(data.map(item => item.id_produto))].sort((a, b) => a - b);
+        const idProdutos = [...new Set(filteredData.map(item => item.id_produto))].sort((a, b) => a - b);
         globais.idProduto = Math.max(...idProdutos) + 1;
 
-        const fornecedores = [...new Set(data.map(item => JSON.stringify({
+        const fornecedores = [...new Set(filteredData.map(item => JSON.stringify({
             Fornecedor: item.Fornecedor.trim(),
             id_fornecedor: item.id_fornecedor
         })))].map(item => JSON.parse(item));
 
-        const valoresAprovado = data.map(item => item.Aprovado);
+        const valoresAprovado = filteredData.map(item => item.Aprovado);
         const valoresFrete = [];
         const valoresDescontos = [];
 
-        data.forEach(item => {
+        filteredData.forEach(item => {
             const frete = item.Valor_do_frete;
             const desconto = item.Descontos;
 
@@ -1214,12 +1238,12 @@ export async function prenchTabCot(data) {
             valoresDescontos.push(desconto);
         });
 
-        globais.idsCotacao = [...new Set(data.map(item => item.ID))].sort((a, b) => a - b);
+        globais.idsCotacao = [...new Set(filteredData.map(item => item.ID))].sort((a, b) => a - b);
 
         //=====Cria linhas dos produtos=====//
         idProdutos.forEach((idProduto, index) => {
             //Busca dados do produto atual//
-            let objProduto = data.filter(item => item.id_produto === idProduto);
+            let objProduto = filteredData.filter(item => item.id_produto === idProduto);
 
             //Cria linha do produto//
             const newRow = table.insertRow(index);
@@ -1467,7 +1491,7 @@ export async function prenchTabCot(data) {
                 linhaDescontos.insertBefore(cellDescontos, linhaDescontos.cells[linhaDescontos.cells.length - 1]);
 
                 //=====ADICIONA A CÉLULA DE TOTAL===//
-                const totalFornecedor = data
+                const totalFornecedor = filteredData
                     .filter(item => item.id_fornecedor === fornecedorObj.id_fornecedor)
                     .reduce((acc, item) => acc + (parseFloat(item.Valor_total) || 0), 0);
 
@@ -1497,7 +1521,7 @@ export async function prenchTabCot(data) {
                 fornCell.dataset.id_forn = fornecedorObj.id_fornecedor;
 
                 const condPagCell = detailRow.insertCell();
-                const dadosFornecedor = data.find(item => item.id_fornecedor === fornecedorObj.id_fornecedor);
+                const dadosFornecedor = filteredData.find(item => item.id_fornecedor === fornecedorObj.id_fornecedor);
                 condPagCell.textContent = dadosFornecedor?.Condicoes_de_pagamento || '';
                 condPagCell.contentEditable = "true";
 

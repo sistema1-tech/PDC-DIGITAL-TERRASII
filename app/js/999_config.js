@@ -63,6 +63,7 @@ const CONFIG = {
     {
         numSolicPDC: null,
         userIP: null,
+        logs:[],
     }
 };
 

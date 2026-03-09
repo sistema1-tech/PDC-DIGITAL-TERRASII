@@ -38,7 +38,15 @@ __INIT__().catch(error => {
 
 async function __INIT__() {
     try {
-        const log = true;
+        
+        const originalConsoleLog = console.log;
+        console.log = (...args) => {
+            const logText = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
+            globais.logs.push(logText);
+            originalConsoleLog(...args);
+        }
+
+        const log = false;
         if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
@@ -321,9 +329,9 @@ async function processarDadosCotacao() {
     
     const idCriterio = globais.numPDC_temp ? `num_pdc_temp=="${globais.numPDC_temp}"` : "ID==0";
 
-    const aprovadoCriterio = !['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra', 'aprovar_cotacao'].some(str => globais.pag?.includes(str)) ? " && Aprovado==true" : "";
+    //const aprovadoCriterio = !['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra', 'aprovar_cotacao'].some(str => globais.pag?.includes(str)) ? " && Aprovado==true" : "";
 
-    let cCot = `(${idCriterio} && Ativo==true${aprovadoCriterio})`;
+    let cCot = `(${idCriterio})`;
     console.log("cCot => ", cCot);
     const respCot = await executar_apiZoho({
         tipo: "busc_reg",

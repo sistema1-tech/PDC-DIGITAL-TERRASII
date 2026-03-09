@@ -1,4 +1,4 @@
-import { saveTableData_V3, enviarParaPaybox } from './006_save_utils.js';
+import { saveTableData_V3, enviarParaPaybox, registrarLogNoZoho} from './006_save_utils.js';
 import {globais, eventConfig} from './999_config.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
@@ -155,7 +155,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 }
 
 export function formatToBRL_V2(v, nd = 2, alt = true) {
-    const log = true;
+    const log = false;
     if (log) console.log("[+++++FORMATANDO PARA BRL+++++]");
     if (log) console.log("Número de decimais => ", nd);
     let ap_vlrOrig = null;
@@ -942,7 +942,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 async function prepararParaSalvar(acao, infoInserida = null) {
 
     try {
-        const log = true;
+        const log = false;
     
         if (log) console.log("++++++++++PREPARANDO PARA SALVAR++++++++++");
         if (log) console.log("acao => ", acao);
@@ -957,27 +957,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         // Nova constante no formato 'aa-mmm-dd' com mês em inglês
         //const data_atual_formatada_en = data_atual.format('DD-MMM-YYYY HH:mm:ss');
         let alcada_temp = null;
-        
-        if(acao === "autorizar_pagamento_subsindico")
-        {
-            /*
-            let crit = `(Inicio <="${data_atual_formatada}" && Fim>="${data_atual_formatada}")`;
-            let ap_status = "Ass. subsindico";
-            
-            const resp = await executar_apiZoho({
-                tipo: "busc_reg", 
-                criterios: crit, 
-                nomeR: "ADM_Alcadas_temporarias_cadastradas"
-            });
-            if(resp.code == 3000)
-            {
-                ap_status_subsindico = "Pag. aut.";
-            }
-            console.log("ap_status_subsindico => ", ap_status_subsindico);
-            */
-            //{status: 404, statusText: 'error', responseText: '{"code":3100,"message":"No records found for the given criteria."}'}
-        }
-        
+
         const paramExtra = {};
         const pgtoAnt = document.getElementById('pag_antecipado').checked;
     
@@ -1270,6 +1250,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             var config = {
                 action: "reload"
             };
+            const res =await registrarLogNoZoho(globais.numPDC_temp);
+            console.log("res do log => ", JSON.stringify(res));
+            if (log) console.log("----------PROCESSO DE SALVAMENTO CONCLUÍDO----------");
+                
             ZOHO.CREATOR.UTIL.navigateParentURL(config);
 
         } else if (acao === 'duplicar_pdc') {
@@ -1341,8 +1325,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             };
             ZOHO.CREATOR.UTIL.navigateParentURL(config);
         }
+        /*
+        const res =await registrarLogNoZoho(globais.numPDC);
+        console.log("res do log => ", JSON.stringify(res));
         if (log) console.log("----------PROCESSO DE SALVAMENTO CONCLUÍDO----------");
-        
+        */
     } catch (error) {
         customModal_V2({
             tipoAcao:'alert', 

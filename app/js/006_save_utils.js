@@ -130,7 +130,7 @@ async function meshData(status = null) {
  */
 function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
     
-    const log = true;
+    const log = false;
 
     if(log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
 
@@ -723,20 +723,20 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 }
 
                 if(log) console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
-    
+
                 //====================CRIA O REGISTRO DOS ARQUIVOS GALERIA================\\
                 if(log) console.log("|||||||||||||||||||||||||||||||||||||");
                 if(log) console.log("|||||SUBINDO ARQUIVOS DA GALERIA|||||");
-                if(log) console.log("|||||||||||||||||||||||||||||||||||||"); 
+                if(log) console.log("|||||||||||||||||||||||||||||||||||||");
                 //ACRESCENTA ARQUIVOS DA GALERIA NOS ARQUIVOS JÁ EXISTENTES//
                 if (qtdFiles > 0) {
                     const dataList = [];
-    
+
                     for (let i = 0; i < qtdFiles; i++) {
                         dataList.push({ PDC_Digital: idNovoPDC !== null ? idNovoPDC : globais.idPDC });
                     }
                     if(log) console.log("dataList => ", JSON.stringify(dataList, null, 2));
-    
+
                     const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: dataList, nomeF: "Documentos" });
                     if(log) console.log("respFilesRec => ", JSON.stringify(respFilesRec, null, 2));
 
@@ -746,19 +746,26 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                         if(log) console.log("idArquivos => ", idArquivos);
                         let indexFile = 0;
                         for (const id of idArquivos) {
+
                             let blob;
                             if (sepPorParc === true) {
                                 blob = arquivos[indexFile++].data;
                             } else {
                                 blob = globais.arquivosGaleria[indexFile++];
                             }
-                            
+
                             if(log) console.log("id => ", id);
-                            if(log)  console.log("blob => ", blob);
+                            if (typeof blob === "string" && blob.startsWith("data:")) {
+                                const base64String = blob.split(",")[1];
+                                const base64Buffer = Buffer.from(base64String, "base64");
+                                const stringBase64 = base64Buffer.toString("utf8");
+                                if (log) console.log("stringBase64 (primeiros 50 caracteres) => ", stringBase64.slice(0, 50));
+                            }
+                            
                             for (let i = 0; i < 3; i++) {
+                                await new Promise(resolve => setTimeout(resolve, 500));
                                 const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
                                 if(log) console.log("respFileUpload => ", respFileUpload);
-                                await new Promise(resolve => setTimeout(resolve, 500));
                                 if (respFileUpload.code && respFileUpload.code !== 3000) {
                                     console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
                                     if (i !== 2) {
@@ -782,8 +789,11 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                         console.log("Erro ao criar o registro de arquivos, erro: ", respFilesRec);
                     }
                 }
-    
+
                 //====================CRIA O REGISTRO DA COTAÇÃO====================//
+                if(log) console.log("||||||||||||||||||||||||||||||||||");
+                if(log) console.log("|||||SUBINDO DADOS DA COTAÇÃO|||||");
+                if(log) console.log("||||||||||||||||||||||||||||||||||");
                 const json = JSON.stringify(dadostabPrecos, null, 2);
                 let respCot = await executar_apiZoho({ tipo: "add_reg", corpo: json });
     
@@ -942,4 +952,40 @@ export async function enviarParaPaybox(){
     }catch(e){
         console.log(e);
     }
+}
+
+export async function registrarLogNoZoho(numPDC)
+{
+    // Filtra e sanitiza os logs para evitar problemas com caracteres especiais
+    let logText = '';
+    
+    if (globais.logs && globais.logs.length > 0) {
+        // Processa cada log, removendo JSON objects muito grandes
+        const filteredLogs = globais.logs
+            .map(log => {
+                // Se for um string muito longo (provável JSON grande), trunca
+                if (log.length > 500) {
+                    return log.substring(0, 500) + '...';
+                }
+                return log;
+            })
+            .filter(log => log && log.trim().length > 0);
+        
+        logText = filteredLogs.join('\n');
+        
+        // Limita o tamanho total do log para evitar rejeição do Zoho
+        if (logText.length > 40000) {
+            logText = logText.substring(0, 40000) + '\n[Log truncado - tamanho máximo atingido]';
+        }
+    } else {
+        logText = 'Nenhum log registrado';
+    }
+    
+    const body = {
+        "Numero_do_PDC": numPDC,
+        "Log": logText
+    };
+    console.log("body => ", body);
+    const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: body, nomeF: "Logs_PDC_Digital" });
+
 }
