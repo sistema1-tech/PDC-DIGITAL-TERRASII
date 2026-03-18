@@ -55,7 +55,7 @@ export function setupEventListeners() {
  */
 export async function executar_apiZoho({ tipo = null, criterios = null, ID = null, corpo = null, nomeR = null, nomeF = null } = {}) {
     try {
-        const log = false;
+        const log = true;
         nomeR = nomeR ? nomeR : globais.nomeRelCot;
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
         let recOps = await ZOHO.CREATOR.DATA;
@@ -118,16 +118,45 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         }
 
         async function subirArquivos() {
-            recOps = ZOHO.CREATOR.FILE;
-            const config = {
-                app_name: globais.nomeApp,
-                report_name: nomeR,
-                id: ID,
-                field_name: 'Arquivo',
-                file: corpo
-            }
+            try {
+                console.log("Subindo arquivos...");
+                recOps = ZOHO.CREATOR.FILE;
+                const config = {
+                    app_name: globais.nomeApp,
+                    report_name: nomeR,
+                    id: ID,
+                    field_name: 'Arquivo',
+                    file: corpo
+                }
+                console.log("Configuração para upload => ", JSON.stringify(config));
 
-            return await recOps.uploadFile(config);
+                const resp = await recOps.uploadFile(config);
+                console.log("Resposta do upload => ", resp);
+                if (!resp || (resp && !resp.code)) {
+                    console.warn("Resposta anômala do upload:", resp);
+                    return {
+                        code: 5001,
+                        message: 'Resposta inválida do servidor Zoho - upload pode ter falhado',
+                        rawResponse: resp
+                    };
+                }
+                return resp;
+            } catch (uploadErr) {
+                console.error("Erro específico no upload:", uploadErr);
+                throw uploadErr;
+            }
+        }
+
+        async function remover_reg(nomeR, criterios)
+        {
+
+                const config = {
+                    app_name: globais.nomeApp,
+                    report_name: nomeR,
+                    payload: {criteria: criterios}
+                }
+                console.log("Deletando registros com critérios => ", JSON.stringify(config));
+                return await recOps.deleteRecords(config);
         }
 
         // Funções solicitadas conforme tipo
@@ -146,11 +175,34 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         } else if (tipo === "subir_arq") {
             return await subirArquivos();
 
+        } else if (tipo === "deletar_reg") {
+            return await remover_reg(nomeR, criterios);
+
         }
     } catch (err) {
-        console.log("Erro na API do Zoho => ", err);
-        return err;
-
+        console.error("Erro na API do Zoho => ", err);
+        
+        // Trata diferentes tipos de erro e retorna um objeto estruturado
+        if (err?.code) {
+            // Se já é uma resposta da API, retorna como está
+            return err;
+        } else if (err?.name === 'Error' || err?.message) {
+            // Se é um erro JavaScript padrão
+            return {
+                code: 5000,
+                message: `Erro ao executar operação: ${err.message || 'Erro desconhecido'}`,
+                type: err.name,
+                error: err
+            };
+        } else {
+            // Erro desconhecido (ex: objeto Event com isTrusted)
+            return {
+                code: 5000,
+                message: 'Erro ao conectar com o Zoho Creator - verifique a conexão e tente novamente',
+                error: err,
+                isTrusted: err?.isTrusted || false
+            };
+        }
     }
 }
 
@@ -940,7 +992,6 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 }
 
 async function prepararParaSalvar(acao, infoInserida = null) {
-
     try {
         const log = false;
     
@@ -1407,6 +1458,7 @@ export function desabilitarCampos() {
         }
     });
     const botoes = document.querySelectorAll('button');
+    console.log("botoes => ", botoes);
     botoes.forEach(botao => {
         if (!botao.closest('.save-btn-container') && !botao.classList.contains('toggle-section')) {
 

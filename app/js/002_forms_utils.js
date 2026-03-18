@@ -302,9 +302,9 @@ export async function preencherDadosPDC(data) {
     if (log) console.log("Anexos encontrados => ", data);
     if (data.Documentos && data.Documentos.length > 0) {
         globais.arquivospPaybox.push(...data.Documentos);
-        preencherListaAnexosV2(data.Documentos);
+        preencherListaAnexos(data.Documentos);
     } else {
-        preencherListaAnexosV2();
+        preencherListaAnexos();
     }
 
     //=====[SESSÃO DE ASSINANTES]=====//
@@ -1390,7 +1390,7 @@ function createLoadingSpinner() {
     return loadingSpinnerContainer;
 }
 
-async function createFileMiniature({ galeria = null, file = null, origem = null }) {
+async function createFileMiniature({ galeria = null, file = null, origem = null, pode_remover = []}) {
     const { typesToView, convertTypes, elLibConfig } = anexos_controller();
     const log = false;
 
@@ -1398,25 +1398,19 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
-
+    
+    //==========ADICIONANDO A GALERIA==========//
+    /*galeria.appendChild(file_container);*/
+    if (galeria && galeria.children.length > 0) {
+        const lastElement = galeria.children[galeria.children.length - 1];
+        galeria.insertBefore(file_container, lastElement);
+    } else {
+        galeria.appendChild(file_container);
+    }
     //==========LOADING SPINNER==========//
     const loading_spinner = createLoadingSpinner();
     file_container.appendChild(loading_spinner);
 
-    //==========ADICIONANDO A GALERIA==========//
-    galeria.appendChild(file_container);
-    /*
-    if (galeria && galeria.children.length > 0) {
-        const lastElement = galeria.children[galeria.children.length - 1];
-        if (lastElement.classList.contains('add-btn')) {
-            galeria.insertBefore(file_container, lastElement);
-        } else {
-            galeria.appendChild(file_container);
-        }
-    } else {
-        galeria.appendChild(file_container);
-    }
-*/
 
     //==========ELEMENTO PARA ARQUIVO==========//
     let file_field = document.createElement('img');
@@ -1471,8 +1465,6 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
 
 
     file_name.textContent = name;
-    console.log("SAIU DO IF");
-    console.log("fileField.src => ", file_field.src);
     const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
     const fileType = convertTypes[name.split('.').pop().toLowerCase()] || name.split('.').pop().toUpperCase() || '';
 
@@ -1505,15 +1497,31 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     }
 
     //==========BOTÃO REMOVER ARQUIVO==========//
-    const remove_btn = document.createElement('button');
-    remove_btn.classList.add('remove-anexo-btn', 'close-icon');
-    remove_btn.style.display = 'none';
-    if (log) console.log("remove_btn => ", remove_btn);
+    let remove_btn = null;
+    const pageIncludesRemover= pode_remover.some(removerOption => globais.pag.includes(removerOption));
+    if(pageIncludesRemover)
+    {
 
-    remove_btn.addEventListener('click', function () {
-        console.log("remove_btn => ", remove_btn);
-        file_container.remove();
-    })
+        remove_btn = document.createElement('button');
+        remove_btn.classList.add('remove-anexo-btn', 'close-icon');
+        remove_btn.style.display = 'none';
+        if (log) console.log("remove_btn => ", remove_btn);
+    
+        remove_btn.addEventListener('click', function () {
+            console.log("remove_btn => ", remove_btn);
+            console.log("file => ", JSON.stringify(file));
+            if(typeof file === 'string' && file.startsWith('/api/v2.1/'))
+            {
+                globais.arquivosRemovidos.push(file);
+            }
+            //globais.arquivosRemovidos.push(file);
+    
+            file_container.remove();
+        })
+        file_container.appendChild(remove_btn);
+
+        remove_btn.style.display = 'block';
+    }
 
     //==========EVENTOS==========//
     //=====BAIXAR ARQUIVO=====//
@@ -1531,10 +1539,14 @@ async function createFileMiniature({ galeria = null, file = null, origem = null 
     });
 
     //==========CONSOLIDA ELEMENTOS==========//
-    file_container.appendChild(remove_btn);
     file_container.appendChild(file_field);
     file_container.appendChild(file_name);
-    return { file_container, file_field, file_name, remove_btn, loading_spinner };
+    //==========APLICA ALGUNS ESTILOS INICIAIS==========//
+    file_field.style.display = 'block';
+    file_name.style.display = 'block';
+    file_container.style.display = 'block';
+
+    return {loading_spinner };
 }
 
 export async function preencherListaAnexos(anexos) {
@@ -1543,6 +1555,7 @@ export async function preencherListaAnexos(anexos) {
 
     //==========VARIÁVEIS DE APOIO==========//
     const { typesToView, convertTypes, elLibConfig } = anexos_controller();
+    const pode_alterar =["criar_cotacao", "editar_cotacao","criar_numero_de_PDC", "confirmar_compra", "receber_compra", "checagem_final"];
 
     //==========PROCURA E INSTANCIA ELEMENTO DA GALERIA==========//
     const galleryElement = document.getElementById('gallery');
@@ -1559,11 +1572,7 @@ export async function preencherListaAnexos(anexos) {
                 const newAnexo = anexo.Arquivo;
 
                 //==========NOVO ELEMENTO DA GALERIA==========//
-                let { file_container, file_field, file_name, remove_btn, loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: newAnexo, origem: 'zoho' });
-                file_field.style.display = 'block';
-                file_name.style.display = 'block';
-                remove_btn.style.display = 'block';
-                file_container.style.display = 'block';
+                let {loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: newAnexo, origem: 'zoho', pode_remover: pode_alterar });
                 loading_spinner.remove();
                 resolve();
 
@@ -1591,86 +1600,68 @@ export async function preencherListaAnexos(anexos) {
 
     }
 
-    const btnContainer = document.createElement('div');
-    btnContainer.classList.add('btn-container', 'gallery-item');
-
-    const botaoAdicionar = document.createElement('a');
-    botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
-    botaoAdicionar.style.padding = '10px 20px';
-    botaoAdicionar.style.fontSize = '60px';
-    botaoAdicionar.style.cursor = 'pointer';
-    botaoAdicionar.style.borderLeft = '1px solid transparent';
-    botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, gray, gray, gray, gray, gray, gray, transparent) 1';
-
-    // Cria um input do tipo file, escondido
-    const inputFile = document.createElement('input');
-    inputFile.type = 'file';
-
-    inputFile.style.display = 'none';
-
-    // Evento para abrir o seletor de arquivos ao clicar no botão
-    botaoAdicionar.addEventListener('click', () => {
-        inputFile.disabled = false;
-        inputFile.readOnly = false;
-        inputFile.click();
-    });
-
-    // Evento de mudança no input, para processar o arquivo selecionado
-    inputFile.addEventListener('change', async (event) => {
-        const files = event.target.files;
-        if (files.length > 0) {
-            const file = files[0];
-            //==========NOVO ELEMENTO DA GALERIA==========//
-            let { 
-                file_container, 
-                file_field, 
-                file_name, 
-                remove_btn, 
-                loading_spinner 
-            } = await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo' });
-
-            file_field.style.display = 'block';
-            file_name.style.display = 'block';
-            remove_btn.style.display = 'block';
-            file_container.style.display = 'block';
-            loading_spinner.remove();
-
-            // Remove a mensagem de anexos
-            const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
-            if (mensagemAnexos) {
-                mensagemAnexos.remove();
-            }
-            
-            setTimeout(() => {
+    const pageIncludesAlterar = pode_alterar.some(alterarOption => globais.pag.includes(alterarOption));
+    if (pageIncludesAlterar) {
+        console.log("pode alterar anexos");
+        const btnContainer = document.createElement('div');
+        btnContainer.classList.add('btn-container', 'gallery-item', 'add-btn-container-gallery');
+    
+        const botaoAdicionar = document.createElement('a');
+        botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
+        botaoAdicionar.style.padding = '10px 20px';
+        botaoAdicionar.style.fontSize = '60px';
+        botaoAdicionar.style.cursor = 'pointer';
+        botaoAdicionar.style.borderLeft = '1px solid transparent';
+        botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, gray, gray, gray, gray, gray, gray, transparent) 1';
+        
+        // Cria um input do tipo file, escondido
+        const inputFile = document.createElement('input');
+        inputFile.type = 'file';
+    
+        inputFile.style.display = 'none';
+    
+        // Evento para abrir o seletor de arquivos ao clicar no botão
+        botaoAdicionar.addEventListener('click', () => {
+            inputFile.disabled = false;
+            inputFile.readOnly = false;
+            inputFile.click();
+        });
+    
+        // Evento de mudança no input, para processar o arquivo selecionado
+        inputFile.addEventListener('change', async (event) => {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const file = files[0];
+                //==========NOVO ELEMENTO DA GALERIA==========//
+                let { loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo', pode_remover: pode_alterar });
+    
+                loading_spinner.remove();
+    
+                // Remove a mensagem de anexos
+                const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
+                if (mensagemAnexos) {
+                    mensagemAnexos.remove();
+                }
+                
                 setTimeout(() => {
-                    const disabledElements = document.querySelectorAll('.wait-file');
-                    console.log(JSON.stringify(disabledElements));
-                    disabledElements.forEach(el => el.classList.remove('wait-file'));
-                }, 1000);
-            }, 0);
-        }
-    });
+                    setTimeout(() => {
+                        const disabledElements = document.querySelectorAll('.wait-file');
+                        console.log(JSON.stringify(disabledElements));
+                        disabledElements.forEach(el => el.classList.remove('wait-file'));
+                    }, 1000);
+                }, 0);
+            }
+            inputFile.value = ''; // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente, se necessário
+        });
+        //Adiciona o botão e o input ao DOM;
+        btnContainer.appendChild(inputFile);
+        btnContainer.appendChild(botaoAdicionar);
+        galleryElement.appendChild(btnContainer);
+    }
+
 
     //==========INICIANDO O FANCYBOX==========//
     await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-    //Adiciona o botão e o input ao DOM;
-    btnContainer.appendChild(inputFile);
-    btnContainer.appendChild(botaoAdicionar);
-    galleryElement.appendChild(btnContainer);
-    
-    //==========CRIANDO BOTÃO DE REMOVER==========//
-    /*
-    for (const item of galleryElement.children) {
-        console.log('file container => ', item);
-        if (item !== galleryElement.lastElementChild && !item.classList.contains('mensagem-anexos-container')) {
-            const removeButton = document.createElement('button');
-            removeButton.classList.add('remove-anexo-btn', 'close-icon');
-            
-            item.prepend(removeButton);
-
-        }
-    }
-        */
 
     setTimeout(() => {
         setTimeout(() => {

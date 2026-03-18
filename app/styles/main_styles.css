@@ -1271,6 +1271,12 @@ button:hover {
     cursor: not-allowed;
     /* Muda o cursor para indicar que o botão está desabilitado */
 }
+.add-btn-container-gallery
+{
+    position: relative;
+    margin-top: auto;
+    margin-bottom: auto;
+}
 
 .hidden {
     display: none !important;

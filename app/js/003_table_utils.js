@@ -418,7 +418,6 @@ export async function addSupplierColumn() {
                 }
             }
         });
-        console.log("Globais.baseFornecedores => ", globais.baseFornecedores);
         // Popula o dropdown com os fornecedores
         globais.baseFornecedores.forEach((dadosFornecedor) => {
             const opcao = document.createElement('div');
@@ -1186,17 +1185,40 @@ export async function prenchTabCot(data) {
     // Filtra data para manter apenas os registros mais recentes para cada combinação única de id_fornecedor e id_produto
     const filteredData = Array.from(
         data.reduce((map, item) => {
-            const key = `${item.id_fornecedor}_${item.id_produto}`;
-            const existing = map.get(key);
-            
-            if (!existing) {
-                map.set(key, item);
-            } else {
-                // Compara Added_Time e mantém o mais recente
-                const existingTime = new Date(existing.Added_Time);
-                const currentTime = new Date(item.Added_Time);
-                if (currentTime > existingTime) {
+            if (item.id_fornecedor !== "" && item.id_produto !== "") {
+
+                const key = `${item.id_fornecedor}_${item.id_produto}`;
+                const existing = map.get(key);
+                if(item.Valor_unitario != null && item.Quantidade != null && item.Valor_unitario > 0 && item.Quantidade > 0)
+                {
+
+                    if (!existing) {
+                        map.set(key, item);
+                    } else {
+                        // Compara Added_Time e mantém o mais recente
+                        const existingTime = new Date(existing.Added_time);
+                        const currentTime = new Date(item.Added_time);
+                        
+                        if (item.Aprovado === "true" && item.Ativo === "true") {
+                            map.set(key, item);
+                        } else if (currentTime > existingTime && (existing.Aprovado !== "true" || existing.Ativo !== "true")) {
+                            map.set(key, item);
+                        }
+                    }
+                }
+            } else if (item.id_fornecedor === "" && ![...map.values()].some(entry => entry.id_fornecedor !== "")) {
+                const key = `${item.id_produto}`;
+                const existing = map.get(key);
+                
+                if (!existing) {
                     map.set(key, item);
+                } else {
+                    // Compara Added_time e mantém o mais recente
+                    const existingTime = new Date(existing.Added_time);
+                    const currentTime = new Date(item.Added_time);
+                    if (currentTime > existingTime) {
+                        map.set(key, item);
+                    }
                 }
             }
             return map;
@@ -1204,8 +1226,6 @@ export async function prenchTabCot(data) {
     );
 
     if (filteredData.length > 0) {
-        if(log) console.log("Dados recebidos: ", filteredData);
-
 
         globais.cotacaoExiste = true;
         const table = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
@@ -1223,20 +1243,25 @@ export async function prenchTabCot(data) {
             id_fornecedor: item.id_fornecedor
         })))].map(item => JSON.parse(item));
 
-        const valoresAprovado = filteredData.map(item => item.Aprovado);
-        const valoresFrete = [];
-        const valoresDescontos = [];
-
+        const valoresAprovado = [...new Map(filteredData.map(item => [item.id_fornecedor, item])).values()].map(item => item.Aprovado + "_" + item.Ativo);
+        const valoresFrete = fornecedores.map(fornecedor => filteredData.filter(item => item.id_fornecedor === fornecedor.id_fornecedor)[0].Valor_do_frete);
+        const valoresDescontos = fornecedores.map(fornecedor => filteredData.filter(item => item.id_fornecedor === fornecedor.id_fornecedor)[0].Descontos);
+        console.log("Valores frete => ", valoresFrete);
+        console.log("Valores desconto => ", valoresDescontos);
+        /*
         filteredData.forEach(item => {
+            console.log("Item => ", item);
             const frete = item.Valor_do_frete;
             const desconto = item.Descontos;
 
             // Adiciona o frete ao array
+            
             valoresFrete.push(frete);
 
             // Adiciona o desconto ao array
             valoresDescontos.push(desconto);
         });
+        */
 
         globais.idsCotacao = [...new Set(filteredData.map(item => item.ID))].sort((a, b) => a - b);
 
@@ -1321,7 +1346,7 @@ export async function prenchTabCot(data) {
                 cell.appendChild(removeButton);
             } else {
                 // Cria a nova célula na linha
-                const cell = newRow.insertCell(2);
+                const cell = newRow.insertCell(3);
 
                 // Cria o botão
                 const removeButton = document.createElement('button');
@@ -1369,8 +1394,7 @@ export async function prenchTabCot(data) {
                 checkbox.classList.add('supplier-checkbox');
 
                 let removeButton;
-
-                if (valoresAprovado[index] == 'true') {
+                if (valoresAprovado[index] == 'true_true') {
                     if (!foundChecked) {
                         checkbox.checked = true;
                         globais.selectedCheckbox = checkbox;
@@ -1530,7 +1554,7 @@ export async function prenchTabCot(data) {
                 obsCell.contentEditable = "true";
 
                 // Adiciona a classe 'forn-aprovado' se o fornecedor estiver aprovado
-                if (valoresAprovado[index] == 'true') {
+                if (valoresAprovado[index] == 'true_true') {
                     celulaCabecalho.classList.add('forn-aprovado');
 
                     // Adiciona a classe 'forn-aprovado' às células de valor unitário e total

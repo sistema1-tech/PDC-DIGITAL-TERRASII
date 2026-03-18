@@ -5,7 +5,7 @@ import {
     validarEntidadesPermitidas,
     calcularValorTotalPagar,
     atualizarValorOriginal,
-    preencherListaAnexosV2,
+    preencherListaAnexos,
     mostrarCamposRetencao,
     atualizarValorOrcado,
     preencherDadosPDC,
@@ -262,7 +262,7 @@ async function executarProcessosParalelos() {
 
         //=====Cria o botão de Sol. Aprov. Síndico=====\\
         criarBotao({ page: globais.pag });
-        preencherListaAnexosV2();
+        preencherListaAnexos();
 
         if (globais.pag.includes('_DP') || globais.pag.includes("_controladoria") || globais.pag.includes("_asa_laranjeiras")) {
             if (globais.pag.includes('_DP')) {

@@ -507,17 +507,17 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
 async function getGalleryFiles() {
 
     return await new Promise((resolve, reject) => {
-
+        
         const apGalleryItems = document.querySelectorAll('.gallery-item');
         const galleryItems = Array.prototype.slice.call(apGalleryItems, 0, -2);
         const files = Array.from(galleryItems).map(item => {
             console.log("item => ", item);
-            if (item.firstChild && item.firstChild.hasAttribute('data-src')) {
-                const dataSrc = item.firstChild.getAttribute('data-src');
-
-                if (dataSrc && dataSrc.startsWith('data:')) {
-                    return { type: getItemType(dataSrc), data: getItemData(dataSrc) };
-                }
+            const segundoElemento = item.firstChild.nextSibling;
+            const dataSrc = segundoElemento ? segundoElemento.getAttribute('data-src') : null;
+            console.log("dataSrc => ", dataSrc);
+            
+            if (dataSrc && dataSrc.startsWith('data:')) {
+                return { type: getItemType(dataSrc), data: getItemData(dataSrc) };
             }
             return {};
             
@@ -608,11 +608,11 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 if(log) console.log("*Não é separação por parcela, limpando dados da cotação");
                 for (const id of globais.idsCotacao) {
                     let payload = {
-                            Ativo: false
+                        Ativo: false
                     };
                     const resp = await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
                     if(resp.code !== 3000) {
-                        await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                        //await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
                         throw new Error("Erro ao limpar dados da cotação antiga! Erro: ", JSON.stringify(resp));
                     }
                 }
@@ -718,7 +718,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 }
 
                 if (respPDC.code !== 3000) {
-                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                    //await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
                     throw new Error("Erro ao salvar dados do PDC! Erro: ", JSON.stringify(respPDC));
                 }
 
@@ -755,27 +755,22 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                             }
 
                             if(log) console.log("id => ", id);
-                            if (typeof blob === "string" && blob.startsWith("data:")) {
-                                const base64String = blob.split(",")[1];
-                                const base64Buffer = Buffer.from(base64String, "base64");
-                                const stringBase64 = base64Buffer.toString("utf8");
-                                if (log) console.log("stringBase64 (primeiros 50 caracteres) => ", stringBase64.slice(0, 50));
-                            }
                             
                             for (let i = 0; i < 3; i++) {
                                 await new Promise(resolve => setTimeout(resolve, 500));
                                 const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
                                 if(log) console.log("respFileUpload => ", respFileUpload);
-                                if (respFileUpload.code && respFileUpload.code !== 3000) {
+                                if (!respFileUpload.code || respFileUpload.code !== 3000) {
                                     console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
                                     if (i !== 2) {
                                         console.log("Tentando novamente...");
                                         await new Promise(resolve => setTimeout(resolve, 1000));
                                     } else {
+                                        const errorMessage = respFileUpload.message || 'Erro desconhecido ao fazer upload do arquivo';
                                         await customModal_V2({
                                             tipoAcao:'alert', 
-                                            titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
-                                            mensagem:`<p>${respFileUpload.code}</p><p style="max-width: 500px; word-wrap: break-word;">${respFileUpload}</p>`,
+                                            titulo: "Erro ao fazer upload do arquivo!", 
+                                            mensagem:`<p>Código: ${respFileUpload.code}</p><p style="max-width: 500px; word-wrap: break-word;">${errorMessage}</p>`,
                                             confirmText: 'Ok!'
                                         });
                                     }
@@ -798,19 +793,24 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 let respCot = await executar_apiZoho({ tipo: "add_reg", corpo: json });
     
                 if (respCot.code !== 3000) {
-                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                    //await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
                     throw new Error("Erro ao salvar dados da cotação! Erro: ", JSON.stringify(respCot));
                 }
-    
                 if(log) console.log("respCot => ", JSON.stringify(respCot, null, 2));
-    
+
+                if(log) console.log("||||||||||||||||||||||||||||||||||||||");
+                if(log) console.log("|||||REMOVENDO ARQUIVOS EXCLUIDOS|||||");
+                if(log) console.log("||||||||||||||||||||||||||||||||||||||");
+                await removerArquivosZoho();
+
             }
             globais.cotacaoExiste = true;
             globais.tipo = apoioTipoAnt;
         }
+
         return ids_pdcs_criados;
     } catch (error) {
-        rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+        //rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
         await customModal_V2({
             tipoAcao:'alert', 
             titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
@@ -827,7 +827,6 @@ async function rollbackSaveData(rbAction = null, rbParams = {}) {
                     Ativo: true
             };
             await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
-
         }
     }
 }
@@ -988,4 +987,16 @@ export async function registrarLogNoZoho(numPDC)
     console.log("body => ", body);
     const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: body, nomeF: "Logs_PDC_Digital" });
 
+}
+
+export async function removerArquivosZoho()
+{
+    console.log("Removendo arquivos marcados para remoção no Zoho...");
+    console.log("Arquivos marcados para remoção => ", globais.arquivosRemovidos);
+    //"/api/v2.1/guillaumon/terras-de-sao-jose-ii/report/PDC_Digital_API/3938561000116768677/Documentos.Arquivo/3938561000116768681/download?filepath=1773148141768840_arquivo.pdf"
+    const idRecArquivosRemovidos = globais.arquivosRemovidos.map(arquivo => arquivo.match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/)[1]).filter(id => id !== null);
+    console.log("IDs dos arquivos marcados para remoção => ", idRecArquivosRemovidos);
+    const criterio = `(ID in [${idRecArquivosRemovidos.join(",")}])`;
+    const resp = await executar_apiZoho({ tipo: "deletar_reg", criterios: criterio, nomeR: "Documentos_API" });
+    return resp;
 }
