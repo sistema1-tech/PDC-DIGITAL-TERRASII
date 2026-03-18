@@ -7,8 +7,8 @@ import {
     executar_apiZoho,
     customModal
 } from './007_utils.js';
-import {handleEnterKeyNavigation} from './001_main.js'
-import {globais} from './999_config.js'
+import { handleEnterKeyNavigation } from './001_main.js'
+import { globais } from './999_config.js'
 
 import { atualizarValorTotalClassificacoes, atualizarValorTotalParcelas, atualizarValorOrcado } from './002_forms_utils.js';
 
@@ -39,7 +39,7 @@ const vlrTolerancia = 1;
  */
 export function addProductRow() {
     const log = false;
-    if(log) console.log("++++++++++ADICIONANDO NOVA LINHA DE PRODUTO++++++++++");
+    if (log) console.log("++++++++++ADICIONANDO NOVA LINHA DE PRODUTO++++++++++");
     // Flag para verificar se a célula deve ser ímpar ou par
 
     // Obtém referência ao corpo da tab
@@ -50,15 +50,15 @@ export function addProductRow() {
     newRow.dataset.id_produto = globais.idProduto;
     globais.idProduto = (globais.idProduto + 1);
     const rowCount = table.rows[0].cells.length;
-    if(log) console.log("Linha criada.");
-    if(log) console.log("Ordem do produto => ", globais.idProduto);
+    if (log) console.log("Linha criada.");
+    if (log) console.log("Ordem do produto => ", globais.idProduto);
 
-    if(log) console.log("Inserindo células na nova linha.");
-    if(log) console.log("Quantidade de celulas => ", rowCount);
+    if (log) console.log("Inserindo células na nova linha.");
+    if (log) console.log("Quantidade de celulas => ", rowCount);
     // Configura as células da nova linha
     for (let i = 0; i < rowCount; i++) {
         const newCell = newRow.insertCell(i);
-        if(log) console.log("Inserindo celula => ", i);
+        if (log) console.log("Inserindo celula => ", i);
 
         if (i === 0 || i === 2) {
             // Coluna de descrição do produto
@@ -103,10 +103,10 @@ export function addProductRow() {
     }
 
     // Atualiza os listeners da tab
-    if(log) console.log("Atualizando ouvintes da tab.");
+    if (log) console.log("Atualizando ouvintes da tab.");
     atualizarOuvintesTabCot();
 
-    if(log) console.log("----------NOVA LINHA DE PRODUTO ADICIONADA----------");
+    if (log) console.log("----------NOVA LINHA DE PRODUTO ADICIONADA----------");
 }
 
 /**
@@ -783,7 +783,7 @@ export function calculateTotalPrices(rowIndex) {
  */
 function calcularTotais() {
     const log = false;
-    if(log) console.log("++++++++++CALCULANDO TOTAIS DOS FORNECEDORES++++++++++");
+    if (log) console.log("++++++++++CALCULANDO TOTAIS DOS FORNECEDORES++++++++++");
     // Seleciona todas as células de "Valor Total" dos fornecedores na linha de totais (linha N+2)
     const table = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
     const totalCells = table.querySelectorAll('.total-fornecedor');
@@ -828,7 +828,7 @@ function calcularTotais() {
 export function handlePasteEventPriceTable(event) {
     const log = false;
 
-    if(log) console.log("++++++++++MANIPULANDO EVENTO DE COLAR (PASTE) NA TABELA DE PREÇOS++++++++++");
+    if (log) console.log("++++++++++MANIPULANDO EVENTO DE COLAR (PASTE) NA TABELA DE PREÇOS++++++++++");
     event.preventDefault();
 
     const clipboardData = event.clipboardData || window.clipboardData;
@@ -932,29 +932,29 @@ export function handlePasteEventDetailtable(event) {
  */
 export function atualizarOuvintesTabCot() {
     const log = false;
-    if(log) console.log("++++++++++ATUALIZANDO OUVINTES DA TABELA DE COTAÇÃO++++++++++");
+    if (log) console.log("++++++++++ATUALIZANDO OUVINTES DA TABELA DE COTAÇÃO++++++++++");
 
     const tab = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
     const lv = tab.rows;
 
     if (!tab) {
-        if(log) console.log("TABELA DE COTAÇÃO NÃO ENCONTRADA"); 
+        if (log) console.log("TABELA DE COTAÇÃO NÃO ENCONTRADA");
         return;
 
     }
 
-    if(log) console.log("Removendo ouvintes existentes...");
+    if (log) console.log("Removendo ouvintes existentes...");
     // Remove listeners existentes
     function removeAllListeners(element) {
         const clone = element.cloneNode(true);
-        if(log) console.log("Clonando elementos...");
+        if (log) console.log("Clonando elementos...");
         const elementString = element.outerHTML;
-        if(log) console.log("Elemento original: ", elementString);
+        if (log) console.log("Elemento original: ", elementString);
         Object.keys(element.dataset).forEach(key => {
             clone.dataset[key] = element.dataset[key];
         });
         const cloneString = clone.outerHTML;
-        if(log) console.log("Elemento clonado: ", cloneString);
+        if (log) console.log("Elemento clonado: ", cloneString);
 
         element.parentNode.replaceChild(clone, element);
         return clone;
@@ -967,9 +967,9 @@ export function atualizarOuvintesTabCot() {
             removeAllListeners(c[j]);
         }
     }
-    if(log) console.log("Ouvintes removidos com sucesso!");
+    if (log) console.log("Ouvintes removidos com sucesso!");
 
-    if(log) console.log("Adicionando ouvintes nas células numéricas...");
+    if (log) console.log("Adicionando ouvintes nas células numéricas...");
     // Adiciona listeners para células numéricas
     tab.querySelectorAll('.numeric-cell').forEach(celula => {
         celula.addEventListener('blur', () => {
@@ -981,12 +981,12 @@ export function atualizarOuvintesTabCot() {
 
         celula.addEventListener('keydown', (elemento) => handleEnterKeyNavigation(elemento));
     });
-    if(log) console.log("Ouvintes adicionados com sucesso!");
+    if (log) console.log("Ouvintes adicionados com sucesso!");
 
-    if(log) console.log("Adicionando ouvintes nas Células Negativas...");
+    if (log) console.log("Adicionando ouvintes nas Células Negativas...");
     // Adiciona listener para converter valores negativos na antepenúltima linha
     const atpl = tab.rows[tab.rows.length - (qlt - 1)];
-    
+
     for (let i = 0; i < atpl.cells.length; i++) {
         const celula = atpl.cells[i];
         celula.addEventListener('blur', () => {
@@ -996,9 +996,9 @@ export function atualizarOuvintesTabCot() {
             }
         }, { capture: true });
     }
-    if(log) console.log("Ouvintes adicionados com sucesso!");
+    if (log) console.log("Ouvintes adicionados com sucesso!");
 
-    if(log) console.log("Adicionando ouvintes nas Celtulas da Tabela Principal...");
+    if (log) console.log("Adicionando ouvintes nas Celtulas da Tabela Principal...");
     // Adiciona listeners para células da tab principal
     for (let i = 0; i < lv.length - 1; i++) {
         const linha = lv[i];
@@ -1026,7 +1026,7 @@ export function atualizarOuvintesTabCot() {
                 // Tratamento para linhas normais de produtos
                 if (j === 1) { // Coluna de quantidade
                     celula.addEventListener('blur', (event) => {
-                        
+
                         if (globais.pag === "lancamentos_provisionados" || globais.pag === "checagem_final") {
                             const valorAtual = converterStringParaDecimal(event.target.dataset.valor_original) || 0; // Obtém o valor original
                             const novoValor = converterStringParaDecimal(event.target.innerText) || 0; // Obtém o novo valor
@@ -1045,8 +1045,7 @@ export function atualizarOuvintesTabCot() {
                         // Armazena o valor atual quando a célula é focada, se ainda não estiver armazenado
                         if (!event.target.hasAttribute('data-valor_original')) {
                             event.target.dataset.valor_original = event.target.innerText;
-                        }else
-                        {
+                        } else {
                             event.target.innerText = event.target.dataset.valor_original;
                         }
 
@@ -1059,8 +1058,7 @@ export function atualizarOuvintesTabCot() {
                         // Armazena o valor atual quando a célula é focada, se ainda não estiver armazenado
                         if (!event.target.hasAttribute('data-valor_original')) {
                             event.target.dataset.valor_original = event.target.innerText;
-                        }else
-                        {
+                        } else {
                             event.target.innerText = event.target.dataset.valor_original;
                         }
                     });
@@ -1088,19 +1086,16 @@ export function atualizarOuvintesTabCot() {
             }
         }
     }
-    if(log) console.log("Ouvintes adicionados com sucesso!");
+    if (log) console.log("Ouvintes adicionados com sucesso!");
 
-    if(log) console.log("----------TODOS OS OUVINTES ADICIONADOS COM SUCESSO----------");
+    if (log) console.log("----------TODOS OS OUVINTES ADICIONADOS COM SUCESSO----------");
 }
 
-function limitarValorPreenchido(valor_inicial, valor_atual, variacao)
-{
-    if(globais.pag === "ajustar_compra_" || globais.pag === "checagem_final")
-    {
+function limitarValorPreenchido(valor_inicial, valor_atual, variacao) {
+    if (globais.pag === "ajustar_compra_" || globais.pag === "checagem_final") {
         const ap_valor_inicial = converterStringParaDecimal(valor_inicial) || 0; // Obtém o valor original
         const ap_valor_atual = converterStringParaDecimal(valor_atual) || 0; // Obtém o novo valor
-        if (ap_valor_atual > ap_valor_inicial + variacao || ap_valor_atual < ap_valor_inicial - variacao)
-        {
+        if (ap_valor_atual > ap_valor_inicial + variacao || ap_valor_atual < ap_valor_inicial - variacao) {
             // Exibe modal de aviso com apenas um botão de OK
 
             let msg = `Este valor não pode ser maior que o valor atual`;
@@ -1140,6 +1135,93 @@ export function atualizarOuvintesTabDetlhesForn() {
 //====================================================================================//
 //===========================PREENCHE A TAB DE COTAÇÃOES===========================//
 //====================================================================================//
+
+function filtrarCot(data) {
+    const log = true;
+    if (log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
+
+    if (log) console.log("Data original => ", data);
+    const ids_forns = [...new Set(data.map(item => item.id_fornecedor))].filter(id => id !== "");
+    const itens_aprov = data.filter(item => item.Aprovado === "true" && item.Ativo === "true").map(item => item.id_produto);
+    if (log) console.log("IDs dos fornecedores encontrados => ", ids_forns);
+    if (log) console.log("IDs dos itens aprovados e ativos encontrados => ", itens_aprov);
+    const filteredData = Array.from(
+
+        data.reduce((map, item) => {
+            if (ids_forns.length > 0) {
+                if (log) console.log("Tem fornecedores");
+                if (item.Valor_unitario == null || item.Quantidade == null || item.Valor_unitario <= 0 || item.Quantidade <= 0) {
+                    if (log) console.log("Item com valor inválido => ", item);
+                    return map;
+                }
+
+                const key = `${item.id_fornecedor}_${item.id_produto}`;
+                const existing = map.get(key);
+
+                if (itens_aprov.length > 0) {
+                    if (log) console.log("Tem itens aprovados");
+                    //BUSCA APENAS OS ITENS APROVADOS E ATIVOS
+                    if (itens_aprov.includes(item.id_produto)) {
+                        if (log) console.log("Item faz parte da lista de aprovados");
+
+                        if (!existing) {
+                            if (log) console.log("Item não existe no mapa, adicionando");
+                            map.set(key, item);
+                        } else {
+
+                            if ((existing.Aprovado !== "true" || existing.Ativo !== "true") && (item.Aprovado === "true" && item.Ativo === "true")) {
+                                map.set(key, item);
+                            } else {
+                                const existingTime = new Date(existing.Added_time);
+                                const currentTime = new Date(item.Added_time);
+                                if (currentTime > existingTime) {
+                                    map.set(key, item);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (log) console.log("Não tem itens aprovados");
+                    //NÃO HÁ ITENS APROVADOS E ATIVOS, ENTÃO BUSCA TODOS OS ITENS QUE TENHAM FORNECEDOR, INDEPENDENTE DE ESTAREM APROVADOS OU ATIVOS, MAS CONSIDERANDO APENAS ITENS COM QUANTIDADE E VALOR UNITÁRIO MAIORES QUE ZERO E NÃO NULOS
+                    if (!existing) {
+
+                        map.set(key, item);
+                    } else {
+                        // Compara Added_Time e mantém o mais recente
+                        const existingTime = new Date(existing.Added_time);
+                        const currentTime = new Date(item.Added_time);
+                        if (currentTime > existingTime) {
+                            map.set(key, item);
+                        }
+                    }
+                }
+
+            } else {
+                if (log) console.log("Não tem fornecedores");
+                //BUSCA TODOS OS ITENS, INDEPENDENTE DE TER FORNECEDOR OU VALOR UNITÁRIO E QUANTIDADE MAIORES QUE ZERO
+                const key = item.id_produto;
+                const existing = map.get(key);
+                if (!existing) {
+                    map.set(key, item);
+                } else {
+                    // Compara Added_Time e mantém o mais recente
+                    const existingTime = new Date(existing.Added_time);
+                    const currentTime = new Date(item.Added_time);
+                    if (currentTime > existingTime) {
+                        map.set(key, item);
+                    }
+                }
+            }
+            return map;
+        }, new Map()).values()
+    );
+    return filteredData;
+}
+
+
+
+
+
 /**
  * Preenche a tab de cotações com os dados recebidos da API
  * 
@@ -1180,18 +1262,19 @@ export function atualizarOuvintesTabDetlhesForn() {
  */
 export async function prenchTabCot(data) {
     const log = true;
-     if(log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
-
-    // Filtra data para manter apenas os registros mais recentes para cada combinação única de id_fornecedor e id_produto
+    if (log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
+    const filteredData = filtrarCot(data);
+    if (log) console.log("Data filtrada => ", filteredData);
+    /*
     const filteredData = Array.from(
         data.reduce((map, item) => {
             if (item.id_fornecedor !== "" && item.id_produto !== "") {
-
+                if(log) console.log("Tem id fornecedor e id produto");
                 const key = `${item.id_fornecedor}_${item.id_produto}`;
                 const existing = map.get(key);
                 if(item.Valor_unitario != null && item.Quantidade != null && item.Valor_unitario > 0 && item.Quantidade > 0)
                 {
-
+                    if(log) console.log("Tem valor unitário e quantidade válidos");
                     if (!existing) {
                         map.set(key, item);
                     } else {
@@ -1207,6 +1290,7 @@ export async function prenchTabCot(data) {
                     }
                 }
             } else if (item.id_fornecedor === "" && ![...map.values()].some(entry => entry.id_fornecedor !== "")) {
+                if(log) console.log("Não tem id fornecedor e nenhum outro registro tem id fornecedor");
                 const key = `${item.id_produto}`;
                 const existing = map.get(key);
                 
@@ -1223,8 +1307,7 @@ export async function prenchTabCot(data) {
             }
             return map;
         }, new Map()).values()
-    );
-
+    ); */
     if (filteredData.length > 0) {
 
         globais.cotacaoExiste = true;
