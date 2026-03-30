@@ -514,10 +514,11 @@ async function getGalleryFiles() {
             console.log("item => ", item);
             const segundoElemento = item.firstChild.nextSibling;
             const dataSrc = segundoElemento ? segundoElemento.getAttribute('data-src') : null;
+            const fileName = item.querySelector('.file-name').innerText;
             console.log("dataSrc => ", dataSrc);
             
             if (dataSrc && dataSrc.startsWith('data:')) {
-                return { type: getItemType(dataSrc), data: getItemData(dataSrc) };
+                return { type: getItemType(dataSrc), data: getItemData(dataSrc, fileName), name: fileName };
             }
             return {};
             
@@ -563,7 +564,7 @@ function getItemType(base64String) {
     return match && (fileTypeMap[match[1]] || match[1]);
 }
 
-function getItemData(base64String) {
+function getItemData(base64String, fileName) {
     const log = false;
     if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
     const fileType = getItemType(base64String);
@@ -573,12 +574,12 @@ function getItemData(base64String) {
         fileContentArray[i] = fileContent.charCodeAt(i);
     }
 
-    const file = new File([fileContentArray], `arquivo.${fileType.split('/')[1]}`, {
+    const file = new File([fileContentArray], fileName, {
         type: fileType,
         lastModified: new Date().getTime(),
         size: fileContentArray.length,
     });
-    if(log) console.log(`arquivo.${fileType.split('/')[1]}`);
+    if(log) console.log(fileName);
     /*
     setTimeout(() => {
         downloadFile(file);
@@ -612,7 +613,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                     };
                     const resp = await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
                     if(resp.code !== 3000) {
-                        //await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                        await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
                         throw new Error("Erro ao limpar dados da cotação antiga! Erro: ", JSON.stringify(resp));
                     }
                 }
@@ -718,7 +719,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 }
 
                 if (respPDC.code !== 3000) {
-                    //await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
                     throw new Error("Erro ao salvar dados do PDC! Erro: ", JSON.stringify(respPDC));
                 }
 
@@ -793,7 +794,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                 let respCot = await executar_apiZoho({ tipo: "add_reg", corpo: json });
     
                 if (respCot.code !== 3000) {
-                    //await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
                     throw new Error("Erro ao salvar dados da cotação! Erro: ", JSON.stringify(respCot));
                 }
                 if(log) console.log("respCot => ", JSON.stringify(respCot, null, 2));
@@ -810,7 +811,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
 
         return ids_pdcs_criados;
     } catch (error) {
-        //rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+        await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
         await customModal_V2({
             tipoAcao:'alert', 
             titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
@@ -998,5 +999,6 @@ export async function removerArquivosZoho()
     console.log("IDs dos arquivos marcados para remoção => ", idRecArquivosRemovidos);
     const criterio = `(ID in [${idRecArquivosRemovidos.join(",")}])`;
     const resp = await executar_apiZoho({ tipo: "deletar_reg", criterios: criterio, nomeR: "Documentos_API" });
+    console.log("Resposta da remoção dos arquivos => ", resp);
     return resp;
 }

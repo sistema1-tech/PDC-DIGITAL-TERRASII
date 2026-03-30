@@ -1373,11 +1373,11 @@ function anexos_controller() {
 }
 
 //==========FUNÇÃO DE APOIO==========//
-function createLoadingSpinner() {
+function createLoadingSpinner(height = '100px', width = '100px') {
     const loadingSpinnerContainer = document.createElement('div');
     loadingSpinnerContainer.className = 'customConfirm-loading-spinner-container';
-    loadingSpinnerContainer.style.width = '100px';
-    loadingSpinnerContainer.style.height = '100px';
+    loadingSpinnerContainer.style.width = width;
+    loadingSpinnerContainer.style.height = height;
     loadingSpinnerContainer.style.display = 'flex';
     loadingSpinnerContainer.style.justifyContent = 'center';
     loadingSpinnerContainer.style.alignItems = 'center';
@@ -1561,7 +1561,7 @@ export async function preencherListaAnexos(anexos) {
     const galleryElement = document.getElementById('gallery');
     if (!galleryElement) return console.error('Elemento gallery não encontrado');
     galleryElement.innerHTML = '';
-
+    
     //==========PRENCHE A GALERIA COM OS ANEXOS==========//
     if (anexos && anexos.length > 0) {
         const promises = [];

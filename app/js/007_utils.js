@@ -120,6 +120,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         async function subirArquivos() {
             try {
                 console.log("Subindo arquivos...");
+                
                 recOps = ZOHO.CREATOR.FILE;
                 const config = {
                     app_name: globais.nomeApp,
@@ -129,6 +130,9 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                     file: corpo
                 }
                 console.log("Configuração para upload => ", JSON.stringify(config));
+                console.log("Arquivo:", corpo);
+                console.log(corpo);
+                console.log(JSON.stringify(corpo));
 
                 const resp = await recOps.uploadFile(config);
                 console.log("Resposta do upload => ", resp);

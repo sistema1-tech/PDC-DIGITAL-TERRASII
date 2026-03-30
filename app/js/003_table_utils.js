@@ -1137,7 +1137,7 @@ export function atualizarOuvintesTabDetlhesForn() {
 //====================================================================================//
 
 function filtrarCot(data) {
-    const log = true;
+    const log = false;
     if (log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
 
     if (log) console.log("Data original => ", data);
@@ -1218,10 +1218,6 @@ function filtrarCot(data) {
     return filteredData;
 }
 
-
-
-
-
 /**
  * Preenche a tab de cotações com os dados recebidos da API
  * 
@@ -1265,49 +1261,7 @@ export async function prenchTabCot(data) {
     if (log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
     const filteredData = filtrarCot(data);
     if (log) console.log("Data filtrada => ", filteredData);
-    /*
-    const filteredData = Array.from(
-        data.reduce((map, item) => {
-            if (item.id_fornecedor !== "" && item.id_produto !== "") {
-                if(log) console.log("Tem id fornecedor e id produto");
-                const key = `${item.id_fornecedor}_${item.id_produto}`;
-                const existing = map.get(key);
-                if(item.Valor_unitario != null && item.Quantidade != null && item.Valor_unitario > 0 && item.Quantidade > 0)
-                {
-                    if(log) console.log("Tem valor unitário e quantidade válidos");
-                    if (!existing) {
-                        map.set(key, item);
-                    } else {
-                        // Compara Added_Time e mantém o mais recente
-                        const existingTime = new Date(existing.Added_time);
-                        const currentTime = new Date(item.Added_time);
-                        
-                        if (item.Aprovado === "true" && item.Ativo === "true") {
-                            map.set(key, item);
-                        } else if (currentTime > existingTime && (existing.Aprovado !== "true" || existing.Ativo !== "true")) {
-                            map.set(key, item);
-                        }
-                    }
-                }
-            } else if (item.id_fornecedor === "" && ![...map.values()].some(entry => entry.id_fornecedor !== "")) {
-                if(log) console.log("Não tem id fornecedor e nenhum outro registro tem id fornecedor");
-                const key = `${item.id_produto}`;
-                const existing = map.get(key);
-                
-                if (!existing) {
-                    map.set(key, item);
-                } else {
-                    // Compara Added_time e mantém o mais recente
-                    const existingTime = new Date(existing.Added_time);
-                    const currentTime = new Date(item.Added_time);
-                    if (currentTime > existingTime) {
-                        map.set(key, item);
-                    }
-                }
-            }
-            return map;
-        }, new Map()).values()
-    ); */
+
     if (filteredData.length > 0) {
 
         globais.cotacaoExiste = true;
@@ -1331,20 +1285,6 @@ export async function prenchTabCot(data) {
         const valoresDescontos = fornecedores.map(fornecedor => filteredData.filter(item => item.id_fornecedor === fornecedor.id_fornecedor)[0].Descontos);
         console.log("Valores frete => ", valoresFrete);
         console.log("Valores desconto => ", valoresDescontos);
-        /*
-        filteredData.forEach(item => {
-            console.log("Item => ", item);
-            const frete = item.Valor_do_frete;
-            const desconto = item.Descontos;
-
-            // Adiciona o frete ao array
-            
-            valoresFrete.push(frete);
-
-            // Adiciona o desconto ao array
-            valoresDescontos.push(desconto);
-        });
-        */
 
         globais.idsCotacao = [...new Set(filteredData.map(item => item.ID))].sort((a, b) => a - b);
 
