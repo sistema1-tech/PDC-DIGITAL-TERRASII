@@ -1398,6 +1398,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     //==========DESABILITANDO BOTÕES DURANTE O PROCESSAMENTO==========//
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => button.classList.add('wait-file'));
+    
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
