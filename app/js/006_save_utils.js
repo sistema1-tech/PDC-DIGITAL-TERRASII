@@ -514,6 +514,8 @@ async function getGalleryFiles() {
             console.log("item => ", item);
             const segundoElemento = item.firstChild.nextSibling;
             const dataSrc = segundoElemento ? segundoElemento.getAttribute('data-src') : null;
+            if(!dataSrc) return {};
+            
             const fileName = item.querySelector('.file-name').innerText;
             console.log("dataSrc => ", dataSrc);
             

@@ -1395,6 +1395,9 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     const log = false;
 
     if (log) console.log("++++++++++CRIANDO MINIATURA DE ARQUIVO++++++++++");
+    //==========DESABILITANDO BOTÕES DURANTE O PROCESSAMENTO==========//
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => button.classList.add('wait-file'));
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
@@ -1884,15 +1887,16 @@ export async function preencherListaAnexosV2(anexos) {
 
     // Evento para abrir o seletor de arquivos ao clicar no botão
     botaoAdicionar.addEventListener('click', () => {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => button.classList.add('wait-file'));
+
         inputFile.disabled = false;
         inputFile.readOnly = false;
         inputFile.click();
     });
 
     // Evento de mudança no input, para processar o arquivo selecionado
-    inputFile.addEventListener('change', async (event) => {
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => button.classList.add('wait-file'));        
+    inputFile.addEventListener('change', async (event) => {     
         const files = event.target.files;
         if (files.length > 0) {
             const file = files[0];
