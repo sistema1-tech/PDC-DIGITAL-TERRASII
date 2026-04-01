@@ -1398,7 +1398,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     //==========DESABILITANDO BOTÕES DURANTE O PROCESSAMENTO==========//
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => button.classList.add('wait-file'));
-    
+
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
@@ -1604,64 +1604,62 @@ export async function preencherListaAnexos(anexos) {
 
     }
 
-    const pageIncludesAlterar = pode_alterar.some(alterarOption => globais.pag.includes(alterarOption));
-    if (pageIncludesAlterar) {
-        console.log("pode alterar anexos");
-        const btnContainer = document.createElement('div');
-        btnContainer.classList.add('btn-container', 'gallery-item', 'add-btn-container-gallery');
+    //const pageIncludesAlterar = pode_alterar.some(alterarOption => globais.pag.includes(alterarOption));
+    console.log("pode alterar anexos");
+    const btnContainer = document.createElement('div');
+    btnContainer.classList.add('btn-container', 'gallery-item', 'add-btn-container-gallery');
+
+    const botaoAdicionar = document.createElement('a');
+    botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
+    botaoAdicionar.style.padding = '10px 20px';
+    botaoAdicionar.style.fontSize = '60px';
+    botaoAdicionar.style.cursor = 'pointer';
+    botaoAdicionar.style.borderLeft = '1px solid transparent';
+    botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, gray, gray, gray, gray, gray, gray, transparent) 1';
     
-        const botaoAdicionar = document.createElement('a');
-        botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
-        botaoAdicionar.style.padding = '10px 20px';
-        botaoAdicionar.style.fontSize = '60px';
-        botaoAdicionar.style.cursor = 'pointer';
-        botaoAdicionar.style.borderLeft = '1px solid transparent';
-        botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, gray, gray, gray, gray, gray, gray, transparent) 1';
-        
-        // Cria um input do tipo file, escondido
-        const inputFile = document.createElement('input');
-        inputFile.type = 'file';
-    
-        inputFile.style.display = 'none';
-    
-        // Evento para abrir o seletor de arquivos ao clicar no botão
-        botaoAdicionar.addEventListener('click', () => {
-            inputFile.disabled = false;
-            inputFile.readOnly = false;
-            inputFile.click();
-        });
-    
-        // Evento de mudança no input, para processar o arquivo selecionado
-        inputFile.addEventListener('change', async (event) => {
-            const files = event.target.files;
-            if (files.length > 0) {
-                const file = files[0];
-                //==========NOVO ELEMENTO DA GALERIA==========//
-                let { loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo', pode_remover: pode_alterar });
-    
-                loading_spinner.remove();
-    
-                // Remove a mensagem de anexos
-                const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
-                if (mensagemAnexos) {
-                    mensagemAnexos.remove();
-                }
-                
-                setTimeout(() => {
-                    setTimeout(() => {
-                        const disabledElements = document.querySelectorAll('.wait-file');
-                        console.log(JSON.stringify(disabledElements));
-                        disabledElements.forEach(el => el.classList.remove('wait-file'));
-                    }, 1000);
-                }, 0);
+    // Cria um input do tipo file, escondido
+    const inputFile = document.createElement('input');
+    inputFile.type = 'file';
+
+    inputFile.style.display = 'none';
+
+    // Evento para abrir o seletor de arquivos ao clicar no botão
+    botaoAdicionar.addEventListener('click', () => {
+        inputFile.disabled = false;
+        inputFile.readOnly = false;
+        inputFile.click();
+    });
+
+    // Evento de mudança no input, para processar o arquivo selecionado
+    inputFile.addEventListener('change', async (event) => {
+        const files = event.target.files;
+        if (files.length > 0) {
+            const file = files[0];
+            //==========NOVO ELEMENTO DA GALERIA==========//
+            let { loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo', pode_remover: pode_alterar });
+
+            loading_spinner.remove();
+
+            // Remove a mensagem de anexos
+            const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
+            if (mensagemAnexos) {
+                mensagemAnexos.remove();
             }
-            inputFile.value = ''; // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente, se necessário
-        });
-        //Adiciona o botão e o input ao DOM;
-        btnContainer.appendChild(inputFile);
-        btnContainer.appendChild(botaoAdicionar);
-        galleryElement.appendChild(btnContainer);
-    }
+            
+            setTimeout(() => {
+                setTimeout(() => {
+                    const disabledElements = document.querySelectorAll('.wait-file');
+                    console.log(JSON.stringify(disabledElements));
+                    disabledElements.forEach(el => el.classList.remove('wait-file'));
+                }, 1000);
+            }, 0);
+        }
+        inputFile.value = ''; // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente, se necessário
+    });
+    //Adiciona o botão e o input ao DOM;
+    btnContainer.appendChild(inputFile);
+    btnContainer.appendChild(botaoAdicionar);
+    galleryElement.appendChild(btnContainer);
 
 
     //==========INICIANDO O FANCYBOX==========//

@@ -82,7 +82,7 @@ export function criarBotao({page = null, removeExistingButtons = false})
                     const allSections = document.querySelectorAll('.section');
                     allSections.forEach(section => {
                         const header = section.previousElementSibling; // Seleciona o header correspondente
-                        if (!section.classList.contains('form-pagamento') && !section.classList.contains('section-buttons')) { // Verifica se não é a seção de parcelas e não é a seção de botões
+                        if (!section.classList.contains('form-pagamento') && !section.classList.contains('section-buttons') && !section.classList.contains('form-compra') ) { // Verifica se não é a seção de parcelas e não é a seção de botões
                             section.classList.add('collapsed'); // Adiciona a classe para colapsar
                             if (header && header.classList.contains('section-header')) {
                                 header.classList.add('collapsed'); // Adiciona a classe para a setinha

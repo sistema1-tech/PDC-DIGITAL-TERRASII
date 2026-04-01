@@ -1430,7 +1430,7 @@ export function desabilitarCampos() {
         formsParaManterHabilitados = ["form-pagamento", "dados-nf", "form-classificacao", ];//forms
         aTagsParaManterHabilitados = ["gallery-item"];
     } else if (globais.pag === "criar_numero_de_PDC") {
-        camposParaManterHabilitados = ["Num_PDC_parcela",];
+        camposParaManterHabilitados = ["Num_PDC_parcela", "Justificativa"];
         botoesParaManterHabilitados = ["add-parcela", "remover-parcela"];
         formsParaManterHabilitados = ["form-classificacao"];
         aTagsParaManterHabilitados = ["gallery-item"];
