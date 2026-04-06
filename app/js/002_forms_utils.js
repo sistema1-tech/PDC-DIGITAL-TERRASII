@@ -1559,7 +1559,7 @@ export async function preencherListaAnexos(anexos) {
 
     //==========VARIÁVEIS DE APOIO==========//
     const { typesToView, convertTypes, elLibConfig } = anexos_controller();
-    const pode_alterar =["criar_cotacao", "editar_cotacao","criar_numero_de_PDC", "confirmar_compra", "receber_compra", "checagem_final"];
+    const pode_alterar =["criar_cotacao", "editar_cotacao","criar_numero_de_PDC", "confirmar_compra", "receber_compra", "checagem_final", "lancamentos_provisionados"];
 
     //==========PROCURA E INSTANCIA ELEMENTO DA GALERIA==========//
     const galleryElement = document.getElementById('gallery');
