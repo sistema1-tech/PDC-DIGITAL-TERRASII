@@ -2,6 +2,7 @@ import { globais } from './999_config.js';
 import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho} from './007_utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
+let indice_documentos = 0;
 const initUrl = 'https://terrasii.zohocreatorportal.com';
 
 /**
@@ -1390,6 +1391,45 @@ function createLoadingSpinner(height = '100px', width = '100px') {
     return loadingSpinnerContainer;
 }
 
+function getItemType(base64String) {
+    const log = false;
+    if(log) console.log("++++++++++PEGANDO TIPO DO ARQUIVO++++++++++");
+    const match = base64String.match(/^data:([^;]+);base64,/);
+    if(log) console.log("match => ", match);
+    const fileTypeMap = {
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "application/xlsx",
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'application/docx',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'application/pptx',
+      'text/plain': 'txt',
+      'octet-stream': 'msg',
+      'application/.vnd.ms-excel': 'xls',
+      // adicione mais tipos de arquivos aqui, se necessário
+    };
+    if(log) console.log("match[1] => ", match?match[1]:null);
+    if(log) console.log("fileTypeMap[match[1]] => ", match?fileTypeMap[match[1]]:null);
+    return match && (fileTypeMap[match[1]] || match[1]);
+}
+
+function getItemData(base64String, fileName) {
+    const log = false;
+    if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
+    const fileType = getItemType(base64String);
+    const fileContent = atob(base64String.replace(`data:${base64String.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
+    const fileContentArray = new Uint8Array(fileContent.length);
+    for (let i = 0; i < fileContent.length; i++) {
+        fileContentArray[i] = fileContent.charCodeAt(i);
+    }
+
+    const file = new File([fileContentArray], fileName, {
+        type: fileType,
+        lastModified: new Date().getTime(),
+        size: fileContentArray.length,
+    });
+    if(log) console.log(fileName);
+    return file;
+}
+
+//==========FUNÇÃO PRINCIPAL PARA CRIAR MINIATURA DE ARQUIVO==========//
 async function createFileMiniature({ galeria = null, file = null, origem = null, pode_remover = []}) {
     const { typesToView, convertTypes, elLibConfig } = anexos_controller();
     const log = false;
@@ -1420,6 +1460,8 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     let file_field = document.createElement('img');
 
     file_field.setAttribute('data-fancybox', 'gallery');
+    indice_documentos++;
+    file_field.setAttribute('data-file_index', indice_documentos);
     file_field.alt = 'Minitatura da imagem ou PDF';
     file_field.style.display = 'none';
 
@@ -1445,37 +1487,31 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
             const checkSrcInterval = setInterval(() => {
                 if (file_field && file_field.src && file_field.src !== "") {
                     file_field.setAttribute('data-src', file_field.src)
-                    console.log("Tratado");
                     clearInterval(checkSrcInterval);
                     resolve();
                 }
             }, 100);
         });
+        
         //==========SETANDO NOME DO ARQUIVO==========//
         const ap_name = file.split('?filepath=')[1];
         name = ap_name.slice(ap_name.indexOf('_') + 1, ap_name.length);
 
+        globais.arquivosExistentes[file_field.dataset.file_index] = getItemData(file_field.src, name);
     } else if (origem == 'novo') {
         file_field.classList.add('anexo-novo');
+        const blobUrl = URL.createObjectURL(file);
+        file_field.setAttribute('data-src', blobUrl);
+        globais.arquivosNovos[file_field.dataset.file_index] = file;
 
         //==========SETANDO NOME DO ARQUIVO==========//
         name = file.name;
-
-        //
-        globais.arquivosGaleria.push(file);
-        const blobUrl = URL.createObjectURL(file);
-        file_field.setAttribute('data-src', blobUrl);
     }
-
 
     file_name.textContent = name;
     const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
     const fileType = convertTypes[name.split('.').pop().toLowerCase()] || name.split('.').pop().toUpperCase() || '';
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    console.log("typesToView => ", typesToView);
-    console.log("fileType => ", fileType);
-    console.log("fileSize => ", fileSize);
     if (typesToView.includes(fileType) && fileSize < 20) {
 
         if (fileType === 'PDF') {
@@ -1505,21 +1541,21 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     const pageIncludesRemover= pode_remover.some(removerOption => globais.pag.includes(removerOption));
     if(pageIncludesRemover)
     {
-
         remove_btn = document.createElement('button');
         remove_btn.classList.add('remove-anexo-btn', 'close-icon');
         remove_btn.style.display = 'none';
         if (log) console.log("remove_btn => ", remove_btn);
     
         remove_btn.addEventListener('click', function () {
-            console.log("remove_btn => ", remove_btn);
-            console.log("file => ", JSON.stringify(file));
             if(typeof file === 'string' && file.startsWith('/api/v2.1/'))
             {
                 globais.arquivosRemovidos.push(file);
+                delete globais.arquivosExistentes[file_field.dataset.file_index];
+            }else
+            {
+                delete globais.arquivosNovos[file_field.dataset.file_index];
             }
-            //globais.arquivosRemovidos.push(file);
-    
+
             file_container.remove();
         })
         file_container.appendChild(remove_btn);

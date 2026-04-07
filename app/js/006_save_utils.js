@@ -51,8 +51,6 @@ async function splitDataByInstallments(status = null) {
     if(log) console.log("numInstallments => ", numInstallments);
 
     const newPDCs = new Map();
-    if(log) console.log("=> PEGANDO ARQUIVOS <=");
-    const files = await getGalleryFiles();
     if(log) console.log("=> PEGANDO DADOS DA NF <=");
     const NFData = pegarDadosNF_V2();
     
@@ -83,7 +81,7 @@ async function splitDataByInstallments(status = null) {
 
             const allDataPDC = { ...initialDataPDC, ...extraDataPDC, ...classData, ...NFData };
             if (status !== null) allDataPDC.Status_geral = status;
-            newPDCs.set(index, { 'priceTableData': priceTableData, 'PDCsData': allDataPDC, 'Files': { ...files } });
+            newPDCs.set(index, { 'priceTableData': priceTableData, 'PDCsData': allDataPDC});
             //
             const parcelaCriadaInput = installment.querySelector('input[name="parcela_criada"]');
             if (parcelaCriadaInput) {
@@ -501,98 +499,13 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
     return [dados, dadosExtras];
 }
 
-//=================================================================================================//
-//===========================BUSCA OS ARQUIVOS PARA CARREGAR NO NOVO PDC===========================//
-//=================================================================================================//
-async function getGalleryFiles() {
-
-    return await new Promise((resolve, reject) => {
-        
-        const apGalleryItems = document.querySelectorAll('.gallery-item');
-        const galleryItems = Array.prototype.slice.call(apGalleryItems, 0, -2);
-        const files = Array.from(galleryItems).map(item => {
-            console.log("item => ", item);
-            const segundoElemento = item.firstChild.nextSibling;
-            const dataSrc = segundoElemento ? segundoElemento.getAttribute('data-src') : null;
-            if(!dataSrc) return {};
-            
-            const fileName = item.querySelector('.file-name').innerText;
-            console.log("dataSrc => ", dataSrc);
-            
-            if (dataSrc && dataSrc.startsWith('data:')) {
-                return { type: getItemType(dataSrc), data: getItemData(dataSrc, fileName), name: fileName };
-            }
-            return {};
-            
-        });
-
-        const promises = files.map(file => {
-            if (file.data) {
-                return Promise.resolve({ ...file, data: file.data });
-            } else {
-                return Promise.resolve(file);
-            }
-        });
-
-        Promise.all(promises).then(resolve).catch(reject);
-    });
-}
-
-/*ANTIGA
-function getItemType(base64String) {
-
-    const match = base64String.match(/^data:([^;]+);base64,/);
-
-    return match && match[1];
-}
-    */
-
-function getItemType(base64String) {
-    const log = false;
-    if(log) console.log("++++++++++PEGANDO TIPO DO ARQUIVO++++++++++");
-    const match = base64String.match(/^data:([^;]+);base64,/);
-    if(log) console.log("match => ", match);
-    const fileTypeMap = {
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "application/xlsx",
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'application/docx',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'application/pptx',
-      'text/plain': 'txt',
-      'octet-stream': 'msg',
-      'application/.vnd.ms-excel': 'xls',
-      // adicione mais tipos de arquivos aqui, se necessário
-    };
-    if(log) console.log("match[1] => ", match?match[1]:null);
-    if(log) console.log("fileTypeMap[match[1]] => ", match?fileTypeMap[match[1]]:null);
-    return match && (fileTypeMap[match[1]] || match[1]);
-}
-
-function getItemData(base64String, fileName) {
-    const log = false;
-    if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
-    const fileType = getItemType(base64String);
-    const fileContent = atob(base64String.replace(`data:${base64String.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
-    const fileContentArray = new Uint8Array(fileContent.length);
-    for (let i = 0; i < fileContent.length; i++) {
-        fileContentArray[i] = fileContent.charCodeAt(i);
-    }
-
-    const file = new File([fileContentArray], fileName, {
-        type: fileType,
-        lastModified: new Date().getTime(),
-        size: fileContentArray.length,
-    });
-    if(log) console.log(fileName);
-    /*
-    setTimeout(() => {
-        downloadFile(file);
-    }, 100);
-    */
-    return file;
-}
-
 //================================================================\\
 //===========================SALVA TUDO===========================\\
 //================================================================\\
+export async function saveTableData_V4()
+{
+
+}
 
 export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
@@ -601,7 +514,6 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
         if(log) console.log("status => ", status);
         if(log) console.log("sepPorParc => ", sepPorParc);
         if(log) console.log("paramsExtraPDC => ", paramsExtraPDC);
-
 
         const ids_pdcs_criados = new Array();
     
@@ -649,68 +561,37 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                     ...pdcData.PDCsData,
                     ...paramsExtraPDC
                 };
-                const arquivos = Object.keys(pdcData.Files).reduce((acc, curr) => {
-                    if (pdcData.Files[curr].data) acc[curr] = pdcData.Files[curr];
-                    return acc;
-                }, {});
-    
+
                 if(log) console.log("1. dadostabPrecos => ", dadostabPrecos);
                 if(log) console.log("2. dadosPDC => ", JSON.stringify(dadosPDC, null, 2));
-                if(log) console.log("3. arquivos => ", arquivos);
-                
+
                 //MESCLA OS ARQUIVOS EXISTENTES COM OS NOVOS ARQUIVOS ADICIONADOS\\
-                let qtdFiles = globais.arquivosGaleria.length;
+                let apoioArquivos = {};
+                let j = 0;
+                Object.values(globais.arquivosNovos).forEach((file, index) => {
+                    apoioArquivos[index] = file;
+                    j++;
+                });
+                
                 if(sepPorParc === true)
                 {
-                    let qtd_docs = Object.keys(arquivos).length;
-                    for (let i = 0; i < globais.arquivosGaleria.length; i++) {
-                        console.log("globais.arquivosGaleria[i] => ", globais.arquivosGaleria[i]);
-                        arquivos[qtd_docs] = { type: `${globais.arquivosGaleria[i].name}`, data: globais.arquivosGaleria[i]};
-                        qtd_docs++;
-                    }
-                    qtdFiles = Object.keys(arquivos).length;
+                    Object.values(globais.arquivosExistentes).forEach((file, index) => {
+                        apoioArquivos[j + index] = file;
+                    });
                 }
-                if(log) console.log("Quantidade de arquivos => ", qtdFiles);
+                const qtdFiles = Object.keys(apoioArquivos).length;
                 
                 //VALIDA SE TODOS OS ARQUIVOS ESTÃO PRONTOS PARA SEREM ENVIADOS, CASO CONTRÁRIO, TENTA AGUARDAR POR 2 SEGUNDOS ANTES DE DAR ERRO\\
-                /*
-                let tent_rest = 2;
-                let allFilesLoaded = true;
-                if(log) console.log("Validando se todos os arquivos estão prontos para serem enviados...");
-
-                do {
-                    for (let fileKey of Object.keys(arquivos)) {
-                        if(log) console.log(`Verificando arquivo ${fileKey} => `, arquivos[fileKey]);
-                        if (!arquivos[fileKey].data) {
-                            allFilesLoaded = false;
-                            break;
-                        }
-                    }
-                    if (!allFilesLoaded) {
-                        if(log) console.log("Nem todos os arquivos estão prontos, tentando novamente em 1 segundo...");
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    }
-                } while (tent_rest-- >= 0 || allFilesLoaded);
-
-                if (!allFilesLoaded) {
-                    console.error("Erro ao criar o PDC: Todos os arquivos devem estar carregados");
-                    rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-                    throw new Error("Erro ao criar o PDC: Todos os arquivos devem estar carregados");
-                }
-                */
                 let respPDC;
                 let idNovoPDC = null;
                 if (globais.tipo === 'editar_pdc') {
                     if(log) console.log("É EDIÇÃO DE PDC!");
-    
                     respPDC = await executar_apiZoho({ tipo: "atualizar_reg", ID: globais.idPDC, corpo: dadosPDC, nomeR: globais.nomeRelPDC });
-                    console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
     
                 } else {
                     if(log) console.log("É CRIAÇÃO DE PDC!");
                     if(log) console.log("DADOS DO PDC ===> ", JSON.stringify(dadosPDC, null, 2));
                     respPDC = await executar_apiZoho({ tipo: "add_reg", corpo: JSON.stringify(dadosPDC, null, 2), nomeF: globais.nomeFormPDC });
-                    console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
 
                     //Verifica se a resposta foi bem-sucedida e se globais.idPDC é null
                     if (respPDC.code === 3000) {
@@ -750,13 +631,7 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                         let indexFile = 0;
                         for (const id of idArquivos) {
 
-                            let blob;
-                            if (sepPorParc === true) {
-                                blob = arquivos[indexFile++].data;
-                            } else {
-                                blob = globais.arquivosGaleria[indexFile++];
-                            }
-
+                            const blob = apoioArquivos[indexFile++];
                             if(log) console.log("id => ", id);
                             
                             for (let i = 0; i < 3; i++) {
@@ -999,7 +874,7 @@ export async function removerArquivosZoho()
     //"/api/v2.1/guillaumon/terras-de-sao-jose-ii/report/PDC_Digital_API/3938561000116768677/Documentos.Arquivo/3938561000116768681/download?filepath=1773148141768840_arquivo.pdf"
     const idRecArquivosRemovidos = globais.arquivosRemovidos.map(arquivo => arquivo.match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/)[1]).filter(id => id !== null);
     console.log("IDs dos arquivos marcados para remoção => ", idRecArquivosRemovidos);
-    const criterio = `(ID in [${idRecArquivosRemovidos.join(",")}])`;
+    const criterio = `(ID == ${idRecArquivosRemovidos.join(" || ID == ")})`;
     const resp = await executar_apiZoho({ tipo: "deletar_reg", criterios: criterio, nomeR: "Documentos_API" });
     console.log("Resposta da remoção dos arquivos => ", resp);
     return resp;

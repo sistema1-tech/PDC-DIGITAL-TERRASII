@@ -36,7 +36,8 @@ const CONFIG = {
         baseFornecedores: new Map(),
         baseCentrosCusto: new Map(),
         idsCotacao: new Array(),
-        arquivosGaleria: new Array(),
+        arquivosNovos: new Map(),
+        arquivosExistentes: new Map(),
         arquivospPaybox: new Array(),
         arquivosRemovidos: new Array(),
         usuarioLogado: new Map()
