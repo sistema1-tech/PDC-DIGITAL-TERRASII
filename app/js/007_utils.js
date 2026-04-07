@@ -1220,6 +1220,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             }
             console.log(`params: ${JSON.stringify(params, null, 2)}`);
             const ids_pdcs_criados = await saveTableData_V3(params);
+            if(ids_pdcs_criados == false)
+            {
+                return false;
+            }
 
             if (acao.includes("finalizar_provisionamento")) {
                 if (globais.perfilResponsavel.includes("Depto. Pessoal")) {

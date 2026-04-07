@@ -73,7 +73,7 @@ export function criarBotao({page = null, removeExistingButtons = false})
 
             case "criar_numero_de_PDC":
                 configurarBotao('criar-pdc-btn adjust-btn', 'Criar PDC', null, null, null);
-
+                setTimeout(() => criarBotao({page: "arquivar_cotacao"}), 0);
                 if(globais.numPDC)
                 {
                     newButton.disabled = true;
@@ -214,6 +214,7 @@ export function criarBotao({page = null, removeExistingButtons = false})
 
             case "finalizar_provisionamento":
                 configurarBotao('finalizar-provisionamento-btn adjust-btn', 'Finalizar Provisionamento', page, null, "Deseja realmente finalizar o provisionamento?\nPDC será enviado para realização da compra.");
+                setTimeout(() => criarBotao({page: "arquivar_cotacao"}), 0);
                 break;
 
             case "receber_compra":

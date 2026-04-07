@@ -502,10 +502,32 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
 //================================================================\\
 //===========================SALVA TUDO===========================\\
 //================================================================\\
+/*
 export async function saveTableData_V4()
 {
+    //===============================\\
+    //VALIDA OS DADOS ANTES DE SALVAR\\
+    //===============================\\
+
+    //==========Valida os documentos==========\\
+    Object.values(globais.documentosNovos).forEach(doc => {
+        if(!doc.name || !doc.data) {
+            customModal_V2({
+                tipoAcao:'alert', 
+                titulo: "Documento com erro!", 
+                mensagem:`<p>Um dos documentos não foi carregado corretamente. Mantenha esta tela aberta e contate o administrador do sistema<br>Documento: ${doc}</p>`,
+                confirmText: 'Ok!'
+            });
+            return false;
+        }
+    });
+
+
+
+
 
 }
+    */
 
 export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
     try {
@@ -516,6 +538,26 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
         if(log) console.log("paramsExtraPDC => ", paramsExtraPDC);
 
         const ids_pdcs_criados = new Array();
+
+        let erro = false;
+        Object.values(globais.arquivosNovos).forEach(doc => {
+            console.log(doc);
+            console.log("doc.name => ", doc.name);
+            console.log("doc.size => ", doc.size);
+            if(!doc.name || !doc.size || doc.size <= 0) {
+
+                customModal_V2({
+                    tipoAcao:'alert', 
+                    titulo: "Documento com erro!", 
+                    mensagem:`<p>Um dos documentos não foi carregado corretamente. Mantenha esta tela aberta e contate o administrador do sistema<br>Documento: ${doc.name}</p>`,
+                    confirmText: 'Ok!'
+                });
+                erro = true;
+                return;
+            }
+        });
+
+        if(erro) return false;
     
         if (globais.cotacaoExiste) {
             if(log) console.log("=> COTAÇÃO EXISTE <=");
