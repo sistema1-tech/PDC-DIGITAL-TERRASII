@@ -73,7 +73,6 @@ export function criarBotao({page = null, removeExistingButtons = false})
 
             case "criar_numero_de_PDC":
                 configurarBotao('criar-pdc-btn adjust-btn', 'Criar PDC', null, null, null);
-                setTimeout(() => criarBotao({page: "arquivar_cotacao"}), 0);
                 if(globais.numPDC)
                 {
                     newButton.disabled = true;
