@@ -1500,12 +1500,16 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
         globais.arquivosExistentes[file_field.dataset.file_index] = getItemData(file_field.src, name);
     } else if (origem == 'novo') {
         file_field.classList.add('anexo-novo');
+        const partes = file.name.split('.');
+        const extensao = partes.pop();
+        const nomeBase = partes.join('.');
+        name = nomeBase.replace(/[^a-zA-Z0-9]/g, '_') + '.' + extensao;
+        file = new File([file], name, { type: file.type, lastModified: file.lastModified });
+
         const blobUrl = URL.createObjectURL(file);
         file_field.setAttribute('data-src', blobUrl);
         globais.arquivosNovos[file_field.dataset.file_index] = file;
 
-        //==========SETANDO NOME DO ARQUIVO==========//
-        name = file.name;
     }
 
     file_name.textContent = name;

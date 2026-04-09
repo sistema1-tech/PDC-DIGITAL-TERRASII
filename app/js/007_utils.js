@@ -1395,7 +1395,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             */
            var config = {
                 action: "open",
-                url: `${url}#Report:Solicitacoes_em_andamento`,
+                url: `${url}${globais.novoPerfilResponsavel=="Controladoria"?"#Report:Provisionado":"#Report:Solicitacoes_em_andamento"}`,
                 window: "same"
             };
             ZOHO.CREATOR.UTIL.navigateParentURL(config);
