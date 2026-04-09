@@ -1160,7 +1160,7 @@ function filtrarCot(data) {
                 if (itens_aprov.length > 0) {
                     if (log) console.log("Tem itens aprovados");
                     //BUSCA APENAS OS ITENS APROVADOS E ATIVOS
-                    if (itens_aprov.includes(item.id_produto)) {
+                    if (itens_aprov.includes(item.id_produto) && ids_forns.includes(item.id_fornecedor)) {
                         if (log) console.log("Item faz parte da lista de aprovados");
 
                         if (!existing) {

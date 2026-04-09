@@ -75,15 +75,29 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
         }
 
         // Função de atualizar registro
-        async function atualizar_reg(nomeR, ID, corpo) {
-            const data = { "data": corpo };
-            if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", data);
-            return await recOps.updateRecordById({
+        async function atualizar_reg(nomeR, ID, criterios, corpo) {
+            const data = { 
+                "criteria": criterios,
+                "data": corpo };
+            if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", JSON.stringify(data, null, 2));
+
+            if(ID !== null)
+            {
+                return await recOps.updateRecordById({
+                    app_name: globais.nomeApp,
+                    report_name: nomeR,
+                    id: ID,
+                    payload: data
+                });
+            }
+
+
+            return await recOps.updateRecords({
                 app_name: globais.nomeApp,
                 report_name: nomeR,
-                id: ID,
                 payload: data
             });
+            
         }
 
         async function buscar_reg(nomeR, criterio) {
@@ -168,7 +182,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
             return await criar_reg(corpo);
 
         } else if (tipo === "atualizar_reg") {
-            return await atualizar_reg(nomeR, ID, corpo);
+            return await atualizar_reg(nomeR, ID, criterios, corpo);
 
         } else if (tipo === "busc_reg") {
             return await buscar_reg(nomeR, criterios);
@@ -1220,10 +1234,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             }
             console.log(`params: ${JSON.stringify(params, null, 2)}`);
             const ids_pdcs_criados = await saveTableData_V3(params);
+            /*
             if(ids_pdcs_criados == false)
             {
                 return false;
             }
+                */
 
             if (acao.includes("finalizar_provisionamento")) {
                 if (globais.perfilResponsavel.includes("Depto. Pessoal")) {

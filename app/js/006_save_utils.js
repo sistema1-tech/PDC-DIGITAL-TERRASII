@@ -563,15 +563,14 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
             if(log) console.log("=> COTAÇÃO EXISTE <=");
             if (sepPorParc === false) {
                 if(log) console.log("*Não é separação por parcela, limpando dados da cotação");
-                for (const id of globais.idsCotacao) {
-                    let payload = {
+                const criteria = `(num_pdc_temp=="${globais.numPDC_temp}" && Ativo==true)`;
+                const payload = {
                         Ativo: false
                     };
-                    const resp = await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
-                    if(resp.code !== 3000) {
-                        await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-                        throw new Error("Erro ao limpar dados da cotação antiga! Erro: ", JSON.stringify(resp));
-                    }
+                const resp = await executar_apiZoho({ tipo: "atualizar_reg", criterios: criteria,   corpo: payload });
+                if(resp.code !== 3000) {
+                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
+                    throw new Error("Erro ao limpar dados da cotação antiga! Erro: ", JSON.stringify(resp));
                 }
                 globais.cotacaoExiste = false;
     
