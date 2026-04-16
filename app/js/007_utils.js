@@ -1441,6 +1441,7 @@ export function desabilitarCampos() {
     let aTagsParaManterHabilitados = [];
 
     if (['editar_cotacao', 'ajustar_cotacao', 'ajustar_compra', 'lancamentos_provisionados'].some(str => globais.pag?.includes(str))) {
+        if (globais.pag === 'lancamentos_provisionados') document.getElementsByClassName('check-pag-antecipado')[0].style.display = 'none';
         return;
     }
     if(log) console.log("Passou do if inicial!");
