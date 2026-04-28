@@ -1081,7 +1081,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 apoio_assin_inic["Joanna"]={
                     Cargo: "Administrativo",
                     Funcao: "Síndico",
-                    Usuario: "Joanna",
+                    Usuario: "Marcelo",
                     E_mail_usuario: "sindico@tsj2.com.br",
                     IP: "",
                     Data_da_assinatura: "",
