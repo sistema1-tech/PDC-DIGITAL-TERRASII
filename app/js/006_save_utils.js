@@ -673,10 +673,13 @@ export async function saveTableData_V3({status = null, sepPorParc = false, param
                         for (const id of idArquivos) {
 
                             const blob = apoioArquivos[indexFile++];
+                            console.log("blob => ", blob);
+                            //const blob = null;
                             if(log) console.log("id => ", id);
                             
                             for (let i = 0; i < 3; i++) {
                                 await new Promise(resolve => setTimeout(resolve, 500));
+                                
                                 const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
                                 if(log) console.log("respFileUpload => ", respFileUpload);
                                 if (!respFileUpload.code || respFileUpload.code !== 3000) {

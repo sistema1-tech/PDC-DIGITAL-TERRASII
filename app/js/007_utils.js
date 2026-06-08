@@ -1223,7 +1223,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             },
             lancar_pdc_ahreas: { status: "Lanç. ERP", paramsExtraPDC: { Status_Guillaumon: "Lançado no ahreas", num_lanc_ahreas: infoInserida } },
             confirmar_pag_ahreas: { status: "Pag. real.", paramsExtraPDC: { Status_Guillaumon: "Pagamento confirmado", Hora_confirm_pagto: data_atual_formatada} },
-            suspender_pagamento: {status: "Pagamento suspenso"}
+            suspender_pagamento: {status: "Pag. suspenso"}
         };
 
         if (acao in statusMap) {

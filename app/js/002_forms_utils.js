@@ -117,15 +117,11 @@ export async function preencherDadosPDC(data) {
     globais.numPDC = data.Numero_do_PDC;
     globais.perfilResponsavel = data.Perfil_responsavel;
     globais.assinaturas = data.Assinaturas;
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
-    console.log(data.Perfil_responsavel);
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++")
     globais.numSolicPDC = data.num_sol;
     if (data.Perfil_responsavel) {
         globais.perfilResponsavel = data.Perfil_responsavel;
     }
-    //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/Cotacoes_API?criteria=(ID%3D%3D0%20%26%26%20Ativo%3D%3Dtrue)&max_records=1000
-    //https://terrasii.zohocreatorportal.com/creator/v2.1/data/guillaumon/condominio-laranjeiras/report/PDC_Digital_API?criteria=id_temp%3D%3D%22null%22%26%26Status_geral!%3D%22Separado%20em%20parcelas%22)&max_records=1000
+    
     //==========SESSÃO 1==========//
     if (log) console.log("||||||||||||||||||||||||||||||||||||||||");
     if (log) console.log("|||||Preenchendo dados de cabeçalho|||||");
@@ -238,7 +234,6 @@ export async function preencherDadosPDC(data) {
         const qtdParcelas = data.Datas ? data.Datas.length : 0;
 
         data.Datas.forEach((dataObj, index) => {
-            console.log("dataObj => ", dataObj);
             const dataStr = dataObj.Vencimento_previsto || "";
             const valor = dataObj.Valor || "0.0";
             const numPDC = dataObj.Num_PDC_parcela || "";
@@ -952,7 +947,7 @@ export function popularSelects(classificacoes, centrosCusto) {
 }
 
 function preencherLinhaInicialClassificacao() {
-    const log = false;
+    const log = true;
     if (log) console.log("++++++++++PREENCHENDO LINHA INICIAL DE CLASSIFICAÇÃO++++++++++");
 
     let linhasClassificacao = document.querySelectorAll('#form-classificacao .linha-classificacao');
@@ -1342,14 +1337,6 @@ export function calcularValorTotalPagar() {
 //==============================================//
 function anexos_controller() {
     const typesToView = ['JPG', 'JPEG', 'PNG', 'GIF', 'PDF'];
-    const convertTypes = {
-        "vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
-        "vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
-        "vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
-        ".vnd.ms-excel": "xls",
-        "octet-stream": "msg",
-        "plain": "txt",
-    };
 
     const elLibConfig = {
         buttons: [
@@ -1367,10 +1354,41 @@ function anexos_controller() {
             setTimeout(function () {
                 document.body.scrollTop = parseInt(scrollPosition);
             }, 100);
+        },
+        afterShow: function(instance, current) {
+
+            const btn = document.querySelector('.fancybox-button--download');
+
+            if (!btn) return;
+
+            btn.onclick = function(e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const filename =
+                    current.opts.$orig.data('filename');
+
+                const url =
+                    current.opts.$orig.data('src');
+
+                const a = document.createElement('a');
+
+                a.href = url;
+                a.download = filename;
+
+                document.body.appendChild(a);
+
+                a.click();
+
+                a.remove();
+
+                return false;
+            };
         }
     };
 
-    return { typesToView, convertTypes, elLibConfig };
+    return { typesToView, elLibConfig };
 }
 
 //==========FUNÇÃO DE APOIO==========//
@@ -1391,47 +1409,11 @@ function createLoadingSpinner(height = '100px', width = '100px') {
     return loadingSpinnerContainer;
 }
 
-function getItemType(base64String) {
-    const log = false;
-    if(log) console.log("++++++++++PEGANDO TIPO DO ARQUIVO++++++++++");
-    const match = base64String.match(/^data:([^;]+);base64,/);
-    if(log) console.log("match => ", match);
-    const fileTypeMap = {
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "application/xlsx",
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'application/docx',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'application/pptx',
-      'text/plain': 'txt',
-      'octet-stream': 'msg',
-      'application/.vnd.ms-excel': 'xls',
-      // adicione mais tipos de arquivos aqui, se necessário
-    };
-    if(log) console.log("match[1] => ", match?match[1]:null);
-    if(log) console.log("fileTypeMap[match[1]] => ", match?fileTypeMap[match[1]]:null);
-    return match && (fileTypeMap[match[1]] || match[1]);
-}
-
-function getItemData(base64String, fileName) {
-    const log = false;
-    if(log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
-    const fileType = getItemType(base64String);
-    const fileContent = atob(base64String.replace(`data:${base64String.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
-    const fileContentArray = new Uint8Array(fileContent.length);
-    for (let i = 0; i < fileContent.length; i++) {
-        fileContentArray[i] = fileContent.charCodeAt(i);
-    }
-
-    const file = new File([fileContentArray], fileName, {
-        type: fileType,
-        lastModified: new Date().getTime(),
-        size: fileContentArray.length,
-    });
-    if(log) console.log(fileName);
-    return file;
-}
-
 //==========FUNÇÃO PRINCIPAL PARA CRIAR MINIATURA DE ARQUIVO==========//
-async function createFileMiniature({ galeria = null, file = null, origem = null, pode_remover = []}) {
-    const { typesToView, convertTypes, elLibConfig } = anexos_controller();
+async function createFileMiniature({ galeria = null, file = null, origem = null, pode_remover = [] }) {
+    const { typesToView, elLibConfig } = anexos_controller();
+    const name = getFileName(file, origem);
+
     const log = false;
 
     if (log) console.log("++++++++++CRIANDO MINIATURA DE ARQUIVO++++++++++");
@@ -1442,7 +1424,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
-    
+
     //==========ADICIONANDO A GALERIA==========//
     /*galeria.appendChild(file_container);*/
     if (galeria && galeria.children.length > 0) {
@@ -1451,10 +1433,10 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     } else {
         galeria.appendChild(file_container);
     }
+
     //==========LOADING SPINNER==========//
     const loading_spinner = createLoadingSpinner();
     file_container.appendChild(loading_spinner);
-
 
     //==========ELEMENTO PARA ARQUIVO==========//
     let file_field = document.createElement('img');
@@ -1468,145 +1450,201 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     //==========ELEMENTO DO NOME DO ARQUIVO==========//
     const file_name = document.createElement('p');
     file_name.classList.add('file-name');
-
     file_name.style.maxWidth = '100px';
     file_name.style.fontSize = '11pt';
     file_name.style.marginLeft = 'auto';
     file_name.style.marginRight = 'auto';
     file_name.style.wordBreak = 'break-word';
     file_name.style.display = 'none';
+    file_name.textContent = name;
 
-    let name = "";
-    if (origem == 'zoho') {
-        file_field.classList.add('anexo-zoho');
-        console.log("Antes de começar a tratar");
-        ZOHO.CREATOR.UTIL.setImageData(file_field, file);
-        //==========SETANDO ARQUIVO NO ELEMENTO==========//
+    file_field.classList.add(`anexo-${origem}`);
+    await ZOHO.CREATOR.UTIL.setImageData(file_field, file, (resp) => organizarAnexosFancybox(resp))
 
-        await new Promise(resolve => {
-            const checkSrcInterval = setInterval(() => {
-                if (file_field && file_field.src && file_field.src !== "") {
-                    file_field.setAttribute('data-src', file_field.src)
-                    clearInterval(checkSrcInterval);
-                    resolve();
-                }
-            }, 100);
+    function organizarAnexosFancybox(resp) {
+        if (resp?.status != 200) {
+            customModal_V2({
+                tipoAcao: 'alert',
+                titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!",
+                mensagem: `<p>${resp}</p>`,
+                confirmText: 'Ok!'
+            });
+            file_container.remove();
+            return;
+        }
+        const ap_file = file;
+        file = getItemData(file_field.src, name);
+
+        if(origem == 'zoho'){
+            globais.arquivosExistentes[file_field.dataset.file_index] = file;
+        }else if(origem == 'novo'){
+            globais.arquivosNovos[file_field.dataset.file_index] = file;
+        }
+
+        const fileSize = file.size;
+        const blobUrl = URL.createObjectURL(file);
+        const fileType = file.type.toUpperCase();
+
+        file_field.download = `${name}`;
+        file_field.setAttribute('data-src', file_field.src);
+        file_field.setAttribute('data-filename', name);
+
+        if (typesToView.includes(fileType) && fileSize < 20*1048576)
+        {
+            if (fileType === 'PDF') 
+            {
+                file_field.setAttribute('data-type', 'iframe');
+                file_field.src = `https://placehold.co/100?text=${fileType}`;
+            }
+        }else
+        {
+            const clone_file_field = file_field.cloneNode(true);
+            clone_file_field.style.width = '100px';
+            clone_file_field.style.height = '100px';
+            clone_file_field.style.display = 'block';
+            clone_file_field.removeAttribute('data-fancybox');
+            //==========CRIANDO UM PLACEHOLDER PARA OS ARQUIVOS QUE NÃO POSSUEM MINIATURAS==========//
+            
+            file_field = document.createElement('a');
+            file_field.download = name;
+            file_field.href = `${clone_file_field.src}`;
+            clone_file_field.src = `https://placehold.co/100?text=${fileType}`;
+            file_field.appendChild(clone_file_field);
+        }
+
+        //=====BAIXAR ARQUIVO=====//
+        
+        const opcaoDownload = document.createElement('a');
+        opcaoDownload.href = `${blobUrl}`; // Define o caminho para o arquivo que deseja baixar
+        opcaoDownload.textContent = 'Baixar arquivo'; // Define o texto da opção de menu
+        opcaoDownload.download = name;
+
+        file_field.addEventListener('contextmenu', function (event) {
+            event.preventDefault(); // Previne o comportamento padrão do botão direito do mouse
+
+            //const url = `${blobUrl}`;
+            //console.log("URL para download => ", url);
+            //ZOHO.CREATOR.UTIL.navigateParentURL({action:"open", url: url});
+            document.body.appendChild(opcaoDownload);
+            opcaoDownload.click(); // Simula um clique no link para iniciar o download
+            document.body.removeChild(opcaoDownload); // Remove a opção de menu do contexto do mouse
         });
         
-        //==========SETANDO NOME DO ARQUIVO==========//
-        const ap_name = file.split('?filepath=')[1];
-        name = ap_name.slice(ap_name.indexOf('_') + 1, ap_name.length);
+        //==========BOTÃO REMOVER ARQUIVO==========//
+        let remove_btn = null;
+        const pageIncludesRemover= pode_remover.some(removerOption => globais.pag.includes(removerOption));
+        if(pageIncludesRemover)
+        {
+            remove_btn = document.createElement('button');
+            remove_btn.classList.add('remove-anexo-btn', 'close-icon');
+            remove_btn.style.display = 'none';
+            if (log) console.log("remove_btn => ", remove_btn);
+        
+            remove_btn.addEventListener('click', function () {
+                if(origem == "zoho")
+                {
+                    globais.arquivosRemovidos.push(ap_file);
+                    delete globais.arquivosExistentes[file_field.dataset.file_index];
+                }else
+                {
+                    delete globais.arquivosNovos[file_field.dataset.file_index];
+                }
 
-        globais.arquivosExistentes[file_field.dataset.file_index] = getItemData(file_field.src, name);
-    } else if (origem == 'novo') {
-        file_field.classList.add('anexo-novo');
-        const partes = file.name.split('.');
-        const extensao = partes.pop();
-        const nomeBase = partes.join('.');
-        name = nomeBase.replace(/[^a-zA-Z0-9]/g, '_') + '.' + extensao;
-        file = new File([file], name, { type: file.type, lastModified: file.lastModified });
+                file_container.remove();
+            })
+            file_container.appendChild(remove_btn);
 
-        const blobUrl = URL.createObjectURL(file);
-        file_field.setAttribute('data-src', blobUrl);
-        globais.arquivosNovos[file_field.dataset.file_index] = file;
-
-    }
-
-    file_name.textContent = name;
-    const fileSize = (base64Size(file_field.src) / (1024 * 1024)).toFixed(2);
-    const fileType = convertTypes[name.split('.').pop().toLowerCase()] || name.split('.').pop().toUpperCase() || '';
-
-    if (typesToView.includes(fileType) && fileSize < 20) {
-
-        if (fileType === 'PDF') {
-            file_field.setAttribute('data-type', 'iframe');
-            file_field.setAttribute('data-download-url', `${initUrl}${file}`);
-            file_field.src = `https://placehold.co/100?text=${fileType}`;
-        } else {
-            file_field.setAttribute('data-download-src', file_field.src);
+            remove_btn.style.display = 'block';
         }
-    } else {
-        const clone_file_field = file_field.cloneNode(true);
-        clone_file_field.style.width = '100px';
-        clone_file_field.style.height = '100px';
-        clone_file_field.style.display = 'block';
-        clone_file_field.removeAttribute('data-fancybox');
 
-        //==========CRIANDO UM PLACEHOLDER PARA OS ARQUIVOS QUE NÃO POSSUEM MINIATURAS==========//
-        clone_file_field.src = `https://placehold.co/100?text=${fileType}`;
-        file_field = document.createElement('a');
-        file_field.href = `${initUrl}${file}`;
-        file_field.download = `${initUrl}${file}`;
-        file_field.appendChild(clone_file_field);
-    }
+        //==========CONSOLIDA ELEMENTOS==========//
+        file_container.appendChild(file_field);
+        file_container.appendChild(file_name);
+        //==========APLICA ALGUNS ESTILOS INICIAIS==========//
+        file_field.style.display = 'block';
+        file_name.style.display = 'block';
+        file_container.style.display = 'block';
 
-    //==========BOTÃO REMOVER ARQUIVO==========//
-    let remove_btn = null;
-    const pageIncludesRemover= pode_remover.some(removerOption => globais.pag.includes(removerOption));
-    if(pageIncludesRemover)
-    {
-        remove_btn = document.createElement('button');
-        remove_btn.classList.add('remove-anexo-btn', 'close-icon');
-        remove_btn.style.display = 'none';
-        if (log) console.log("remove_btn => ", remove_btn);
-    
-        remove_btn.addEventListener('click', function () {
-            if(typeof file === 'string' && file.startsWith('/api/v2.1/'))
-            {
-                globais.arquivosRemovidos.push(file);
-                delete globais.arquivosExistentes[file_field.dataset.file_index];
-            }else
-            {
-                delete globais.arquivosNovos[file_field.dataset.file_index];
+        loading_spinner.remove();
+
+        const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
+        if (mensagemAnexos) {
+            mensagemAnexos.remove();
+        }
+
+        function getItemData(fileObj, fileName) {
+            const log = false;
+            if (log) console.log("++++++++++PEGANDO DADOS DO ARQUIVO++++++++++");
+
+            let ap_file_content, ap_file_type, ap_last_mod, ap_file_size;
+
+            ap_file_type = pegarExtensao(fileName);
+            if (typeof fileObj === "string") {
+                const a = atob(fileObj.replace(`data:${fileObj.match(/^data:([^;]+);base64,/)[1]};base64,`, ''));
+                ap_file_content = new Uint8Array(a.length);
+                for (let i = 0; i < ap_file_content.length; i++) {
+                    ap_file_content[i] = a.charCodeAt(i);
+                }
+                ap_last_mod = new Date().getTime();
+                ap_file_size = ap_file_content.length/1024/1024
+            } else {
+                ap_file_content = fileObj;
+                ap_last_mod = fileObj.lastModified;
+                ap_file_size = fileObj.lenght;
             }
 
-            file_container.remove();
-        })
-        file_container.appendChild(remove_btn);
+            const file = new File([ap_file_content], fileName, {
+                type: ap_file_type,
+                lastModified: new Date().getTime(),
+                size: ap_file_size,
+            });
+            function pegarExtensao(nomeArquivo) {
+                const ultimoPonto = nomeArquivo.lastIndexOf(".");
+                if (ultimoPonto <= 0) {
+                    return "";
+                }
 
-        remove_btn.style.display = 'block';
+                return nomeArquivo.slice(ultimoPonto + 1);
+            }
+
+            return file;
+        }
+
+        $('[data-fancybox="gallery"]').fancybox(elLibConfig);
+        setTimeout(() => {
+            setTimeout(() => {
+                const disabledElements = document.querySelectorAll('.wait-file');
+                disabledElements.forEach(el => el.classList.remove('wait-file'));
+            }, 1000);
+        }, 0);
     }
 
-    //==========EVENTOS==========//
-    //=====BAIXAR ARQUIVO=====//
-    const opcaoDownload = document.createElement('a');
-    opcaoDownload.href = `${initUrl}${file}`; // Define o caminho para o arquivo que deseja baixar
-    opcaoDownload.textContent = 'Baixar arquivo'; // Define o texto da opção de menu
-    opcaoDownload.download = name;
-
-    file_field.addEventListener('contextmenu', function (event) {
-        event.preventDefault(); // Previne o comportamento padrão do botão direito do mouse
-
-        document.body.appendChild(opcaoDownload);
-        opcaoDownload.click(); // Simula um clique no link para iniciar o download
-        document.body.removeChild(opcaoDownload); // Remove a opção de menu do contexto do mouse
-    });
-
-    //==========CONSOLIDA ELEMENTOS==========//
-    file_container.appendChild(file_field);
-    file_container.appendChild(file_name);
-    //==========APLICA ALGUNS ESTILOS INICIAIS==========//
-    file_field.style.display = 'block';
-    file_name.style.display = 'block';
-    file_container.style.display = 'block';
-
-    return {loading_spinner };
+    function getFileName(file, origin) {
+        if (origin === 'zoho') {
+            const ap_name = file.split('?filepath=')[1];
+            return ap_name.slice(ap_name.indexOf('_') + 1, ap_name.length);
+        } else if (origin === 'novo') {
+            const partes = file.name.split('.');
+            const extensao = partes.pop();
+            const nomeBase = partes.join('.');
+            return nomeBase.replace(/[^a-zA-Z0-9]/g, '_') + '.' + extensao;
+        }
+    }
 }
 
 export async function preencherListaAnexos(anexos) {
-    const log = false;
+    const log = true;
     if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
 
     //==========VARIÁVEIS DE APOIO==========//
-    const { typesToView, convertTypes, elLibConfig } = anexos_controller();
-    const pode_alterar =["criar_cotacao", "editar_cotacao","criar_numero_de_PDC", "confirmar_compra", "receber_compra", "checagem_final", "lancamentos_provisionados"];
+    const { typesToView, elLibConfig } = anexos_controller();
+    const pode_alterar = ["criar_cotacao", "editar_cotacao", "criar_numero_de_PDC", "confirmar_compra", "receber_compra", "ajustar_compra_compras", "checagem_final"];
 
     //==========PROCURA E INSTANCIA ELEMENTO DA GALERIA==========//
     const galleryElement = document.getElementById('gallery');
     if (!galleryElement) return console.error('Elemento gallery não encontrado');
     galleryElement.innerHTML = '';
-    
-    //==========PRENCHE A GALERIA COM OS ANEXOS==========//
+
     if (anexos && anexos.length > 0) {
         const promises = [];
         for (const anexo of anexos) {
@@ -1614,18 +1652,13 @@ export async function preencherListaAnexos(anexos) {
 
                 //==========VARIÁVEIS DE APOIO==========//
                 const newAnexo = anexo.Arquivo;
-
                 //==========NOVO ELEMENTO DA GALERIA==========//
-                let {loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: newAnexo, origem: 'zoho', pode_remover: pode_alterar });
-                loading_spinner.remove();
+                await createFileMiniature({ galeria: galleryElement, file: newAnexo, origem: 'zoho', pode_remover: pode_alterar });
                 resolve();
-
             }));
 
         }
-
-        await Promise.all(promises);
-
+        Promise.all(promises);
     } else {
         //==========CRIANDO MENSAGEM DE NÃO HÁ ANEXOS==========//
         const pContainer = document.createElement('div');
@@ -1641,77 +1674,59 @@ export async function preencherListaAnexos(anexos) {
         p.textContent = 'Não há anexos...';
         pContainer.appendChild(p);
         galleryElement.appendChild(pContainer);
-
     }
 
-    //const pageIncludesAlterar = pode_alterar.some(alterarOption => globais.pag.includes(alterarOption));
-    console.log("pode alterar anexos");
-    const btnContainer = document.createElement('div');
-    btnContainer.classList.add('btn-container', 'gallery-item', 'add-btn-container-gallery');
+    const pageIncludesAlterar = pode_alterar.some(alterarOption => globais.pag.includes(alterarOption));
+    if (pageIncludesAlterar) {
+        const btnContainer = document.createElement('div');
+        btnContainer.classList.add('btn-container', 'gallery-item', 'add-btn-container-gallery');
+        btnContainer.style.display= 'flex';
+        btnContainer.style.height= '-webkit-fill-available';
 
-    const botaoAdicionar = document.createElement('a');
-    botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
-    botaoAdicionar.style.padding = '10px 20px';
-    botaoAdicionar.style.fontSize = '60px';
-    botaoAdicionar.style.cursor = 'pointer';
-    botaoAdicionar.style.borderLeft = '1px solid transparent';
-    botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, gray, gray, gray, gray, gray, gray, transparent) 1';
-    
-    // Cria um input do tipo file, escondido
-    const inputFile = document.createElement('input');
-    inputFile.type = 'file';
+        const botaoAdicionar = document.createElement('a');
+        botaoAdicionar.classList.add('botao-adicionar', 'add-btn', 'add-icon', 'gallery-item');
+        botaoAdicionar.style.padding = '10px 20px';
+        botaoAdicionar.style.fontSize = '60px';
+        botaoAdicionar.style.cursor = 'pointer';
+        botaoAdicionar.style.borderLeft = '1px solid transparent';
+        botaoAdicionar.style.borderImage = 'linear-gradient(to bottom, transparent, transparent, gray, gray, gray, gray, transparent, transparent) 1';
 
-    inputFile.style.display = 'none';
+        // Cria um input do tipo file, escondido
+        const inputFile = document.createElement('input');
+        inputFile.type = 'file';
+        inputFile.multiple = true;
 
-    // Evento para abrir o seletor de arquivos ao clicar no botão
-    botaoAdicionar.addEventListener('click', () => {
-        inputFile.disabled = false;
-        inputFile.readOnly = false;
-        inputFile.click();
-    });
+        inputFile.style.display = 'none';
 
-    // Evento de mudança no input, para processar o arquivo selecionado
-    inputFile.addEventListener('change', async (event) => {
-        const files = event.target.files;
-        if (files.length > 0) {
-            const file = files[0];
-            //==========NOVO ELEMENTO DA GALERIA==========//
-            let { loading_spinner } = await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo', pode_remover: pode_alterar });
+        // Evento de mudança no input, para processar o arquivo selecionado
+        let temp_file_container = null;
 
-            loading_spinner.remove();
+        // Evento para abrir o seletor de arquivos ao clicar no botão
+        botaoAdicionar.addEventListener('click', () => {
+            inputFile.disabled = false;
+            inputFile.readOnly = false;
+            inputFile.click();
+        });
 
-            // Remove a mensagem de anexos
-            const mensagemAnexos = document.querySelector('.mensagem-anexos-container');
-            if (mensagemAnexos) {
-                mensagemAnexos.remove();
-            }
+        inputFile.addEventListener('change', async (event) => {
             
-            setTimeout(() => {
-                setTimeout(() => {
-                    const disabledElements = document.querySelectorAll('.wait-file');
-                    console.log(JSON.stringify(disabledElements));
-                    disabledElements.forEach(el => el.classList.remove('wait-file'));
-                }, 1000);
-            }, 0);
-        }
-        inputFile.value = ''; // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente, se necessário
-    });
-    //Adiciona o botão e o input ao DOM;
-    btnContainer.appendChild(inputFile);
-    btnContainer.appendChild(botaoAdicionar);
-    galleryElement.appendChild(btnContainer);
+            const files = event.target.files;
+            if (files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    //==========NOVO ELEMENTO DA GALERIA==========//
+                    await createFileMiniature({ galeria: galleryElement, file: file, origem: 'novo', pode_remover: pode_alterar });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-
-    //==========INICIANDO O FANCYBOX==========//
-    await $('[data-fancybox="gallery"]').fancybox(elLibConfig);
-
-    setTimeout(() => {
-        setTimeout(() => {
-            const disabledElements = document.querySelectorAll('.wait-file');
-            console.log(JSON.stringify(disabledElements));
-            disabledElements.forEach(el => el.classList.remove('wait-file'));
-        }, 1000);
-    }, 0);
+        //Adiciona o botão e o input ao DOM;
+        btnContainer.appendChild(inputFile);
+        btnContainer.appendChild(botaoAdicionar);
+        galleryElement.appendChild(btnContainer);
+    }
 }
 
 export async function preencherListaAnexosV2(anexos) {
@@ -1862,9 +1877,7 @@ export async function preencherListaAnexosV2(anexos) {
 
                         newLoadingSpinner.remove();
 
-
                         // Adiciona um evento de clique ao elemento
-                        console.log('Adicinoando botão direito');
                         const opcaoDownload = document.createElement('a');
                         opcaoDownload.href = `${initUrl}${newAnexo}`; // Define o caminho para o arquivo que deseja baixar
                         opcaoDownload.textContent = 'Baixar arquivo'; // Define o texto da opção de menu
@@ -1872,14 +1885,12 @@ export async function preencherListaAnexosV2(anexos) {
 
                         fileElement.addEventListener('contextmenu', function(event) {
                             event.preventDefault(); // Previne o comportamento padrão do botão direito do mouse
-                            console.log('Botão direito clicado');
 
                             // Adiciona a opção de menu ao contexto do mouse
                             document.body.appendChild(opcaoDownload);
                             opcaoDownload.click(); // Simula um clique no link para iniciar o download
                             document.body.removeChild(opcaoDownload); // Remove a opção de menu do contexto do mouse
                         });
-                        console.log('Arquivo adicionado');
 
                         clearInterval(checkSrcInterval);
                         resolve();
@@ -2000,7 +2011,6 @@ export async function preencherListaAnexosV2(anexos) {
             setTimeout(() => {
                 setTimeout(() => {
                     const disabledElements = document.querySelectorAll('.wait-file');
-                    console.log(JSON.stringify(disabledElements));
                     disabledElements.forEach(el => el.classList.remove('wait-file'));
                 }, 1000);
             }, 0);
@@ -2018,7 +2028,6 @@ export async function preencherListaAnexosV2(anexos) {
     setTimeout(() => {
         setTimeout(() => {
             const disabledElements = document.querySelectorAll('.wait-file');
-            console.log(JSON.stringify(disabledElements));
             disabledElements.forEach(el => el.classList.remove('wait-file'));
         }, 1000);
     }, 0);

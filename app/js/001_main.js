@@ -27,7 +27,7 @@ import {
     setupEventListeners,
     customModal_V2
 
-} from './007_utils.js'
+} from './007_utils.js';
 import {globais} from './999_config.js';
 //import {enviarParaPaybox} from './006_save_utils.js'
 

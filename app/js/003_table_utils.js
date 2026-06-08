@@ -1149,7 +1149,7 @@ function filtrarCot(data) {
         data.reduce((map, item) => {
             if (ids_forns.length > 0) {
                 if (log) console.log("Tem fornecedores");
-                if (item.Valor_unitario == null || item.Quantidade == null || item.Valor_unitario <= 0 || item.Quantidade <= 0) {
+                if (item.Valor_unitario == null || item.Quantidade == null || item.Quantidade <= 0 || item.id_fornecedor === "") {
                     if (log) console.log("Item com valor inválido => ", item);
                     return map;
                 }
