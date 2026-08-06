@@ -1078,10 +1078,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             
             if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 800)
             {
-                apoio_assin_inic["Joanna"]={
+                apoio_assin_inic["Mario"]={
                     Cargo: "Administrativo",
                     Funcao: "Síndico",
-                    Usuario: "Marcelo",
+                    Usuario: "Mario",
                     E_mail_usuario: "sindico@tsj2.com.br",
                     IP: "",
                     Data_da_assinatura: "",
@@ -1470,6 +1470,9 @@ export function desabilitarCampos() {
             "Datas",
             "Valor"
         ];
+    }else
+    {
+        aTagsParaManterHabilitados = ["gallery-item"];
     }
 
     // Seleciona todos os elementos de input, textarea e select

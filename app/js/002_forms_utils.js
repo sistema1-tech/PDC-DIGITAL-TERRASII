@@ -1638,7 +1638,7 @@ export async function preencherListaAnexos(anexos) {
 
     //==========VARIÁVEIS DE APOIO==========//
     const { typesToView, elLibConfig } = anexos_controller();
-    const pode_alterar = ["criar_cotacao", "editar_cotacao", "criar_numero_de_PDC", "confirmar_compra", "receber_compra", "ajustar_compra_compras", "checagem_final"];
+    const pode_alterar =["criar_cotacao", "editar_cotacao","criar_numero_de_PDC", "confirmar_compra", "receber_compra", "checagem_final", "lancamentos_provisionados", "autorizar_pagamento_subsindico", "confirmar_todas_as_assinaturas", "ver_PDC_c_ret"];
 
     //==========PROCURA E INSTANCIA ELEMENTO DA GALERIA==========//
     const galleryElement = document.getElementById('gallery');
