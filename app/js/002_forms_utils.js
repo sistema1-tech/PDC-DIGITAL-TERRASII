@@ -600,7 +600,7 @@ function atualizarLabels() {
 export function adicionarLinhaClassificacao() {
 
     const log = false;
-    if(log) console.log("++++++++++ADICIONANDO LINHA DE CLASSIFICAÇÃO++++++++++");
+    if (log) console.log("++++++++++ADICIONANDO LINHA DE CLASSIFICAÇÃO++++++++++");
 
     const classFields = document.getElementById('camposClassificacao');
 
@@ -610,11 +610,10 @@ export function adicionarLinhaClassificacao() {
 
     //====================Classe para criar campos de classificação====================\\
     class ClassContField {
-        constructor({ placeholder = null, inputType, inputName, id = null, class_name = null, options = null }) {
+        constructor({ placeholder = null, inputType, inputName, id = null, options = null }) {
             this.inputType = inputType;
             this.inputName = inputName;
             this.id = id;
-            this.class_name = class_name;
             this.options = options;
             this.placeholder = placeholder;
         }
@@ -623,7 +622,7 @@ export function adicionarLinhaClassificacao() {
             //==========Criando o container geral do campo==========//
             const field = document.createElement('div');
             field.id = this.id;
-            field.classList.add('campo', 'dp-field-master-container', this.class_name);
+            field.classList.add('campo', 'dp-field-master-container');
 
             const input = document.createElement('input');
             input.type = this.inputType;
@@ -647,6 +646,13 @@ export function adicionarLinhaClassificacao() {
                 });
             }
 
+            function restaurarOpcoes(optContainer) {
+                const options = optContainer.querySelectorAll('.dropdown-opcao');
+                options.forEach((option) => {
+                    option.style.display = '';
+                });
+            }
+
             //==========Criando o campo de pesquisa e as opções==========//
             if (this.inputType === 'select') {
 
@@ -660,22 +666,17 @@ export function adicionarLinhaClassificacao() {
 
                 input.addEventListener('blur', () => {
                     const valorDigitado = input.value;
-                    const opcoes = this.options.map(([value, text]) => text);
-                    if (!opcoes.includes(valorDigitado)) {
+                    const opcaoFinal = this.options.find(([, text]) => text === valorDigitado);
+
+                    if (!opcaoFinal) {
                         input.value = '';
-                        // Adiciona um atraso de 100ms antes de restaurar a visibilidade das opções
-                        setTimeout(() => {
-                            const optContainer = field.querySelector('.dp-field-opt-container');
-                            const options = optContainer.querySelectorAll('.dropdown-opcao');
-                            options.forEach((option) => {
-                                option.style.display = '';
-                            });
-                        }, 100);
-                    }else{
-                        const opcaoFinal = this.options.find(([value, text]) => text === valorDigitado);
+                        delete input.dataset.id_opcao;
+                    } else {
                         input.dataset.id_opcao = opcaoFinal[0];
-                        optContainer.style.display = 'none';
                     }
+
+                    optContainer.style.display = 'none';
+                    restaurarOpcoes(optContainer);
                 });
 
                 //=====Adicionando evento para alterar visualização container das opções + pesquisa=====//
@@ -684,8 +685,11 @@ export function adicionarLinhaClassificacao() {
                 });
 
                 input.addEventListener('input', () => {
+                    // Ao alterar o texto, a seleção anterior deixa de ser válida.
+                    delete input.dataset.id_opcao;
+                    optContainer.style.display = 'block';
                     optFilter(input, optContainer);
-                })
+                });
 
                 document.addEventListener('click', (ev) => {
                     if (!optContainer.contains(ev.target) && !input.contains(ev.target)) {
@@ -695,18 +699,28 @@ export function adicionarLinhaClassificacao() {
                 //Criando o restante das opções//
                 this.options.forEach(([value, text]) => {
                     const option = document.createElement('div');
-                    
+
                     option.classList.add(`option-${this.inputName}`, 'dropdown-opcao');
                     option.textContent = text;
                     option.dataset.id_opcao = value;
                     optContainer.appendChild(option);
 
-                    option.onclick = (ev) => {
-                        const trgt = ev.target;
-                        input.value = trgt.textContent;
-                        input.dataset.id_opcao = trgt.dataset.id_opcao;
+                    const selecionarOpcao = () => {
+                        input.value = option.textContent;
+                        input.dataset.id_opcao = option.dataset.id_opcao;
                         optContainer.style.display = 'none';
-                    }
+                        restaurarOpcoes(optContainer);
+                    };
+
+                    // pointerdown acontece antes do blur do input. Isso evita que
+                    // a validação apague o texto antes de o click ser concluído.
+                    option.addEventListener('pointerdown', (ev) => {
+                        ev.preventDefault();
+                        selecionarOpcao();
+                    });
+
+                    // Mantém compatibilidade com ativações que não gerem pointerdown.
+                    option.addEventListener('click', selecionarOpcao);
                 });
             } else {
                 if (this.inputType === 'number') {
@@ -740,31 +754,26 @@ export function adicionarLinhaClassificacao() {
         id,
         `${dados.contaReduzida} - ${dados.nomeClasse} - ${dados.codigoClasse}`
     ]);
-    const accCenterOpt = Array.from(globais.baseCentrosCusto.entries()).map(([id, dados]) => [
-        id,
-        `${dados.codigoCentro} - ${dados.nomeCentro}`
-    ]);
 
     const fieldsToCreate = [
         { placeholder: 'Conta...', inputType: 'select', inputName: 'Conta_a_debitar', id: 'conta', options: accOptions },
-        { placeholder: 'Centro Custo...', inputType: 'select', inputName: 'Centro_de_custo', id: 'centro', class_name: 'hidden',options: accCenterOpt },
         { placeholder: 'Classe Op...', inputType: 'select', inputName: 'Classe_operacional', id: 'classe', options: opClassOpt },
         { placeholder: 'R$ 0,00', inputType: 'number', inputName: 'Valor', id: 'valor' }
     ];
 
     fieldsToCreate.forEach((field) => {
-        newRowClass.appendChild(new ClassContField({ placeholder: field.placeholder, inputType: field.inputType, inputName: field.inputName, id: field.id, class_name: field.class_name || null,options: field.options }).create());
+        newRowClass.appendChild(new ClassContField({ placeholder: field.placeholder, inputType: field.inputType, inputName: field.inputName, id: field.id, options: field.options }).create());
     });
 
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.classList.add('remover-classificacao', 'close-icon', 'remove-btn', 'transl-because-title');
-    
+
     removeBtn.addEventListener('click', () => removerLinhaClassificacao(removeBtn));
 
     newRowClass.appendChild(removeBtn);
     classFields.appendChild(newRowClass);
-    if(log) console.log("----------LINHA DE CLASSIFICAÇÃO ADICIONADA----------");
+    if (log) console.log("----------LINHA DE CLASSIFICAÇÃO ADICIONADA----------");
 }
 
 /**
@@ -814,17 +823,14 @@ function preencherDadosClassificacao(classificacoes) {
         // Extrai os valores do display_value
         if(log) console.log("classificacao => ", classificacao);
         const conta = classificacao.Conta_a_debitar || "";
-        const centro = classificacao.Centro_de_custo.Codigo || "";
         const classe = classificacao.Classe_operacional.Codigo || "";
         const valor = classificacao.Valor || "";
         const id = classificacao.ID || "";
 
         if(log) console.log("conta => ", conta);
-        if(log) console.log("centro => ", centro);
         if(log) console.log("classe => ", classe);
         if(log) console.log("valor => ", valor);
         if(log) console.log("id => ", id);
-        //const [conta, centro, classe, valor, id] = classificacao.display_value.split('|SPLITKEY|');
 
         // Adiciona uma nova linha
         adicionarLinhaClassificacao();
@@ -834,20 +840,11 @@ function preencherDadosClassificacao(classificacoes) {
 
         // Preenche os campos
         const selectConta = ultimaLinha.querySelector('.dp-field-input[name="Conta_a_debitar"]');
-        const selectCentro = ultimaLinha.querySelector('.dp-field-input[name="Centro_de_custo"]');
         const selectClasse = ultimaLinha.querySelector('.dp-field-input[name="Classe_operacional"]');
         const inputValor = ultimaLinha.querySelector('input[name="Valor"]');
 
         // Extrai apenas o código antes do hífen para fazer o match
         const codigoClasse = classe.split(' - ')[0].trim();
-        const codigoCentro = centro.split(' - ')[0].trim();
-
-        // Encontra e seleciona a opção correta em cada select
-        Array.from(selectCentro.parentNode.querySelectorAll('.dropdown-opcao')).forEach(option => {
-            if (option.textContent.startsWith(codigoCentro) && codigoCentro !== '') {
-                option.click();
-            }
-        });
 
         Array.from(selectClasse.parentNode.querySelectorAll('.dropdown-opcao')).forEach(option => {
             if (option.textContent.endsWith(codigoClasse) && codigoClasse !== '') {
@@ -873,10 +870,9 @@ function preencherDadosClassificacao(classificacoes) {
  * 
  * @function initClassificacaoForm
  * @param {Map} classificacoes - Map contendo as classificações operacionais
- * @param {Map} centrosCusto - Map contendo os centros de custo
  * @returns {void}
  */
-export function initClassificacaoForm(classificacoes, centrosCusto) {
+export function initClassificacaoForm(classificacoes) {
 
     // Oculta mensagem de carregamento
     const loadingMessage = document.getElementById('loading-classificacao');
@@ -897,7 +893,7 @@ export function initClassificacaoForm(classificacoes, centrosCusto) {
     form.style.display = 'block';
 
     // Popula os selects
-    popularSelects(classificacoes, centrosCusto);
+    popularSelects(classificacoes);
 
     // Mostra o primeiro conjunto de campos de classificação
     const camposClassificacao = document.getElementById('camposClassificacao');
@@ -905,33 +901,20 @@ export function initClassificacaoForm(classificacoes, centrosCusto) {
 }
 
 /**
- * Popula os selects de classificação contábil e centro de custo
+ * Popula os selects de classificação contábil
  * 
  * @function popularSelects
  * @param {Map} classificacoes - Map contendo as classificações operacionais
- * @param {Map} centrosCusto - Map contendo os centros de custo
  * @returns {void}
  */
-export function popularSelects(classificacoes, centrosCusto) {
+export function popularSelects(classificacoes) {
     // Busca todos os conjuntos de selects dentro do form-classificacao
     const classificacaoForm = document.getElementById('form-classificacao');
     const todasClassificacoes = classificacaoForm.querySelectorAll('.linha-classificacao');
 
     todasClassificacoes.forEach(container => {
         // Seleciona os selects dentro de cada container de classificação
-        const selectCentro = container.querySelector('select[name="Centro_de_custo"]');
         const selectClassificacao = container.querySelector('select[name="Classe_operacional"]');
-
-        // Popula select de centros de custo
-        if (selectCentro) {
-            selectCentro.innerHTML = '<option value="" disabled selected>Selecione...</option>';
-            centrosCusto.forEach((dados, id) => {
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = `${dados.codigoCentro} - ${dados.nomeCentro}`;
-                selectCentro.appendChild(option);
-            });
-        }
 
         // Popula select de classificações
         if (selectClassificacao) {
