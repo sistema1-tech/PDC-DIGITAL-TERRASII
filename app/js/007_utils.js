@@ -53,51 +53,124 @@ export function setupEventListeners() {
  * - buscarFornecedores: Popula o Map baseFornecedores
  * - buscarRecursivamente: Busca registros recursivamente com paginação
  */
-export async function executar_apiZoho({ tipo = null, criterios = null, ID = null, corpo = null, nomeR = null, nomeF = null } = {}) {
+export async function executar_apiZoho({
+    tipo = null,
+    criterios = null,
+    ID = null,
+    corpo = null,
+    nomeR = null,
+    nomeF = null,
+    tentativas = null
+} = {}) {
     try {
-        const log = true;
+        const log = false;
         nomeR = nomeR ? nomeR : globais.nomeRelCot;
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
-        let recOps = await ZOHO.CREATOR.DATA;
+        let recOps = globalThis.ZOHO?.CREATOR?.DATA;
+
+        if (!recOps) {
+            throw new Error('O SDK do Zoho Creator ainda não está disponível.');
+        }
+
+        const tiposIdempotentes = new Set(['busc_reg', 'busc_reg_recursivo', 'atualizar_reg', 'deletar_reg', 'subir_arq']);
+        const totalTentativas = tentativas ?? (tiposIdempotentes.has(tipo) ? 3 : 1);
+        const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        function respostaTransitoria(resp) {
+            const status = Number(resp?.status || resp?.response?.status || 0);
+            const code = Number(resp?.code || 0);
+            return status === 408 || status === 429 || status >= 500 || code === 429 || code >= 5000;
+        }
+
+        function erroTransitorio(erro) {
+            const status = Number(erro?.status || erro?.response?.status || 0);
+            if (status) return status === 408 || status === 429 || status >= 500;
+
+            const responseText = erro?.responseText || erro?.response?.responseText;
+            if (typeof responseText === 'string') {
+                try {
+                    const code = Number(JSON.parse(responseText)?.code || 0);
+                    if ([3100, 9280].includes(code)) return false;
+                    if (code) return code === 429 || code >= 5000;
+                } catch (_) {
+                    // Sem status/código confiável, trata como falha de rede.
+                }
+            }
+            return true;
+        }
+
+        async function executarComRetry(operacao) {
+            let ultimoErro;
+
+            for (let tentativa = 1; tentativa <= totalTentativas; tentativa++) {
+                try {
+                    const resp = await operacao();
+                    if (!respostaTransitoria(resp) || tentativa === totalTentativas) {
+                        return resp;
+                    }
+                    ultimoErro = resp;
+                } catch (erro) {
+                    ultimoErro = erro;
+                    if (tentativa === totalTentativas || !erroTransitorio(erro)) throw erro;
+                }
+
+                await esperar(300 * (2 ** (tentativa - 1)) + Math.floor(Math.random() * 150));
+            }
+
+            return ultimoErro;
+        }
+
+        function normalizarCorpo(valor) {
+            if (typeof valor !== 'string') return valor;
+
+            try {
+                return JSON.parse(valor);
+            } catch (_) {
+                return valor;
+            }
+        }
 
         // Função de criar registro
         async function criar_reg(ddsCriacao) {
 
-            ddsCriacao = { "data": ddsCriacao };
+            ddsCriacao = { "data": normalizarCorpo(ddsCriacao) };
             if (log) console.log("Criando registro com dados => ", JSON.stringify(ddsCriacao, null, 2));
             const config = {
                 app_name: globais.nomeApp,
                 form_name: nomeF,
                 payload: ddsCriacao
             };
-            const resp = await recOps.addRecords(config);
+            // Inclusões não são repetidas automaticamente aqui: se a resposta se
+            // perder depois da gravação, o chamador precisa reconciliar pela chave
+            // de negócio antes de tentar novamente.
+            const resp = await executarComRetry(() => recOps.addRecords(config));
             return resp;
         }
 
         // Função de atualizar registro
         async function atualizar_reg(nomeR, ID, criterios, corpo) {
-            const data = { 
+            const data = {
                 "criteria": criterios,
-                "data": corpo };
+                "data": corpo
+            };
             if (log) console.log("Atualizando registro ID => ", ID, " com dados => ", JSON.stringify(data, null, 2));
 
-            if(ID !== null)
-            {
-                return await recOps.updateRecordById({
+            if (ID !== null) {
+                return await executarComRetry(() => recOps.updateRecordById({
                     app_name: globais.nomeApp,
                     report_name: nomeR,
                     id: ID,
                     payload: data
-                });
+                }));
             }
 
 
-            return await recOps.updateRecords({
+            return await executarComRetry(() => recOps.updateRecords({
                 app_name: globais.nomeApp,
                 report_name: nomeR,
                 payload: data
-            });
-            
+            }));
+
         }
 
         async function buscar_reg(nomeR, criterio) {
@@ -112,13 +185,22 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                     record_cursor: cursor,
                     max_records: 1000
                 };
-                const resp  = await recOps.getRecords(config);
-                //Verifica possíveis erros
-                if (!resp || resp.code !== 3000 || !Array.isArray(resp.data) || resp.data.length === 0) {
+                const resp = await executarComRetry(() => recOps.getRecords(config));
+                // Não transforma falha de servidor em "nenhum registro": isso é
+                // essencial para a reconciliação idempotente antes de uma criação.
+                if (!resp) {
+                    throw new Error(`Resposta vazia ao consultar o relatório ${nomeR}.`);
+                }
+                if ([3100, 9280].includes(Number(resp.code))) {
                     break;
                 }
+                if (Number(resp.code) !== 3000) throw resp;
+                if (!Array.isArray(resp.data)) {
+                    throw new Error(`Resposta inválida ao consultar o relatório ${nomeR}.`);
+                }
+                if (resp.data.length === 0) break;
 
-                cursor = resp.record_cursor??null;
+                cursor = resp.record_cursor ?? null;
 
                 // Processa os dados recebidos
                 resp.data.forEach((item) => {
@@ -126,21 +208,22 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                     baseApoio.set(id, item);
                 });
 
-            } while(cursor!=null)
-            
+            } while (cursor != null)
+
             return Array.from(baseApoio.values());
         }
 
         async function subirArquivos() {
             try {
                 console.log("Subindo arquivos...");
-                
-                recOps = ZOHO.CREATOR.FILE;
+
+                recOps = globalThis.ZOHO?.CREATOR?.FILE;
+                if (!recOps) throw new Error('O módulo de arquivos do Zoho Creator não está disponível.');
                 const config = {
                     app_name: globais.nomeApp,
                     report_name: nomeR,
                     id: ID,
-                    field_name: 'Arquivo',
+                    field_name: 'Arquivos',
                     file: corpo
                 }
                 console.log("Configuração para upload => ", JSON.stringify(config));
@@ -148,7 +231,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                 console.log(corpo);
                 console.log(JSON.stringify(corpo));
 
-                const resp = await recOps.uploadFile(config);
+                const resp = await executarComRetry(() => recOps.uploadFile(config));
                 console.log("Resposta do upload => ", resp);
                 if (!resp || (resp && !resp.code)) {
                     console.warn("Resposta anômala do upload:", resp);
@@ -165,16 +248,15 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
             }
         }
 
-        async function remover_reg(nomeR, criterios)
-        {
+        async function remover_reg(nomeR, criterios) {
 
-                const config = {
-                    app_name: globais.nomeApp,
-                    report_name: nomeR,
-                    payload: {criteria: criterios}
-                }
-                console.log("Deletando registros com critérios => ", JSON.stringify(config));
-                return await recOps.deleteRecords(config);
+            const config = {
+                app_name: globais.nomeApp,
+                report_name: nomeR,
+                payload: { criteria: criterios }
+            }
+            console.log("Deletando registros com critérios => ", JSON.stringify(config));
+            return await executarComRetry(() => recOps.deleteRecords(config));
         }
 
         // Funções solicitadas conforme tipo
@@ -198,12 +280,29 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 
         }
     } catch (err) {
-        console.error("Erro na API do Zoho => ", err);
-        
+
+        const responseText = err?.responseText || err?.response?.responseText;
+        let erroZoho = err;
+        if (typeof responseText === 'string') {
+            try {
+                erroZoho = { ...err, ...JSON.parse(responseText) };
+            } catch (_) {
+                // Mantém o erro original quando o corpo não é JSON.
+            }
+        }
+
+        if (tipo?.startsWith('busc_reg') && [3100, 9280].includes(Number(erroZoho?.code))) {
+            console.warn("Nenhum registro encontrado para os critérios fornecidos.");
+            return [];
+        }
+
+        console.log("Erro na API do Zoho => ", err);
+        console.log("Erro na API do Zoho => ", JSON.stringify(err));
+
         // Trata diferentes tipos de erro e retorna um objeto estruturado
-        if (err?.code) {
+        if (erroZoho?.code) {
             // Se já é uma resposta da API, retorna como está
-            return err;
+            return erroZoho;
         } else if (err?.name === 'Error' || err?.message) {
             // Se é um erro JavaScript padrão
             return {

@@ -499,282 +499,743 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
     return [dados, dadosExtras];
 }
 
-//================================================================\\
-//===========================SALVA TUDO===========================\\
-//================================================================\\
-/*
-export async function saveTableData_V4()
-{
-    //===============================\\
-    //VALIDA OS DADOS ANTES DE SALVAR\\
-    //===============================\\
 
-    //==========Valida os documentos==========\\
-    Object.values(globais.documentosNovos).forEach(doc => {
-        if(!doc.name || !doc.data) {
-            customModal_V2({
-                tipoAcao:'alert', 
-                titulo: "Documento com erro!", 
-                mensagem:`<p>Um dos documentos não foi carregado corretamente. Mantenha esta tela aberta e contate o administrador do sistema<br>Documento: ${doc}</p>`,
-                confirmText: 'Ok!'
-            });
-            return false;
+//================================================================\\
+//==================SALVAMENTO RESILIENTE E IDEMPOTENTE==================\\
+//================================================================\\
+const SAVE_JOURNAL_VERSION = 2;
+const SAVE_STORAGE_PREFIX = 'pdc-digital:save:v2:';
+const SAVE_PAGE_POINTER_PREFIX = 'pdc-digital:save-page:v2:';
+const SAVE_LOCK_PREFIX = 'pdc-digital:save-lock:v2:';
+const SAVE_DB_NAME = 'pdc-digital-pending-saves';
+const SAVE_DB_STORE = 'files';
+const ATTACHMENT_FORM = 'laranj_arquivos_pdc';
+const ATTACHMENT_REPORT = 'laranj_arquivos_pdc_Report';
+let salvamentoEmAndamento = null;
+
+function valoresDaColecao(colecao) {
+    if (!colecao) return [];
+    if (colecao instanceof Map) return [...colecao.values(), ...Object.values(colecao)];
+    return Object.values(colecao);
+}
+
+function escaparCriterio(valor) {
+    return String(valor ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"');
+}
+
+function gerarId() {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function obterStorage() {
+    const storages = [];
+    for (const nome of ['localStorage', 'sessionStorage']) {
+        try {
+            storages.push(globalThis[nome]);
+        } catch (_) {
+            // O navegador pode bloquear o getter em iframe de terceiro.
         }
+    }
+
+    for (const storage of storages) {
+        if (!storage) continue;
+        const teste = `${SAVE_STORAGE_PREFIX}storage-test`;
+        try {
+            storage.setItem(teste, '1');
+            storage.removeItem(teste);
+            return storage;
+        } catch (_) {
+            // Tenta o próximo storage disponível.
+        }
+    }
+    throw new Error('O navegador bloqueou o armazenamento necessário para retomar o salvamento após um F5.');
+}
+
+function chaveOperacao(numPdcTemp) {
+    return `${SAVE_STORAGE_PREFIX}${encodeURIComponent(numPdcTemp)}`;
+}
+
+function chavePaginaAtual() {
+    const href = globalThis.location?.href || 'pagina-sem-url';
+    return `${SAVE_PAGE_POINTER_PREFIX}${encodeURIComponent(href)}`;
+}
+
+function lerOperacaoPorChave(storageKey) {
+    const storage = obterStorage();
+    const json = storage.getItem(storageKey);
+    if (!json) return null;
+
+    try {
+        const operacao = JSON.parse(json);
+        return operacao?.version === SAVE_JOURNAL_VERSION ? operacao : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function lerOperacaoPendente(numPdcTemp) {
+    if (numPdcTemp) return lerOperacaoPorChave(chaveOperacao(numPdcTemp));
+
+    const storageKey = obterStorage().getItem(chavePaginaAtual());
+    return storageKey ? lerOperacaoPorChave(storageKey) : null;
+}
+
+function persistirOperacao(operacao) {
+    operacao.updatedAt = new Date().toISOString();
+    const storage = obterStorage();
+    storage.setItem(operacao.storageKey, JSON.stringify(operacao));
+    storage.setItem(operacao.pagePointerKey, operacao.storageKey);
+}
+
+function removerOperacao(operacao) {
+    const storage = obterStorage();
+    storage.removeItem(operacao.storageKey);
+    if (storage.getItem(operacao.pagePointerKey) === operacao.storageKey) {
+        storage.removeItem(operacao.pagePointerKey);
+    }
+}
+
+function abrirBancoArquivos() {
+    return new Promise((resolve, reject) => {
+        if (!globalThis.indexedDB) {
+            reject(new Error('IndexedDB não está disponível para preservar os anexos.'));
+            return;
+        }
+
+        const request = indexedDB.open(SAVE_DB_NAME, 1);
+        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(SAVE_DB_STORE)) {
+                db.createObjectStore(SAVE_DB_STORE, { keyPath: 'id' });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
+async function executarNoBanco(modo, executor) {
+    const db = await abrirBancoArquivos();
+    try {
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(SAVE_DB_STORE, modo);
+            const store = tx.objectStore(SAVE_DB_STORE);
+            let resultado;
+
+            tx.oncomplete = () => resolve(resultado);
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error || new Error('Transação de arquivos cancelada.'));
+
+            try {
+                resultado = executor(store);
+            } catch (erro) {
+                reject(erro);
+            }
+        });
+    } finally {
+        db.close();
+    }
+}
+
+async function guardarArquivo(id, arquivo) {
+    if (!(arquivo instanceof Blob)) {
+        throw new Error(`O anexo ${arquivo?.name || id} não pôde ser preservado para retomada.`);
+    }
+
+    await executarNoBanco('readwrite', store => store.put({
+        id,
+        blob: arquivo,
+        name: arquivo.name || 'anexo',
+        type: arquivo.type || 'application/octet-stream',
+        lastModified: arquivo.lastModified || Date.now()
+    }));
+}
+
+async function recuperarArquivo(descritor) {
+    const registro = await executarNoBanco('readonly', store => {
+        const request = store.get(descritor.storageId);
+        request.onsuccess = () => {};
+        return request;
     });
 
+    // executarNoBanco resolve no fim da transação; o resultado acima é o request.
+    const dados = registro?.result;
+    if (!dados?.blob) {
+        throw new Error(`O anexo "${descritor.name}" não está mais disponível. Selecione-o novamente e repita a ação.`);
+    }
 
-
-
-
+    return new File([dados.blob], dados.name, {
+        type: dados.type,
+        lastModified: dados.lastModified
+    });
 }
-    */
 
-export async function saveTableData_V3({status = null, sepPorParc = false, paramsExtraPDC = {}}) {
+async function limparArquivosDaOperacao(operacao) {
+    const ids = [...new Set(operacao.items.flatMap(item => item.attachments.map(anexo => anexo.storageId)))];
+    if (ids.length === 0) return;
+
     try {
-        const log = true;
-        if(log) console.log("++++++++++SALVANDO COTAÇÃO++++++++++");
-        if(log) console.log("status => ", status);
-        if(log) console.log("sepPorParc => ", sepPorParc);
-        if(log) console.log("paramsExtraPDC => ", paramsExtraPDC);
+        await executarNoBanco('readwrite', store => ids.forEach(id => store.delete(id)));
+    } catch (erro) {
+        console.warn('Não foi possível limpar os anexos temporários do navegador:', erro);
+    }
+}
 
-        const ids_pdcs_criados = new Array();
+function itensResposta(resp) {
+    if (Array.isArray(resp?.result)) return resp.result;
+    return resp ? [resp] : [];
+}
 
-        let erro = false;
-        Object.values(globais.arquivosNovos).forEach(doc => {
-            console.log(doc);
-            console.log("doc.name => ", doc.name);
-            console.log("doc.size => ", doc.size);
-            if(!doc.name || !doc.size || doc.size <= 0) {
+function respostaSemRegistros(resp) {
+    const code = Number(resp?.code);
+    return resp === '' || (Array.isArray(resp) && resp.length === 0) || code === 3100 || code === 9280;
+}
 
-                customModal_V2({
-                    tipoAcao:'alert', 
-                    titulo: "Documento com erro!", 
-                    mensagem:`<p>Um dos documentos não foi carregado corretamente. Mantenha esta tela aberta e contate o administrador do sistema<br>Documento: ${doc.name}</p>`,
-                    confirmText: 'Ok!'
-                });
-                erro = true;
-                return;
-            }
+function respostaBemSucedida(resp) {
+    const itens = itensResposta(resp);
+    return itens.length > 0 && itens.every(item => Number(item?.code) === 3000);
+}
+
+function erroZoho(etapa, resp) {
+    let detalhe;
+    try {
+        detalhe = JSON.stringify(resp);
+    } catch (_) {
+        detalhe = String(resp);
+    }
+    return new Error(`${etapa}. Resposta do Zoho: ${detalhe}`);
+}
+
+function extrairIdCriado(resp) {
+    const item = itensResposta(resp).find(resultado => Number(resultado?.code) === 3000 && resultado?.data?.ID);
+    return item?.data?.ID ? String(item.data.ID) : null;
+}
+
+async function buscarRegistros({ criterios, nomeR }) {
+    const resp = await executar_apiZoho({ tipo: 'busc_reg_recursivo', criterios, nomeR });
+    if (Array.isArray(resp)) return resp;
+    if (respostaSemRegistros(resp)) return [];
+    throw erroZoho(`Erro ao consultar ${nomeR}`, resp);
+}
+
+function normalizarOpcoes(opcoes, sepPorParcLegado = false, paramsExtraLegado = {}) {
+    if (opcoes && typeof opcoes === 'object' && !Array.isArray(opcoes)) {
+        return {
+            status: opcoes.status ?? null,
+            sepPorParc: Boolean(opcoes.sepPorParc),
+            paramsExtraPDC: opcoes.paramsExtraPDC || opcoes.paramExtra || {}
+        };
+    }
+
+    return {
+        status: opcoes ?? null,
+        sepPorParc: Boolean(sepPorParcLegado),
+        paramsExtraPDC: paramsExtraLegado || {}
+    };
+}
+
+function idsArquivosRemovidos(arquivos) {
+    return arquivos
+        .map(arquivo => String(arquivo || '').match(/anexo_arquivos\.Arquivos\/(\d+)\/download\?filepath/)?.[1])
+        .filter(Boolean);
+}
+
+async function criarOperacao({ status, sepPorParc, paramsExtraPDC }) {
+    if (!globais.numPDC_temp) {
+        globais.numPDC_temp = `pdc_${gerarId()}`;
+    }
+
+    const operationId = gerarId();
+    const PDCsToSave = sepPorParc ? await splitDataByInstallments(status) : await meshData(status);
+    if (PDCsToSave.size === 0) {
+        throw new Error('Não há parcelas pendentes para salvar.');
+    }
+
+    const arquivos = [...new Set([
+        ...valoresDaColecao(globais.arquivosNovos),
+        ...(sepPorParc ? valoresDaColecao(globais.arquivosExistentes) : [])
+    ])];
+    const anexosBase = [];
+    try {
+        for (let index = 0; index < arquivos.length; index++) {
+            const arquivo = arquivos[index];
+            const storageId = `${operationId}:file:${index}`;
+            await guardarArquivo(storageId, arquivo);
+            anexosBase.push({
+                storageId,
+                name: arquivo.name || `anexo-${index + 1}`,
+                type: arquivo.type || 'application/octet-stream',
+                recordId: null,
+                uploaded: false
+            });
+        }
+    } catch (erro) {
+        if (anexosBase.length > 0) {
+            await executarNoBanco('readwrite', store => anexosBase.forEach(anexo => store.delete(anexo.storageId)));
+        }
+        throw erro;
+    }
+
+    const tipoOriginal = globais.tipo;
+    const items = Array.from(PDCsToSave.entries()).map(([chave, pdcData]) => ({
+        key: String(chave),
+        tempId: pdcData.PDCsData.id_temp,
+        mode: sepPorParc ? 'criar_pdc' : tipoOriginal,
+        pdcId: !sepPorParc && tipoOriginal === 'editar_pdc' && globais.idPDC ? String(globais.idPDC) : null,
+        pdcDone: false,
+        quoteDone: false,
+        pdcData: { ...pdcData.PDCsData, ...paramsExtraPDC },
+        priceTableData: pdcData.priceTableData,
+        attachments: anexosBase.map(anexo => ({ ...anexo }))
+    }));
+
+    const operacao = {
+        version: SAVE_JOURNAL_VERSION,
+        id: operationId,
+        storageKey: chaveOperacao(globais.numPDC_temp),
+        pagePointerKey: chavePaginaAtual(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        context: {
+            rootTempId: globais.numPDC_temp,
+            originalType: tipoOriginal,
+            sepPorParc
+        },
+        oldQuotesDeactivated: false,
+        replaceActiveQuotes: !sepPorParc,
+        removedAttachmentIds: idsArquivosRemovidos(globais.arquivosRemovidos || []),
+        removedAttachmentsDone: false,
+        items
+    };
+
+    try {
+        persistirOperacao(operacao);
+        return operacao;
+    } catch (erro) {
+        await limparArquivosDaOperacao(operacao);
+        throw erro;
+    }
+}
+
+async function desativarCotacoes(criterio) {
+    const resp = await executar_apiZoho({
+        tipo: 'atualizar_reg',
+        criterios: criterio,
+        corpo: { Ativo: false },
+        nomeR: globais.nomeRelCot
+    });
+    if (!respostaBemSucedida(resp) && !respostaSemRegistros(resp)) {
+        throw erroZoho('Erro ao desativar a cotação anterior', resp);
+    }
+}
+
+async function garantirPDC(operacao, item) {
+    if (item.pdcDone && item.pdcId) {
+        if (!globais.idPDC) globais.idPDC = item.pdcId;
+        return;
+    }
+
+    let pdcId = item.pdcId;
+    const criterioTemp = `(id_temp=="${escaparCriterio(item.tempId)}")`;
+
+    if (!pdcId) {
+        const existentes = await buscarRegistros({ criterios: criterioTemp, nomeR: globais.nomeRelPDC });
+        pdcId = existentes[0]?.ID ? String(existentes[0].ID) : null;
+        if (existentes.length > 1) {
+            console.warn(`Foram encontrados ${existentes.length} PDCs com id_temp ${item.tempId}. O primeiro será reutilizado.`);
+        }
+    }
+
+    if (pdcId) {
+        const resp = await executar_apiZoho({
+            tipo: 'atualizar_reg',
+            ID: pdcId,
+            corpo: item.pdcData,
+            nomeR: globais.nomeRelPDC
         });
+        if (!respostaBemSucedida(resp)) throw erroZoho('Erro ao atualizar o PDC', resp);
+    } else {
+        const resp = await executar_apiZoho({
+            tipo: 'add_reg',
+            corpo: item.pdcData,
+            nomeF: globais.nomeFormPDC
+        });
+        pdcId = extrairIdCriado(resp);
 
-        if(erro) return false;
-    
-        if (globais.cotacaoExiste) {
-            if(log) console.log("=> COTAÇÃO EXISTE <=");
-            if (sepPorParc === false) {
-                if(log) console.log("*Não é separação por parcela, limpando dados da cotação");
-                const criteria = `(num_pdc_temp=="${globais.numPDC_temp}" && Ativo==true)`;
-                const payload = {
-                        Ativo: false
-                    };
-                const resp = await executar_apiZoho({ tipo: "atualizar_reg", criterios: criteria,   corpo: payload });
-                if(resp.code !== 3000) {
-                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-                    throw new Error("Erro ao limpar dados da cotação antiga! Erro: ", JSON.stringify(resp));
-                }
-                globais.cotacaoExiste = false;
-    
+        // Se a resposta se perdeu, consulta a chave de negócio antes de repetir.
+        if (!pdcId) {
+            const reconciliados = await buscarRegistros({ criterios: criterioTemp, nomeR: globais.nomeRelPDC });
+            pdcId = reconciliados[0]?.ID ? String(reconciliados[0].ID) : null;
+        }
+        if (!pdcId) throw erroZoho('Erro ao criar o PDC', resp);
+    }
+
+    item.pdcId = pdcId;
+    item.pdcDone = true;
+    if (!globais.idPDC) globais.idPDC = pdcId;
+    persistirOperacao(operacao);
+}
+
+const CAMPOS_NUMERICOS_COTACAO = new Set([
+    'Quantidade', 'Valor_unitario', 'Valor_total', 'Valor_do_frete',
+    'Descontos', 'Total_geral', 'Versao'
+]);
+
+function normalizarValorCotacao(campo, valor) {
+    if (valor && typeof valor === 'object') {
+        valor = valor.ID ?? valor.id ?? valor.display_value ?? JSON.stringify(valor);
+    }
+    if (CAMPOS_NUMERICOS_COTACAO.has(campo)) {
+        const numero = Number(String(valor ?? 0).replace(',', '.'));
+        return Number.isFinite(numero) ? numero : String(valor ?? '');
+    }
+    if (campo === 'Aprovado' || campo === 'Ativo') {
+        return valor === true || String(valor).toLowerCase() === 'true';
+    }
+    return String(valor ?? '').trim();
+}
+
+function assinaturaCotacao(registro, campos) {
+    const normalizado = {};
+    campos.forEach(campo => {
+        normalizado[campo] = normalizarValorCotacao(campo, registro?.[campo]);
+    });
+    return JSON.stringify(normalizado);
+}
+
+function cotacoesConferem(atuais, esperadas) {
+    if (atuais.length !== esperadas.length) return false;
+    const campos = [...new Set(esperadas.flatMap(registro => Object.keys(registro)))].sort();
+    const a = atuais.map(registro => assinaturaCotacao(registro, campos)).sort();
+    const b = esperadas.map(registro => assinaturaCotacao(registro, campos)).sort();
+    return a.every((assinatura, index) => assinatura === b[index]);
+}
+
+async function garantirCotacoes(operacao, item) {
+    if (item.quoteDone) return;
+
+    const criterioAtivas = `(num_PDC_temp=="${escaparCriterio(item.tempId)}" && Ativo==true)`;
+    let atuais = await buscarRegistros({ criterios: criterioAtivas, nomeR: globais.nomeRelCot });
+    if (cotacoesConferem(atuais, item.priceTableData)) {
+        item.quoteDone = true;
+        persistirOperacao(operacao);
+        return;
+    }
+
+    // Remove qualquer lote parcial deixado por uma resposta perdida.
+    if (atuais.length > 0) {
+        await desativarCotacoes(criterioAtivas);
+        atuais = [];
+    }
+
+    if (item.priceTableData.length === 0) {
+        item.quoteDone = true;
+        persistirOperacao(operacao);
+        return;
+    }
+
+    const resp = await executar_apiZoho({
+        tipo: 'add_reg',
+        corpo: item.priceTableData,
+        nomeF: globais.nomeFormCot
+    });
+
+    if (!respostaBemSucedida(resp)) {
+        const reconciliadas = await buscarRegistros({ criterios: criterioAtivas, nomeR: globais.nomeRelCot });
+        if (!cotacoesConferem(reconciliadas, item.priceTableData)) {
+            throw erroZoho('Erro ao salvar a cotação', resp);
+        }
+    }
+
+    item.quoteDone = true;
+    persistirOperacao(operacao);
+}
+
+function textoArquivoZoho(valor) {
+    if (!valor) return '';
+    let texto = typeof valor === 'string' ? valor : JSON.stringify(valor);
+    try {
+        texto = decodeURIComponent(texto);
+    } catch (_) {
+        // Alguns nomes não usam URL encoding.
+    }
+    return texto.toLowerCase();
+}
+
+function registroTemArquivo(registro, nome) {
+    return textoArquivoZoho(registro?.Arquivos).includes(String(nome || '').toLowerCase());
+}
+
+function registroSemArquivo(registro) {
+    return textoArquivoZoho(registro?.Arquivos).trim() === '';
+}
+
+async function buscarAnexosDoPDC(pdcId) {
+    return buscarRegistros({
+        criterios: `(PDC_Digital==${pdcId})`,
+        nomeR: ATTACHMENT_REPORT
+    });
+}
+
+async function garantirAnexos(operacao, item) {
+    if (item.attachments.every(anexo => anexo.uploaded)) return;
+
+    let registros = await buscarAnexosDoPDC(item.pdcId);
+    const idsReservados = new Set(item.attachments.map(anexo => anexo.recordId).filter(Boolean).map(String));
+
+    for (const anexo of item.attachments) {
+        if (anexo.uploaded) continue;
+
+        if (!anexo.recordId) {
+            const jaEnviado = registros.find(registro =>
+                !idsReservados.has(String(registro.ID)) && registroTemArquivo(registro, anexo.name)
+            );
+            if (jaEnviado) {
+                anexo.recordId = String(jaEnviado.ID);
+                anexo.uploaded = true;
+                idsReservados.add(anexo.recordId);
+                persistirOperacao(operacao);
+                continue;
+            }
+
+            const vazio = registros.find(registro =>
+                !idsReservados.has(String(registro.ID)) && registroSemArquivo(registro)
+            );
+            if (vazio) {
+                anexo.recordId = String(vazio.ID);
             } else {
-                if(log) console.log("*É separação por parcela");
-                globais.cotacaoExiste = false;
-                
-            }
-            if(log) console.log("*Marca que cotação não existe");
-            ids_pdcs_criados.push(...await saveTableData_V3({status, sepPorParc, paramsExtraPDC}));
-    
-        } else {
-            if(log) console.log("=> COTACAO NÃO EXISTE <=");
-    
-            const PDCsToSave = sepPorParc ? await splitDataByInstallments(status) : await meshData(status);
-            if(log) console.log("PDCsToSave => ");
-            console.log(JSON.stringify(Object.fromEntries(PDCsToSave), null, 2));
-            
-            const apoioTipoAnt = globais.tipo;
-            if (sepPorParc === true) globais.tipo = 'criar_pdc';
-    
-            for (let i = 0; i < PDCsToSave.size; i++) {
-
-                //====================CRIA O REGISTRO DO PDC====================\\
-                const chave = Array.from(PDCsToSave.keys())[i];
-                const pdcData = PDCsToSave.get(chave);
-                const dadostabPrecos = pdcData.priceTableData;
-                const dadosPDC = {
-                    ...pdcData.PDCsData,
-                    ...paramsExtraPDC
-                };
-
-                if(log) console.log("1. dadostabPrecos => ", dadostabPrecos);
-                if(log) console.log("2. dadosPDC => ", JSON.stringify(dadosPDC, null, 2));
-
-                //MESCLA OS ARQUIVOS EXISTENTES COM OS NOVOS ARQUIVOS ADICIONADOS\\
-                let apoioArquivos = {};
-                let j = 0;
-                Object.values(globais.arquivosNovos).forEach((file, index) => {
-                    apoioArquivos[index] = file;
-                    j++;
+                const respCriacao = await executar_apiZoho({
+                    tipo: 'add_reg',
+                    corpo: { PDC_Digital: item.pdcId },
+                    nomeF: ATTACHMENT_FORM
                 });
-                
-                if(sepPorParc === true)
-                {
-                    Object.values(globais.arquivosExistentes).forEach((file, index) => {
-                        apoioArquivos[j + index] = file;
-                    });
+                anexo.recordId = extrairIdCriado(respCriacao);
+
+                if (!anexo.recordId) {
+                    registros = await buscarAnexosDoPDC(item.pdcId);
+                    const reconciliado = registros.find(registro =>
+                        !idsReservados.has(String(registro.ID)) && registroSemArquivo(registro)
+                    );
+                    anexo.recordId = reconciliado?.ID ? String(reconciliado.ID) : null;
                 }
-                const qtdFiles = Object.keys(apoioArquivos).length;
-                
-                //VALIDA SE TODOS OS ARQUIVOS ESTÃO PRONTOS PARA SEREM ENVIADOS, CASO CONTRÁRIO, TENTA AGUARDAR POR 2 SEGUNDOS ANTES DE DAR ERRO\\
-                let respPDC;
-                let idNovoPDC = null;
-                if (globais.tipo === 'editar_pdc') {
-                    if(log) console.log("É EDIÇÃO DE PDC!");
-                    respPDC = await executar_apiZoho({ tipo: "atualizar_reg", ID: globais.idPDC, corpo: dadosPDC, nomeR: globais.nomeRelPDC });
-    
-                } else {
-                    if(log) console.log("É CRIAÇÃO DE PDC!");
-                    if(log) console.log("DADOS DO PDC ===> ", JSON.stringify(dadosPDC, null, 2));
-                    respPDC = await executar_apiZoho({ tipo: "add_reg", corpo: JSON.stringify(dadosPDC, null, 2), nomeF: globais.nomeFormPDC });
-
-                    //Verifica se a resposta foi bem-sucedida e se globais.idPDC é null
-                    if (respPDC.code === 3000) {
-                        if (globais.idPDC === null) globais.idPDC = respPDC.data.ID; // Preenche globais.idPDC com o ID retornado
-                        idNovoPDC = respPDC.data.ID;
-                        ids_pdcs_criados.push(idNovoPDC);
-                    }
-                }
-
-                if (respPDC.code !== 3000) {
-                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-                    throw new Error("Erro ao salvar dados do PDC! Erro: ", JSON.stringify(respPDC));
-                }
-
-                if(log) console.log("respPDC => ", JSON.stringify(respPDC, null, 2));
-
-                //====================CRIA O REGISTRO DOS ARQUIVOS GALERIA================\\
-                if(log) console.log("|||||||||||||||||||||||||||||||||||||");
-                if(log) console.log("|||||SUBINDO ARQUIVOS DA GALERIA|||||");
-                if(log) console.log("|||||||||||||||||||||||||||||||||||||");
-                //ACRESCENTA ARQUIVOS DA GALERIA NOS ARQUIVOS JÁ EXISTENTES//
-                if (qtdFiles > 0) {
-                    const dataList = [];
-
-                    for (let i = 0; i < qtdFiles; i++) {
-                        dataList.push({ PDC_Digital: idNovoPDC !== null ? idNovoPDC : globais.idPDC });
-                    }
-                    if(log) console.log("dataList => ", JSON.stringify(dataList, null, 2));
-
-                    const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: dataList, nomeF: "Documentos" });
-                    if(log) console.log("respFilesRec => ", JSON.stringify(respFilesRec, null, 2));
-
-                    if (respFilesRec.result.every(item => item.code === 3000)) {
-    
-                        const idArquivos = respFilesRec.result.map(item => item.data.ID);
-                        if(log) console.log("idArquivos => ", idArquivos);
-                        let indexFile = 0;
-                        for (const id of idArquivos) {
-
-                            const blob = apoioArquivos[indexFile++];
-                            console.log("blob => ", blob);
-                            //const blob = null;
-                            if(log) console.log("id => ", id);
-                            
-                            for (let i = 0; i < 3; i++) {
-                                await new Promise(resolve => setTimeout(resolve, 500));
-                                
-                                const respFileUpload = await executar_apiZoho({ tipo: "subir_arq", nomeR: "Documentos_API", ID: id, corpo: blob });
-                                if(log) console.log("respFileUpload => ", respFileUpload);
-                                if (!respFileUpload.code || respFileUpload.code !== 3000) {
-                                    console.log("Erro ao carregar aquirvos no registro correspondente, erro: ", respFileUpload);
-                                    if (i !== 2) {
-                                        console.log("Tentando novamente...");
-                                        await new Promise(resolve => setTimeout(resolve, 1000));
-                                    } else {
-                                        const errorMessage = respFileUpload.message || 'Erro desconhecido ao fazer upload do arquivo';
-                                        await customModal_V2({
-                                            tipoAcao:'alert', 
-                                            titulo: "Erro ao fazer upload do arquivo!", 
-                                            mensagem:`<p>Código: ${respFileUpload.code}</p><p style="max-width: 500px; word-wrap: break-word;">${errorMessage}</p>`,
-                                            confirmText: 'Ok!'
-                                        });
-                                    }
-                                }else 
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        console.log("Erro ao criar o registro de arquivos, erro: ", respFilesRec);
-                    }
-                }
-
-                //====================CRIA O REGISTRO DA COTAÇÃO====================//
-                if(log) console.log("||||||||||||||||||||||||||||||||||");
-                if(log) console.log("|||||SUBINDO DADOS DA COTAÇÃO|||||");
-                if(log) console.log("||||||||||||||||||||||||||||||||||");
-                const json = JSON.stringify(dadostabPrecos, null, 2);
-                let respCot = await executar_apiZoho({ tipo: "add_reg", corpo: json });
-    
-                if (respCot.code !== 3000) {
-                    await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-                    throw new Error("Erro ao salvar dados da cotação! Erro: ", JSON.stringify(respCot));
-                }
-                if(log) console.log("respCot => ", JSON.stringify(respCot, null, 2));
-
-                if(log) console.log("||||||||||||||||||||||||||||||||||||||");
-                if(log) console.log("|||||REMOVENDO ARQUIVOS EXCLUIDOS|||||");
-                if(log) console.log("||||||||||||||||||||||||||||||||||||||");
-                await removerArquivosZoho();
-
+                if (!anexo.recordId) throw erroZoho(`Erro ao criar o registro do anexo "${anexo.name}"`, respCriacao);
+                registros.push({ ID: anexo.recordId, Arquivos: '' });
             }
-            globais.cotacaoExiste = true;
-            globais.tipo = apoioTipoAnt;
+
+            idsReservados.add(String(anexo.recordId));
+            // O ID é salvo antes do upload. Repetir um upload no mesmo registro
+            // apenas substitui o campo, sem criar outro anexo.
+            persistirOperacao(operacao);
         }
 
-        return ids_pdcs_criados;
-    } catch (error) {
-        await rollbackSaveData("reset_price_quote", {idsCot: globais.idsCotacao});
-        await customModal_V2({
-            tipoAcao:'alert', 
-            titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
-            mensagem:`<p>${error.message}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,
-            confirmText: 'Ok!'
+        const arquivo = await recuperarArquivo(anexo);
+        const respUpload = await executar_apiZoho({
+            tipo: 'subir_arq',
+            nomeR: ATTACHMENT_REPORT,
+            ID: anexo.recordId,
+            corpo: arquivo
         });
+        if (!respostaBemSucedida(respUpload)) {
+            throw erroZoho(`Erro ao enviar o anexo "${anexo.name}"`, respUpload);
+        }
+
+        anexo.uploaded = true;
+        persistirOperacao(operacao);
     }
 }
 
-async function rollbackSaveData(rbAction = null, rbParams = {}) {
-    if(rbAction === "reset_price_quote") {
-        for (const id of globais.idsCotacao) {
-            let payload = {
-                    Ativo: true
-            };
-            await executar_apiZoho({ tipo: "atualizar_reg", ID: id, corpo: payload });
+async function removerAnexosDaOperacao(operacao) {
+    if (operacao.removedAttachmentsDone) return;
+
+    if (operacao.removedAttachmentIds.length > 0) {
+        const criterio = `(${operacao.removedAttachmentIds.map(id => `ID==${id}`).join(' || ')})`;
+        const resp = await executar_apiZoho({
+            tipo: 'deletar_reg',
+            criterios: criterio,
+            nomeR: ATTACHMENT_REPORT
+        });
+        if (!respostaBemSucedida(resp) && !respostaSemRegistros(resp)) {
+            throw erroZoho('Erro ao remover anexos excluídos', resp);
         }
     }
+
+    operacao.removedAttachmentsDone = true;
+    persistirOperacao(operacao);
 }
 
-export async function tratarSalvamentoPDC({ acao = null }) {
-    //TODOS OS DADOS//
-    /**
-     * Dados iniciais do PDC
-     * Toda a tabela de cotação
-     * Tabela do fornecedor aprovado
-     * Detalhes dos fornecedores
-     * Dados de forma de pagamento
-     * Dados de parcelas (Sem separar)
-     * Dados de parcelas separando as marcadas (Pagamento de sinal)
-     * Dados de parcelas separando as não separadas (Compra recebida)
-     * Dados de nota fiscal
-     * Dados de retenção
-     * Dados de classificação (Sem separar)
-     * Dados de classificação separando as marcadas (Pagamento de sinal)
-     * Dados de classificação separando as não separadas (Compra recebida)
-     * Anexos novos e removidos
-     * Duplicar anexos (Pagamento de sinal)
-     * Duplicar anexos (Compra recebida)
-     * Alterar Status
-     */
+async function processarOperacao(operacao) {
+    if (operacao.replaceActiveQuotes && !operacao.oldQuotesDeactivated) {
+        const criterio = `(num_PDC_temp=="${escaparCriterio(operacao.context.rootTempId)}" && Ativo==true)`;
+        await desativarCotacoes(criterio);
+        operacao.oldQuotesDeactivated = true;
+        persistirOperacao(operacao);
+    }
 
+    for (const item of operacao.items) {
+        await garantirPDC(operacao, item);
+        await garantirAnexos(operacao, item);
+        await garantirCotacoes(operacao, item);
+    }
+
+    await removerAnexosDaOperacao(operacao);
+
+    globais.cotacaoExiste = true;
+    globais.tipo = operacao.context.originalType;
+    removerOperacao(operacao);
+    await limparArquivosDaOperacao(operacao);
+
+    document.dispatchEvent(new CustomEvent('pdc:save-complete', {
+        detail: { operationId: operacao.id, resumed: Boolean(operacao.resumed) }
+    }));
+    return true;
+}
+
+async function comBloqueioDeSalvamento(operacao) {
+    const nomeBloqueio = `${SAVE_LOCK_PREFIX}${operacao.context.rootTempId}`;
+    const executar = async () => {
+        const maisRecente = lerOperacaoPorChave(operacao.storageKey);
+        if (!maisRecente) return true;
+        return processarOperacao(maisRecente);
+    };
+
+    if (globalThis.navigator?.locks?.request) {
+        return navigator.locks.request(nomeBloqueio, { mode: 'exclusive' }, executar);
+    }
+
+    // Fallback para navegadores sem Web Locks. O prazo evita lock órfão após F5.
+    const storage = obterStorage();
+    const lockKey = `${nomeBloqueio}:fallback`;
+    const owner = gerarId();
+    const agora = Date.now();
+    let lockAtual;
+    try {
+        lockAtual = JSON.parse(storage.getItem(lockKey) || 'null');
+    } catch (_) {
+        lockAtual = null;
+    }
+    if (lockAtual?.expiresAt > agora) {
+        await new Promise(resolve => setTimeout(resolve, Math.min(lockAtual.expiresAt - agora + 50, 16000)));
+        try {
+            lockAtual = JSON.parse(storage.getItem(lockKey) || 'null');
+        } catch (_) {
+            lockAtual = null;
+        }
+        if (lockAtual?.expiresAt > Date.now()) {
+            throw new Error('Este PDC já está sendo salvo em outra aba. Aguarde a conclusão.');
+        }
+    }
+
+    const renovarLock = () => storage.setItem(lockKey, JSON.stringify({ owner, expiresAt: Date.now() + 15000 }));
+    renovarLock();
+    const heartbeat = setInterval(renovarLock, 5000);
+    try {
+        return await executar();
+    } finally {
+        clearInterval(heartbeat);
+        let lockFinal;
+        try {
+            lockFinal = JSON.parse(storage.getItem(lockKey) || 'null');
+        } catch (_) {
+            lockFinal = null;
+        }
+        if (lockFinal?.owner === owner) storage.removeItem(lockKey);
+    }
+}
+
+/**
+ * Salva PDC, anexos e cotação usando um diário persistente. Se a aba fechar ou
+ * receber F5, cada etapa concluída é reconciliada com o Zoho antes da retomada.
+ * Também aceita a assinatura antiga: saveTableData_V3(status, sepPorParc).
+ */
+export async function saveTableData_V3(opcoes = {}, sepPorParcLegado = false, paramsExtraLegado = {}) {
+    if (salvamentoEmAndamento) return salvamentoEmAndamento;
+
+    const parametros = normalizarOpcoes(opcoes, sepPorParcLegado, paramsExtraLegado);
+    salvamentoEmAndamento = (async () => {
+        let operacao = lerOperacaoPendente(globais.numPDC_temp);
+        if (operacao) {
+            operacao.resumed = true;
+            persistirOperacao(operacao);
+            console.info(`Retomando o salvamento ${operacao.id} a partir do último checkpoint.`);
+        } else {
+            operacao = await criarOperacao(parametros);
+        }
+
+        try {
+            return await comBloqueioDeSalvamento(operacao);
+        } catch (causa) {
+            const erro = causa instanceof Error ? causa : erroZoho('Falha inesperada durante o salvamento', causa);
+            erro.message = `${erro.message} O progresso foi preservado e será retomado automaticamente nesta mesma página.`;
+            document.dispatchEvent(new CustomEvent('pdc:save-pending', {
+                detail: { operationId: operacao.id, error: erro.message }
+            }));
+            throw erro;
+        }
+    })();
+
+    try {
+        return await salvamentoEmAndamento;
+    } finally {
+        salvamentoEmAndamento = null;
+    }
+}
+
+export async function retomarSalvamentoPendente() {
+    if (salvamentoEmAndamento) return false;
+    const operacao = lerOperacaoPendente(globais.numPDC_temp);
+    if (!operacao) return false;
+    if (!globais.numPDC_temp) globais.numPDC_temp = operacao.context.rootTempId;
+
+    try {
+        await saveTableData_V3();
+        await customModal_V3({
+            tipoAcao: 'alert',
+            titulo: 'Salvamento retomado',
+            mensagem: 'O processo interrompido foi concluído com segurança.',
+            confirmText: 'Ok'
+        });
+        return true;
+    } catch (erro) {
+        console.error('Não foi possível retomar o salvamento pendente:', erro);
+        await customModal_V2({
+            tipoAcao: 'alert',
+            titulo: 'Salvamento ainda pendente',
+            mensagem: `${erro.message}<br><br>Você pode tentar novamente sem duplicar os dados.`,
+            confirmText: 'Ok'
+        });
+        return false;
+    }
+}
+
+async function agendarRetomadaAutomatica() {
+    // Aguarda a leitura dos parâmetros da página e o SDK do Zoho.
+    for (let tentativa = 0; tentativa < 60; tentativa++) {
+        if (globalThis.ZOHO?.CREATOR?.DATA) {
+            const pendente = lerOperacaoPendente(globais.numPDC_temp);
+            if (pendente) await retomarSalvamentoPendente();
+            if (globais.numPDC_temp || pendente) return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', event => {
+        if (!salvamentoEmAndamento) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
+
+    if (document.readyState === 'complete') {
+        setTimeout(() => agendarRetomadaAutomatica().catch(console.error), 1000);
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(() => agendarRetomadaAutomatica().catch(console.error), 1000);
+        }, { once: true });
+    }
 }
 
 export async function enviarParaPaybox(){
@@ -783,7 +1244,10 @@ export async function enviarParaPaybox(){
         //==========VARIÁVEIS DE APOIO==========\\
         const corpo = new Array();
         const lancamento = new Map();
-        const fornAprov = Array.from(globais.baseFornecedores.values()).find((fornecedor) => fornecedor[0] === globais.idFornAprovado);
+        const fornAprov = Array.from(globais.baseFornecedores.values()).find((fornecedor) => fornecedor[0] == globais.idFornAprovado);
+
+        console.log(" ID: ",globais.idFornAprovado);
+        console.log("Base: ", globais.baseFornecedores)
         const formDdsDetalhes = document.querySelector('#form-pagamento');
         const parcelas = formDdsDetalhes ? formDdsDetalhes.querySelectorAll('.parcela') : [];
         const cpf_cnpj_forn_ajust = fornAprov[2].replace(/\D/g, '');
@@ -811,7 +1275,7 @@ export async function enviarParaPaybox(){
     
         const dds_pgto = document.getElementById("dados-nf");
         const dds_impostos = dds_pgto.getElementsByClassName("campos-retencao-nf")[0].getElementsByTagName("tbody");
-        const dds_nf = dds_pgto.getElementsByClassName("campos-iniciais-nf")[0].getElementsByClassName("linha-nf")[0];
+                const dds_nf = dds_pgto.getElementsByClassName("campos-iniciais-nf")[0].getElementsByClassName("linha-nf")[0];
         //==========POPULANDO CORPO DA REQUISIÇÃO==========\\
         lancamento["cnpj_administradora"]= 58109067000149;
         lancamento["cnpj_remetente"]= 58109067000149;
@@ -820,22 +1284,24 @@ export async function enviarParaPaybox(){
         lancamento["condominio"]= selectedOption.dataset.cod_cond_ahreas;
         lancamento["tipo_inscr_condo"]= "J";
         lancamento["tipo_inscr_fornec"]= ap_tipo_forn;
+        lancamento["produto"]= ""
     
         lancamento["valor_total_nf"]= converterStringParaDecimal(dds_impostos[0].rows[0].cells[1].innerText||0.00);
         lancamento["vr_inss"]= converterStringParaDecimal(dds_impostos[0].rows[1].cells[1].innerText || 0.00);
         lancamento["vr_iss"]= converterStringParaDecimal(dds_impostos[0].rows[2].cells[1].innerText || 0.00);
-        lancamento["vr_csll_pis_cofins"]= converterStringParaDecimal(dds_impostos[0].rows[3].cells[1].innerText || 0.00);
+        lancamento["vr_irrf"]= converterStringParaDecimal(dds_impostos[0].rows[3].cells[1].innerText || 0.00);
+        lancamento["vr_csll_pis_cofins"]= converterStringParaDecimal(dds_impostos[0].rows[4].cells[1].innerText || 0.00);
         lancamento["vr_irrf"]= 0.00;
     
-        lancamento["data_emissao_nf"]= formatDate(dds_nf.querySelector("input[name='Data_emissao_N_Fiscal']").value, "DD/MM/YYYY");
+        lancamento["data_emissao_nf"]= dds_nf.querySelector("input[name='Data_emissao_N_Fiscal']").value;
         lancamento["nro_nf"]= dds_nf.querySelector("input[name='Numero_N_Fiscal']").value;
         //
         let urls = new Array();
     
         globais.arquivospPaybox.forEach((arquivo)=>{
-            const filepathIndex = arquivo.display_value.indexOf("filepath=");
-            const filepathValue = arquivo.display_value.substring(filepathIndex + "filepath=".length);
-            const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/Documentos_API/Arquivos/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
+            const filepathIndex = arquivo.Arquivos.indexOf("filepath=");
+            const filepathValue = arquivo.Arquivos.substring(filepathIndex + "filepath=".length);
+            const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/laranj_arquivos_pdc_Report/Arquivos/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
             urls.push({url: url});
     
         } );
@@ -851,7 +1317,7 @@ export async function enviarParaPaybox(){
             lancamento["mes"] = dataInput.value.split("-")[1];
             lancamento["vencimento"] = dataInput.value;
             lancamento["valor"] = valorInput;
-            lancamento["desc_produto"] = globais.numSolicPDC + "|" + descricao_curta + " | PDC: " + numPDC;
+            lancamento["desc_produto"] = "API Paybox";
             corpo.push(lancamento);
         });
     
@@ -869,10 +1335,25 @@ export async function enviarParaPaybox(){
             responseType: 'full'
         })
         console.log("response => ", response);
+        return response;
         
     }catch(e){
         console.log(e);
     }
+}
+
+export async function removerArquivosZoho()
+{
+    console.log("Removendo arquivos marcados para remoção no Zoho...");
+    console.log("Arquivos marcados para remoção => ", globais.arquivosRemovidos);
+    const idRecArquivosRemovidos = idsArquivosRemovidos(globais.arquivosRemovidos || []);
+    console.log("IDs dos arquivos marcados para remoção => ", idRecArquivosRemovidos);
+    if (idRecArquivosRemovidos.length === 0) return { code: 3000, skipped: true };
+
+    const criterio = `(${idRecArquivosRemovidos.map(id => `ID==${id}`).join(' || ')})`;
+    const resp = await executar_apiZoho({ tipo: "deletar_reg", criterios: criterio, nomeR: ATTACHMENT_REPORT });
+    console.log("Resposta da remoção dos arquivos => ", JSON.stringify(resp));
+    return resp;
 }
 
 export async function registrarLogNoZoho(numPDC)
@@ -909,17 +1390,4 @@ export async function registrarLogNoZoho(numPDC)
     console.log("body => ", body);
     const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: body, nomeF: "Logs_PDC_Digital" });
 
-}
-
-export async function removerArquivosZoho()
-{
-    console.log("Removendo arquivos marcados para remoção no Zoho...");
-    console.log("Arquivos marcados para remoção => ", globais.arquivosRemovidos);
-    //"/api/v2.1/guillaumon/terras-de-sao-jose-ii/report/PDC_Digital_API/3938561000116768677/Documentos.Arquivo/3938561000116768681/download?filepath=1773148141768840_arquivo.pdf"
-    const idRecArquivosRemovidos = globais.arquivosRemovidos.map(arquivo => arquivo.match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/)[1]).filter(id => id !== null);
-    console.log("IDs dos arquivos marcados para remoção => ", idRecArquivosRemovidos);
-    const criterio = `(ID == ${idRecArquivosRemovidos.join(" || ID == ")})`;
-    const resp = await executar_apiZoho({ tipo: "deletar_reg", criterios: criterio, nomeR: "Documentos_API" });
-    console.log("Resposta da remoção dos arquivos => ", resp);
-    return resp;
 }
