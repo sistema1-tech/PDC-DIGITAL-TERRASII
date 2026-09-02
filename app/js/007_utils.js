@@ -223,7 +223,7 @@ export async function executar_apiZoho({
                     app_name: globais.nomeApp,
                     report_name: nomeR,
                     id: ID,
-                    field_name: 'Arquivos',
+                    field_name: 'Arquivo',
                     file: corpo
                 }
                 console.log("Configuração para upload => ", JSON.stringify(config));

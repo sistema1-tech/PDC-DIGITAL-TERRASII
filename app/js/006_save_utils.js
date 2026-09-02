@@ -509,8 +509,8 @@ const SAVE_PAGE_POINTER_PREFIX = 'pdc-digital:save-page:v2:';
 const SAVE_LOCK_PREFIX = 'pdc-digital:save-lock:v2:';
 const SAVE_DB_NAME = 'pdc-digital-pending-saves';
 const SAVE_DB_STORE = 'files';
-const ATTACHMENT_FORM = 'laranj_arquivos_pdc';
-const ATTACHMENT_REPORT = 'laranj_arquivos_pdc_Report';
+const ATTACHMENT_FORM = 'Documentos';
+const ATTACHMENT_REPORT = 'Documentos_API';
 let salvamentoEmAndamento = null;
 
 function valoresDaColecao(colecao) {
@@ -739,7 +739,7 @@ function normalizarOpcoes(opcoes, sepPorParcLegado = false, paramsExtraLegado = 
 
 function idsArquivosRemovidos(arquivos) {
     return arquivos
-        .map(arquivo => String(arquivo || '').match(/anexo_arquivos\.Arquivos\/(\d+)\/download\?filepath/)?.[1])
+        .map(arquivo => String(arquivo || '').match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/)?.[1])
         .filter(Boolean);
 }
 
@@ -917,7 +917,7 @@ function cotacoesConferem(atuais, esperadas) {
 async function garantirCotacoes(operacao, item) {
     if (item.quoteDone) return;
 
-    const criterioAtivas = `(num_PDC_temp=="${escaparCriterio(item.tempId)}" && Ativo==true)`;
+    const criterioAtivas = `(num_pdc_temp=="${escaparCriterio(item.tempId)}" && Ativo==true)`;
     let atuais = await buscarRegistros({ criterios: criterioAtivas, nomeR: globais.nomeRelCot });
     if (cotacoesConferem(atuais, item.priceTableData)) {
         item.quoteDone = true;
@@ -966,11 +966,11 @@ function textoArquivoZoho(valor) {
 }
 
 function registroTemArquivo(registro, nome) {
-    return textoArquivoZoho(registro?.Arquivos).includes(String(nome || '').toLowerCase());
+    return textoArquivoZoho(registro?.Arquivo).includes(String(nome || '').toLowerCase());
 }
 
 function registroSemArquivo(registro) {
-    return textoArquivoZoho(registro?.Arquivos).trim() === '';
+    return textoArquivoZoho(registro?.Arquivo).trim() === '';
 }
 
 async function buscarAnexosDoPDC(pdcId) {
@@ -1068,7 +1068,7 @@ async function removerAnexosDaOperacao(operacao) {
 
 async function processarOperacao(operacao) {
     if (operacao.replaceActiveQuotes && !operacao.oldQuotesDeactivated) {
-        const criterio = `(num_PDC_temp=="${escaparCriterio(operacao.context.rootTempId)}" && Ativo==true)`;
+        const criterio = `(num_pdc_temp=="${escaparCriterio(operacao.context.rootTempId)}" && Ativo==true)`;
         await desativarCotacoes(criterio);
         operacao.oldQuotesDeactivated = true;
         persistirOperacao(operacao);
@@ -1299,9 +1299,9 @@ export async function enviarParaPaybox(){
         let urls = new Array();
     
         globais.arquivospPaybox.forEach((arquivo)=>{
-            const filepathIndex = arquivo.Arquivos.indexOf("filepath=");
-            const filepathValue = arquivo.Arquivos.substring(filepathIndex + "filepath=".length);
-            const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/laranj_arquivos_pdc_Report/Arquivos/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
+            const filepathIndex = arquivo.Arquivo.indexOf("filepath=");
+            const filepathValue = arquivo.Arquivo.substring(filepathIndex + "filepath=".length);
+            const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/Documentos_API/Arquivo/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
             urls.push({url: url});
     
         } );
