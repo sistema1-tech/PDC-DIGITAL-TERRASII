@@ -29,7 +29,7 @@ import {
 
 } from './007_utils.js';
 import {globais} from './999_config.js';
-//import {enviarParaPaybox} from './006_save_utils.js'
+import {retomarSalvamentoPendente} from './006_save_utils.js';
 
 // Inicia o processo
 __INIT__().catch(error => {
@@ -52,6 +52,12 @@ async function __INIT__() {
         await searchPageParams();
         console.log("page => ", globais.pag);
         console.log("globais => ", globais)
+
+        // Conclui primeiro qualquer operação interrompida. Assim, uma consulta
+        // logo após o F5 não consegue sobrescrever a tela com o estado antigo.
+        globais.salvamentoRetomado = await retomarSalvamentoPendente({
+            exibirMensagem: false
+        });
 
         // 2. Valida as entidades permitidas
         validarEntidadesPermitidas();

@@ -53,25 +53,90 @@ export function setupEventListeners() {
  * - buscarFornecedores: Popula o Map baseFornecedores
  * - buscarRecursivamente: Busca registros recursivamente com paginação
  */
-export async function executar_apiZoho({ tipo = null, criterios = null, ID = null, corpo = null, nomeR = null, nomeF = null } = {}) {
+export async function executar_apiZoho({
+    tipo = null,
+    criterios = null,
+    ID = null,
+    corpo = null,
+    nomeR = null,
+    nomeF = null,
+    tentativas = null
+} = {}) {
     try {
-        const log = true;
+        const log = false;
         nomeR = nomeR ? nomeR : globais.nomeRelCot;
         nomeF = nomeF ? nomeF : globais.nomeFormCot;
-        let recOps = await ZOHO.CREATOR.DATA;
+        let recOps = globalThis.ZOHO?.CREATOR?.DATA;
+
+        if (!recOps) {
+            throw new Error('O SDK do Zoho Creator ainda não está disponível.');
+        }
+
+        const tiposIdempotentes = new Set(['busc_reg', 'busc_reg_recursivo', 'atualizar_reg', 'deletar_reg', 'subir_arq']);
+        const totalTentativas = tentativas ?? (tiposIdempotentes.has(tipo) ? 3 : 1);
+        const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        function respostaTransitoria(resp) {
+            const status = Number(resp?.status || resp?.response?.status || 0);
+            const code = Number(resp?.code || 0);
+            return status === 408 || status === 429 || status >= 500 || code === 429 || code >= 5000;
+        }
+
+        function erroTransitorio(erro) {
+            const status = Number(erro?.status || erro?.response?.status || 0);
+            if (status) return status === 408 || status === 429 || status >= 500;
+
+            const responseText = erro?.responseText || erro?.response?.responseText;
+            if (typeof responseText === 'string') {
+                try {
+                    const code = Number(JSON.parse(responseText)?.code || 0);
+                    if ([3100, 9280].includes(code)) return false;
+                    if (code) return code === 429 || code >= 5000;
+                } catch (_) {
+                    // Sem status/código confiável, trata como falha de rede.
+                }
+            }
+            return true;
+        }
+
+        async function executarComRetry(operacao) {
+            let ultimoErro;
+            for (let tentativa = 1; tentativa <= totalTentativas; tentativa++) {
+                try {
+                    const resp = await operacao();
+                    if (!respostaTransitoria(resp) || tentativa === totalTentativas) return resp;
+                    ultimoErro = resp;
+                } catch (erro) {
+                    ultimoErro = erro;
+                    if (tentativa === totalTentativas || !erroTransitorio(erro)) throw erro;
+                }
+
+                await esperar(300 * (2 ** (tentativa - 1)) + Math.floor(Math.random() * 150));
+            }
+            return ultimoErro;
+        }
+
+        function normalizarCorpo(valor) {
+            if (typeof valor !== 'string') return valor;
+            try {
+                return JSON.parse(valor);
+            } catch (_) {
+                return valor;
+            }
+        }
 
         // Função de criar registro
         async function criar_reg(ddsCriacao) {
-
-            ddsCriacao = { "data": ddsCriacao };
+            ddsCriacao = { "data": normalizarCorpo(ddsCriacao) };
             if (log) console.log("Criando registro com dados => ", JSON.stringify(ddsCriacao, null, 2));
             const config = {
                 app_name: globais.nomeApp,
                 form_name: nomeF,
                 payload: ddsCriacao
             };
-            const resp = await recOps.addRecords(config);
-            return resp;
+            // Inclusões não são repetidas automaticamente. Se a resposta se perder,
+            // o fluxo de salvamento reconcilia pela chave de negócio antes de criar de novo.
+            return executarComRetry(() => recOps.addRecords(config));
         }
 
         // Função de atualizar registro
@@ -83,20 +148,19 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 
             if(ID !== null)
             {
-                return await recOps.updateRecordById({
+                return executarComRetry(() => recOps.updateRecordById({
                     app_name: globais.nomeApp,
                     report_name: nomeR,
                     id: ID,
                     payload: data
-                });
+                }));
             }
 
-
-            return await recOps.updateRecords({
+            return executarComRetry(() => recOps.updateRecords({
                 app_name: globais.nomeApp,
                 report_name: nomeR,
                 payload: data
-            });
+            }));
             
         }
 
@@ -112,11 +176,12 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                     record_cursor: cursor,
                     max_records: 1000
                 };
-                const resp  = await recOps.getRecords(config);
-                //Verifica possíveis erros
-                if (!resp || resp.code !== 3000 || !Array.isArray(resp.data) || resp.data.length === 0) {
-                    break;
-                }
+                const resp = await executarComRetry(() => recOps.getRecords(config));
+                if (!resp) throw new Error(`Resposta vazia ao consultar o relatório ${nomeR}.`);
+                if ([3100, 9280].includes(Number(resp.code))) break;
+                if (Number(resp.code) !== 3000) throw resp;
+                if (!Array.isArray(resp.data)) throw new Error(`Resposta inválida ao consultar o relatório ${nomeR}.`);
+                if (resp.data.length === 0) break;
 
                 cursor = resp.record_cursor??null;
 
@@ -135,7 +200,8 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
             try {
                 console.log("Subindo arquivos...");
                 
-                recOps = ZOHO.CREATOR.FILE;
+                recOps = globalThis.ZOHO?.CREATOR?.FILE;
+                if (!recOps) throw new Error('O módulo de arquivos do Zoho Creator não está disponível.');
                 const config = {
                     app_name: globais.nomeApp,
                     report_name: nomeR,
@@ -148,7 +214,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                 console.log(corpo);
                 console.log(JSON.stringify(corpo));
 
-                const resp = await recOps.uploadFile(config);
+                const resp = await executarComRetry(() => recOps.uploadFile(config));
                 console.log("Resposta do upload => ", resp);
                 if (!resp || (resp && !resp.code)) {
                     console.warn("Resposta anômala do upload:", resp);
@@ -174,7 +240,7 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
                     payload: {criteria: criterios}
                 }
                 console.log("Deletando registros com critérios => ", JSON.stringify(config));
-                return await recOps.deleteRecords(config);
+                return executarComRetry(() => recOps.deleteRecords(config));
         }
 
         // Funções solicitadas conforme tipo
@@ -198,12 +264,26 @@ export async function executar_apiZoho({ tipo = null, criterios = null, ID = nul
 
         }
     } catch (err) {
+        const responseText = err?.responseText || err?.response?.responseText;
+        let erroZoho = err;
+        if (typeof responseText === 'string') {
+            try {
+                erroZoho = { ...err, ...JSON.parse(responseText) };
+            } catch (_) {
+                // Mantém o erro original quando o corpo não é JSON.
+            }
+        }
+
+        if (tipo?.startsWith('busc_reg') && [3100, 9280].includes(Number(erroZoho?.code))) {
+            return [];
+        }
+
         console.error("Erro na API do Zoho => ", err);
-        
+
         // Trata diferentes tipos de erro e retorna um objeto estruturado
-        if (err?.code) {
+        if (erroZoho?.code) {
             // Se já é uma resposta da API, retorna como está
-            return err;
+            return erroZoho;
         } else if (err?.name === 'Error' || err?.message) {
             // Se é um erro JavaScript padrão
             return {
@@ -1021,6 +1101,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
         const parcelaCriadaElement = document.getElementsByName('parcela_criada')[0];
         let parcelaCriada = parcelaCriadaElement ? parcelaCriadaElement.checked : false;
+        const quantidadeParcelas = document.querySelectorAll('#form-pagamento .parcela').length;
         const data_atual = moment();
         const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
         // Nova constante no formato 'aa-mmm-dd' com mês em inglês
@@ -1042,8 +1123,9 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         } 
         else if (acao === "enviar_p_ass_control") {
-            stats_salvarCot = parcelaCriada? "Ass. control." : "Prop. criada";
-            apoio_sep_parcela = parcelaCriada?false:true;
+            const deveSepararEmParcelas = !parcelaCriada && quantidadeParcelas > 1;
+            stats_salvarCot = deveSepararEmParcelas ? "Prop. criada" : "Ass. control.";
+            apoio_sep_parcela = deveSepararEmParcelas;
 
         }else if (globais.pag === "checagem_final") {
             stats_salvarCot = "Chec. final";
@@ -1202,7 +1284,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             {
                 status: stats_salvarCot,
                 sepPorParc: apoio_sep_parcela,
-                paramsExtraPDC: apoio_paramExtras
+                paramsExtraPDC: apoio_paramExtras,
+                resolucaoAposSalvar: apoio_sep_parcela ? {
+                    tipo: 'enviar_p_ass_control',
+                    statusPrimeiroPdc: 'Ass. control.',
+                    salvarPdcOriginalSeparado: globais.tipo === 'editar_pdc'
+                } : null
             },
             enviar_p_assinatura: {
                 status: stats_salvarCot,
@@ -1234,6 +1321,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             }
             console.log(`params: ${JSON.stringify(params, null, 2)}`);
             const ids_pdcs_criados = await saveTableData_V3(params);
+            console.log('IDs de PDC retornados pelo salvamento resiliente => ', ids_pdcs_criados);
             /*
             if(ids_pdcs_criados == false)
             {
@@ -1307,14 +1395,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 }
             } else if (acao === 'confirmar_recebimento') {
                 await saveTableData_V3({ status: "Separado em parcelas" });
-            }
-            else if(acao === 'enviar_p_ass_control' && apoio_sep_parcela)
-            {
-                const resp = await executar_apiZoho({tipo: "atualizar_reg", ID: ids_pdcs_criados[0], corpo: {Status_geral: "Ass. control."}, nomeR: globais.nomeRelPDC});
-                if(globais.tipo === "editar_pdc")
-                {
-                    await saveTableData_V3({ status: "Separado em parcelas" });                
-                }
             }
             /*
             if(params.status == "Pag. aut.")
