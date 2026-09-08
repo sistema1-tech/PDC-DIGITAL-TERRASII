@@ -609,11 +609,6 @@ function normalizarOperacaoPersistida(operacao) {
     operacao.resolution.firstPdcStatusDone = false;
     operacao.resolution.done = false;
 
-    if (operacao.items?.length === 1 && operacao.resolution.originalItem) {
-        // Na parcela única o item principal já é o PDC original. Não pode haver
-        // uma segunda fase que o devolva para "Separado em parcelas".
-        operacao.resolution.originalItem = null;
-    }
     return operacao;
 }
 

@@ -1101,7 +1101,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
         const parcelaCriadaElement = document.getElementsByName('parcela_criada')[0];
         let parcelaCriada = parcelaCriadaElement ? parcelaCriadaElement.checked : false;
-        const quantidadeParcelas = document.querySelectorAll('#form-pagamento .parcela').length;
         const data_atual = moment();
         const data_atual_formatada = data_atual.format('DD/MM/YYYY HH:mm:ss');
         // Nova constante no formato 'aa-mmm-dd' com mês em inglês
@@ -1123,9 +1122,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         } 
         else if (acao === "enviar_p_ass_control") {
-            const deveSepararEmParcelas = !parcelaCriada && quantidadeParcelas > 1;
-            stats_salvarCot = deveSepararEmParcelas ? "Prop. criada" : "Ass. control.";
-            apoio_sep_parcela = deveSepararEmParcelas;
+            // Mantém a decisão do fluxo original: o que define a separação é
+            // a parcela já ter sido criada, não a quantidade de parcelas.
+            // Uma solicitação nova da Controladoria, mesmo com uma parcela,
+            // precisa passar pelo separador para gerar o filhote com índice 0.
+            stats_salvarCot = parcelaCriada ? "Ass. control." : "Prop. criada";
+            apoio_sep_parcela = parcelaCriada ? false : true;
 
         }else if (globais.pag === "checagem_final") {
             stats_salvarCot = "Chec. final";
