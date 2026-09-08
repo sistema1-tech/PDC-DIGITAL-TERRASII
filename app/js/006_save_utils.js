@@ -64,7 +64,10 @@ async function splitDataByInstallments(status = null) {
         if (!isCreated) {
 
             if(log) console.log("=> PARCELA AINDA NÃO CRIADA, PEGANDO DADOS <=");
-            const currTempPDC = numInstallments > 1 || pgtoAnt === true ? `${globais.numPDC_temp}/${(index + 1).toString().padStart(2, '0')}` : globais.numPDC_temp;
+            // Esta função sempre prepara filhotes (sepPorParc=true). Mesmo com
+            // uma parcela, a chave deve ser distinta da do pai; do contrário a
+            // reconciliação por id_temp reutiliza o original em vez de criar.
+            const currTempPDC = `${globais.numPDC_temp}/${(index + 1).toString().padStart(2, '0')}`;
             if(log) console.log("currTempPDC => ", currTempPDC);
 
             const initialDataPDC = pegarDadosPDC_V2(index, currTempPDC);
