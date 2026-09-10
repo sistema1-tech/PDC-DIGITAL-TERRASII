@@ -10,4 +10,7 @@ dist
 app/js/temp.txt
 app/js/_bkp
 tests
+!tests/
+tests/*
+!tests/final_check_installments_simulation.cjs
 00-Fluxograma

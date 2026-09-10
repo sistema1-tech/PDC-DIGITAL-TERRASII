@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server/index.js",
-    "test": "node tests/resilient_save_simulation.cjs && node tests/single_installment_simulation.cjs && node tests/single_installment_receipt_simulation.cjs && node tests/zoho_api_retry_simulation.cjs"
+    "test": "node tests/resilient_save_simulation.cjs && node tests/single_installment_simulation.cjs && node tests/single_installment_receipt_simulation.cjs && node tests/final_check_installments_simulation.cjs && node tests/zoho_api_retry_simulation.cjs"
   },
   "dependencies": {
     "body-parser": "^1.14.2",

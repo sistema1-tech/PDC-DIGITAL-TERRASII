@@ -1097,6 +1097,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         if (log) console.log("acao => ", acao);
         if (log) console.log("page => ", globais.pag);
         if (log) console.log("infoInserida => ", infoInserida);
+
+        const statusSemAjuste = new Set(['Pag. aut.', 'Lanç. ERP', 'Pag. real.']);
+        if (acao === 'solicitar_ajuste_ao_compras' && statusSemAjuste.has(String(globais.statusPDC || '').trim())) {
+            throw new Error('Este PDC já passou da autorização de pagamento e não pode mais ser devolvido para ajuste.');
+        }
     
         const tipoSolicitacao = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
         const parcelaCriadaElement = document.getElementsByName('parcela_criada')[0];
@@ -1112,13 +1117,14 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
         let stats_salvarCot = "Prop. criada";
         let apoio_sep_parcela = globais.perfilResponsavel.includes("Controladoria");
+        const checandoPdcPai = globais.pag === "checagem_final" && !globais.pdcEhParcela;
 
         if (globais.pag === "criar_numero_de_PDC") {
             stats_salvarCot = null;
 
         } else if (acao === "enviar_p_assinatura") {
-            stats_salvarCot = parcelaCriada? "Ass. control." : "Chec. final";
-            apoio_sep_parcela = false;
+            stats_salvarCot = "Ass. control.";
+            apoio_sep_parcela = checandoPdcPai;
 
         } 
         else if (acao === "enviar_p_ass_control") {
@@ -1160,7 +1166,8 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 Assinado: true
             }
             
-            if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 800)
+            const criandoParcelasNaChecagem = acao === 'enviar_p_assinatura' && checandoPdcPai;
+            if(criandoParcelasNaChecagem || converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 800)
             {
                 apoio_assin_inic["Mario"]={
                     Cargo: "Administrativo",
@@ -1275,11 +1282,19 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             },
             confirmar_compra: {
                 status: globais.perfilResponsavel.includes("Controladoria")? 'Chec. final': tipoSolicitacao === 'SERVIÇO' || pgtoAnt?'Chec. final' : 'Compra real.',
-                sepPorParc: tipoSolicitacao === 'SERVIÇO' || pgtoAnt || globais.perfilResponsavel.includes("Controladoria"),
+                sepPorParc: false,
                 paramsExtraPDC: {pag_antecipado: false}
             },
-            confirmar_recebimento: { status: "Chec. final", sepPorParc: true },
-            solicitar_ajuste_ao_compras: { status: "Ajuste sol. control.", paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida }},
+            confirmar_recebimento: { status: "Chec. final", sepPorParc: false },
+            solicitar_ajuste_ao_compras: {
+                status: "Ajuste sol. control.",
+                paramsExtraPDC: { Solicitacao_de_ajuste: infoInserida },
+                resolucaoAposSalvar: String(globais.numPDC_temp || '').includes('/') ? {
+                    tipo: 'solicitar_ajuste_parcela',
+                    parentTempId: String(globais.numPDC_temp).replace(/\/\d+$/, ''),
+                    solicitacaoDeAjuste: infoInserida
+                } : null
+            },
             enviar_p_checagem_final: { status: "Chec. final" },
             tratar_control: { paramsExtraPDC: { Status_controladoria: "Tratado" } },
             enviar_p_ass_control:
@@ -1296,7 +1311,10 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             enviar_p_assinatura: {
                 status: stats_salvarCot,
                 sepPorParc: apoio_sep_parcela,
-                paramsExtraPDC: apoio_paramExtras
+                paramsExtraPDC: apoio_paramExtras,
+                parcelasSelecionadas: checandoPdcPai,
+                permitirAtualizacaoAjuste: checandoPdcPai,
+                finalizarParcelasNaChecagem: checandoPdcPai
             },
             autorizar_pagamento_subsindico: {
                 status: ap_status_subsindico,//status: tudoAssinado ? "Pag. aut." : "Ass. subsindico",
@@ -1317,7 +1335,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
 
         if (acao in statusMap) {
             const params = statusMap[acao];
-            if(["aprov_cot", "enviar_p_ass_control"].includes(acao) && !globais.numPDC)
+            if(["aprov_cot", "enviar_p_ass_control", "enviar_p_checagem_final"].includes(acao) && !globais.numPDC)
             {
                 await gerar_num_pdc();
             }
@@ -1377,14 +1395,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
                 }
             } else if (acao === 'confirmar_compra') {
-                if (tipoSolicitacao === 'SERVIÇO' || globais.perfilResponsavel.includes("Controladoria")) {
-                    await saveTableData_V3({ status: "Separado em parcelas" });
-
-                } else if (pgtoAnt) {
-                    await saveTableData_V3({ status: "Compra real.", paramExtra: { pag_antecipado: false } });
-                    
-                }
-    
                 const entidadeSelecionada = document.getElementById('entidade').value;
                 const layoutMap = {
                     "1": "pedido_PDF",
@@ -1395,8 +1405,6 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     const link_layout = `${url}guillaumon/${globais.nomeApp}/pdf/${layoutName}?id_pdc=${globais.idPDC}&zc_PdfSize=A4&zc_FileName=${globais.numPDC}_${layoutName.split('_')[0]}`;
                     window.open(link_layout, '_blank', 'noopener,noreferrer');
                 }
-            } else if (acao === 'confirmar_recebimento') {
-                await saveTableData_V3({ status: "Separado em parcelas" });
             }
             /*
             if(params.status == "Pag. aut.")
@@ -1528,9 +1536,12 @@ export function desabilitarCampos() {
     }
     if(log) console.log("Passou do if inicial!");
     if (globais.pag === "ajustar_compra_compras" || globais.pag === "checagem_final") {
-        camposParaManterHabilitados = ["Entidade", "Tipo_de_solicitacao","Datas", "Valor", "valor-unit", "Justificativa"];//name
+        camposParaManterHabilitados = ["Entidade", "Tipo_de_solicitacao","Datas", "Valor", "valor-unit", "Justificativa", "parcela_selecionada"];//name
         botoesParaManterHabilitados = ["add-classificacao", "add-parcela", "remover-parcela", "add-linha-nf", "remover-linha-nf"];//classe
-        formsParaManterHabilitados = ["form-pagamento", "dados-nf", "form-classificacao", ];//forms
+        if (globais.pag === "checagem_final" && globais.temParcelaEmAjuste) {
+            camposParaManterHabilitados.push("Descricao_da_compra", "Utilizacao");
+            formsParaManterHabilitados = ["form-pagamento", "dados-nf", "form-classificacao"];//forms
+        }
         aTagsParaManterHabilitados = ["gallery-item"];
     } else if (globais.pag === "criar_numero_de_PDC") {
         camposParaManterHabilitados = ["Num_PDC_parcela", "Justificativa"];
@@ -1560,8 +1571,11 @@ export function desabilitarCampos() {
     // Seleciona todos os elementos de input, textarea e select
     const campos = document.querySelectorAll('input, textarea, select');
     campos.forEach(elemento => {
+        const dentroDeFormHabilitado = formsParaManterHabilitados.some(form =>
+            elemento.closest(`#${form}, .${form}`)
+        );
         // Verifica se o elemento deve ser mantido visível
-        if (!camposParaManterHabilitados.includes(elemento.name)) {
+        if (!camposParaManterHabilitados.includes(elemento.name) && !dentroDeFormHabilitado) {
             elemento.disabled = true;
             elemento.readOnly = true; // Adiciona o atributo readonly
             elemento.style.cursor = 'not-allowed';

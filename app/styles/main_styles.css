@@ -780,6 +780,57 @@ button:hover {
     flex: 1;
 }
 
+.parcela.parcela-criada {
+    background: #f3fbf5;
+    border: 1px solid #b8e0c2;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.parcela.parcela-em-ajuste {
+    background: #fff9ec;
+    border: 1px solid #f0cf82;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.selecao-parcela-wrapper {
+    min-width: auto !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #315f3b !important;
+    cursor: pointer;
+}
+
+.selecao-parcela-wrapper input {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.estado-parcela {
+    flex: 0 0 auto;
+    min-width: 92px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: 82%;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.estado-parcela-criada {
+    color: #176b2c;
+    background: #dff3e4;
+}
+
+.estado-parcela-ajuste {
+    color: #855d00;
+    background: #ffecb8;
+}
+
 .add-parcela {
     background: none;
     border: none;

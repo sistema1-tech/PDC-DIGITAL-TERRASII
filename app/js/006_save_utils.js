@@ -7,7 +7,13 @@ const qtdCssDecimais = 2; //Quantidade de casas decimais dos campos decimais (At
 //==================================================================================================//
 //===========================MESCLA OS DADOS DO PDC, TOTAL OU POR PARCELA===========================//
 //==================================================================================================//
-async function splitDataByInstallments(status = null) {
+const STATUS_FILHO_EM_AJUSTE = new Set(['Ajuste sol. control.', 'Aguardando ajuste']);
+
+function parcelaPodeSerAtualizada(parcela) {
+    return STATUS_FILHO_EM_AJUSTE.has(String(parcela?.dataset?.statusFilho || '').trim());
+}
+
+async function splitDataByInstallments(status = null, opcoes = {}) {
     const log = false;
     const reqType = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     const pgtoAnt = document.getElementById('pag_antecipado').checked;
@@ -40,10 +46,10 @@ async function splitDataByInstallments(status = null) {
         )
     )
     {
-        installments = [document.querySelectorAll('.parcela')[0]];
+        installments = [{ parcela: document.querySelectorAll('.parcela')[0], index: 0 }];
 
     } else {
-        installments = document.querySelectorAll('.parcela');
+        installments = [...document.querySelectorAll('.parcela')].map((parcela, index) => ({ parcela, index }));
         
     }
 
@@ -55,13 +61,18 @@ async function splitDataByInstallments(status = null) {
     const NFData = pegarDadosNF_V2();
     
     if(log) console.log("=> PEGANDO DADOS DE PARCELAS <=");
-    installments.forEach((installment, index) => {
+    installments.forEach(({ parcela: installment, index }) => {
 
         if(log) console.log("indexInstallment => ", index);
-        const isCreated = installment.querySelector('input[name="parcela_criada"]').hasAttribute('checked');
+        const isCreated = Boolean(installment.querySelector('input[name="parcela_criada"]')?.checked);
+        const isSelected = Boolean(installment.querySelector('input[name="parcela_selecionada"]')?.checked);
+        const isAdjustment = isCreated && parcelaPodeSerAtualizada(installment);
+        const shouldProcess = opcoes.apenasSelecionadas
+            ? isSelected && (!isCreated || (opcoes.permitirAtualizacaoAjuste && isAdjustment))
+            : !isCreated;
         if(log) console.log("isCreated => ", isCreated);
 
-        if (!isCreated) {
+        if (shouldProcess) {
 
             if(log) console.log("=> PARCELA AINDA NÃO CRIADA, PEGANDO DADOS <=");
             // Esta função sempre prepara filhotes (sepPorParc=true). Mesmo com
@@ -87,8 +98,8 @@ async function splitDataByInstallments(status = null) {
             newPDCs.set(index, { 'priceTableData': priceTableData, 'PDCsData': allDataPDC});
             //
             const parcelaCriadaInput = installment.querySelector('input[name="parcela_criada"]');
-            if (parcelaCriadaInput) {
-                parcelaCriadaInput.setAttribute('checked', 'checked');
+            if (parcelaCriadaInput && !opcoes.naoMarcarComoCriadaNaTela) {
+                parcelaCriadaInput.checked = true;
             }
         }
     });
@@ -765,14 +776,20 @@ function normalizarOpcoes(opcoes, sepPorParcLegado = false, paramsExtraLegado = 
             status: opcoes.status ?? null,
             sepPorParc: Boolean(opcoes.sepPorParc),
             paramsExtraPDC: opcoes.paramsExtraPDC || opcoes.paramExtra || {},
-            resolucaoAposSalvar: opcoes.resolucaoAposSalvar || null
+            resolucaoAposSalvar: opcoes.resolucaoAposSalvar || null,
+            parcelasSelecionadas: Boolean(opcoes.parcelasSelecionadas),
+            permitirAtualizacaoAjuste: Boolean(opcoes.permitirAtualizacaoAjuste),
+            finalizarParcelasNaChecagem: Boolean(opcoes.finalizarParcelasNaChecagem)
         };
     }
     return {
         status: opcoes ?? null,
         sepPorParc: Boolean(sepPorParcLegado),
         paramsExtraPDC: paramsExtraLegado || {},
-        resolucaoAposSalvar: null
+        resolucaoAposSalvar: null,
+        parcelasSelecionadas: false,
+        permitirAtualizacaoAjuste: false,
+        finalizarParcelasNaChecagem: false
     };
 }
 
@@ -826,19 +843,50 @@ function criarItem({ chave, pdcData, paramsExtraPDC, anexos, mode, pdcId = null,
     };
 }
 
-async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoAposSalvar }) {
+async function criarOperacao({
+    status,
+    sepPorParc,
+    paramsExtraPDC,
+    resolucaoAposSalvar,
+    parcelasSelecionadas,
+    permitirAtualizacaoAjuste,
+    finalizarParcelasNaChecagem
+}) {
     if (!globais.numPDC_temp) globais.numPDC_temp = `pdc_${gerarIdOperacao()}`;
 
     const operationId = gerarIdOperacao();
     const tipoOriginal = globais.tipo;
     const pdcOriginalId = globais.idPDC ? String(globais.idPDC) : null;
-    const PDCsToSave = sepPorParc ? await splitDataByInstallments(status) : await meshData(status);
-    if (PDCsToSave.size === 0) throw new Error('Não há parcelas pendentes para salvar.');
+    const PDCsToSave = sepPorParc
+        ? await splitDataByInstallments(status, {
+            apenasSelecionadas: parcelasSelecionadas,
+            permitirAtualizacaoAjuste,
+            naoMarcarComoCriadaNaTela: finalizarParcelasNaChecagem
+        })
+        : await meshData(status);
+    if (PDCsToSave.size === 0) {
+        throw new Error(parcelasSelecionadas
+            ? 'Selecione ao menos uma parcela pendente ou aguardando ajuste.'
+            : 'Não há parcelas pendentes para salvar.');
+    }
 
     let dadosOriginaisResolucao = null;
+    let dadosPaiParcelas = null;
     if (resolucaoAposSalvar?.tipo === 'enviar_p_ass_control' && resolucaoAposSalvar.salvarPdcOriginalSeparado) {
         if (!pdcOriginalId) throw new Error('Não foi possível identificar o PDC original para concluir enviar_p_ass_control.');
         dadosOriginaisResolucao = await meshData('Separado em parcelas');
+    }
+    if (finalizarParcelasNaChecagem) {
+        if (!pdcOriginalId) throw new Error('Não foi possível identificar o PDC pai da checagem final.');
+        const indicesProcessados = new Set([...PDCsToSave.keys()].map(Number));
+        const todasCriadas = [...document.querySelectorAll('#camposData .parcela')]
+            .every((parcela, index) => Boolean(parcela.querySelector('input[name="parcela_criada"]')?.checked) || indicesProcessados.has(index));
+        const statusPai = todasCriadas ? 'Separado em parcelas' : 'Chec. final';
+        dadosPaiParcelas = await meshData(statusPai);
+        const entradaPai = dadosPaiParcelas.entries().next().value;
+        entradaPai[1].PDCsData.Datas?.forEach((parcela, index) => {
+            if (indicesProcessados.has(index)) parcela.parcela_criada = true;
+        });
     }
 
     const novos = [...new Set(valoresDaColecao(globais.arquivosNovos))];
@@ -855,6 +903,14 @@ async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoApos
             // Somente a primeira parcela entra no fluxo de assinaturas. O array
             // vazio também corrige uma parcela reconciliada de uma tentativa anterior.
             extrasDoItem = { ...paramsExtraPDC, Assinaturas: [] };
+        } else if (finalizarParcelasNaChecagem && Array.isArray(paramsExtraPDC.Assinaturas)) {
+            const valorParcela = Number(pdcData.PDCsData.Datas?.[0]?.Valor || 0);
+            extrasDoItem = {
+                ...paramsExtraPDC,
+                Assinaturas: paramsExtraPDC.Assinaturas.filter(assinatura =>
+                    assinatura?.Usuario !== 'Mario' || valorParcela >= 800
+                )
+            };
         }
 
         const item = criarItem({
@@ -891,6 +947,24 @@ async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoApos
             firstPdcStatusDone: false,
             originalQuotesDeactivated: false,
             originalItem,
+            done: false
+        };
+    } else if (finalizarParcelasNaChecagem) {
+        const entradaPai = dadosPaiParcelas.entries().next().value;
+        resolution = {
+            type: 'parcelas_checagem_final',
+            parentPdcId: pdcOriginalId,
+            parentData: entradaPai[1].PDCsData,
+            parentStatus: entradaPai[1].PDCsData.Status_geral,
+            parentDone: false,
+            done: false
+        };
+    } else if (resolucaoAposSalvar?.tipo === 'solicitar_ajuste_parcela') {
+        resolution = {
+            type: 'solicitar_ajuste_parcela',
+            parentTempId: resolucaoAposSalvar.parentTempId,
+            adjustmentNote: resolucaoAposSalvar.solicitacaoDeAjuste || '',
+            parentDone: false,
             done: false
         };
     }
@@ -1200,9 +1274,84 @@ async function confirmarStatusPrimeiroPDC(operacao, primeiroItem) {
     );
 }
 
+async function atualizarPDCComConfirmacao(operacao, { pdcId, corpo, statusEsperado, descricao }) {
+    let ultimaResposta;
+    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        ultimaResposta = await executar_apiZoho({
+            tipo: 'atualizar_reg',
+            ID: pdcId,
+            corpo,
+            nomeR: globais.nomeRelPDC
+        });
+        if (!respostaBemSucedida(ultimaResposta)) {
+            throw erroZoho(`Erro ao atualizar ${descricao}`, ultimaResposta);
+        }
+
+        const confirmacao = await buscarRegistros({
+            criterios: `(ID==${pdcId})`,
+            nomeR: globais.nomeRelPDC
+        });
+        if (String(confirmacao[0]?.Status_geral || '').trim() === statusEsperado) return;
+        if (tentativa < 3) await new Promise(resolve => setTimeout(resolve, 300 * tentativa));
+    }
+    throw erroZoho(`O Zoho não confirmou ${descricao}`, ultimaResposta);
+}
+
+async function concluirParcelasDaChecagem(operacao) {
+    const resolucao = operacao.resolution;
+    if (resolucao.parentDone) return;
+    await atualizarPDCComConfirmacao(operacao, {
+        pdcId: resolucao.parentPdcId,
+        corpo: resolucao.parentData,
+        statusEsperado: resolucao.parentStatus,
+        descricao: `o PDC pai ${resolucao.parentPdcId}`
+    });
+    resolucao.parentDone = true;
+    persistirOperacao(operacao);
+}
+
+async function devolverPaiParaChecagem(operacao) {
+    const resolucao = operacao.resolution;
+    if (resolucao.parentDone) return;
+    if (!resolucao.parentPdcId) {
+        const pais = await buscarRegistros({
+            criterios: `(id_temp=="${escaparCriterio(resolucao.parentTempId)}")`,
+            nomeR: globais.nomeRelPDC
+        });
+        resolucao.parentPdcId = pais[0]?.ID ? String(pais[0].ID) : null;
+        if (!resolucao.parentPdcId) throw new Error('Não foi possível localizar o PDC pai para receber o ajuste.');
+        persistirOperacao(operacao);
+    }
+    await atualizarPDCComConfirmacao(operacao, {
+        pdcId: resolucao.parentPdcId,
+        corpo: {
+            Status_geral: 'Chec. final',
+            Solicitacao_de_ajuste: resolucao.adjustmentNote
+        },
+        statusEsperado: 'Chec. final',
+        descricao: `o retorno do PDC pai ${resolucao.parentPdcId} para a checagem final`
+    });
+    resolucao.parentDone = true;
+    persistirOperacao(operacao);
+}
+
 async function executarResolucaoAposSalvar(operacao) {
     const resolucao = operacao.resolution;
     if (!resolucao || resolucao.done) return;
+
+    if (resolucao.type === 'parcelas_checagem_final') {
+        await concluirParcelasDaChecagem(operacao);
+        resolucao.done = true;
+        persistirOperacao(operacao);
+        return;
+    }
+
+    if (resolucao.type === 'solicitar_ajuste_parcela') {
+        await devolverPaiParaChecagem(operacao);
+        resolucao.done = true;
+        persistirOperacao(operacao);
+        return;
+    }
 
     if (resolucao.originalItem) {
         if (!resolucao.originalQuotesDeactivated) {

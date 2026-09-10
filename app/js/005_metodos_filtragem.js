@@ -226,16 +226,20 @@ export function criarBotao({page = null, removeExistingButtons = false})
                 break;
             
             case "criar_cotacao_controladoria":
-                configurarBotao('confirm-purchase-btn adjust-btn', 'Sol. aut. Síndico', 'enviar_p_ass_control', null, 'Deseja enviar o PDC para que o SÍNDICO e o SUBSÍNDICO possa autorizar?');
+                configurarBotao('confirm-purchase-btn adjust-btn', 'Enviar p/ checagem final', 'enviar_p_checagem_final', null, 'Deseja enviar o PDC para a CHECAGEM FINAL?');
                 break;
 
             case "lancamentos_provisionados":
-                configurarBotao('confirm-purchase-btn adjust-btn', 'Sol. aut. Síndico', 'enviar_p_ass_control', null, 'Deseja enviar o PDC para que o SÍNDICO e o SUBSÍNDICO possa autorizar?');
+                configurarBotao('confirm-purchase-btn adjust-btn', 'Enviar p/ checagem final', 'enviar_p_checagem_final', null, 'Deseja enviar o PDC para a CHECAGEM FINAL?');
                 setTimeout(() => criarBotao({page: "arquivar_cotacao"}));
                 break;
 
             case "checagem_final":
-                configurarBotao('confirm-purchase-btn adjust-btn', 'Sol. aut. Síndico', 'enviar_p_assinatura', null, 'Deseja enviar o PDC para que o SÍNDICO e o SUBSÍNDICO possa autorizar?');
+                if (globais.pdcEhParcela) {
+                    configurarBotao('confirm-purchase-btn adjust-btn', 'Sol. aut. Síndico', 'enviar_p_assinatura', null, 'Deseja enviar o PDC para autorização?');
+                } else {
+                    configurarBotao('confirm-purchase-btn adjust-btn', 'Enviar parcelas selecionadas', 'enviar_p_assinatura', null, 'Deseja enviar as parcelas selecionadas para autorização?');
+                }
                 setTimeout(() => criarBotao({page: "solicitar_ajuste_ao_compras"}), 0);
                 setTimeout(() => criarBotao({page: "arquivar_cotacao"}), 0);
                 break;

@@ -4,6 +4,142 @@ let numeroParcela = 1;
 let numParcelaInicial = null;
 let indice_documentos = 0;
 const initUrl = 'https://terrasii.zohocreatorportal.com';
+const STATUS_FILHO_EM_AJUSTE = new Set(['Ajuste sol. control.', 'Aguardando ajuste']);
+
+function valorBooleano(valor) {
+    return valor === true || String(valor).toLowerCase() === 'true';
+}
+
+function statusPermiteAjuste(status) {
+    return STATUS_FILHO_EM_AJUSTE.has(String(status || '').trim());
+}
+
+function garantirControlesDaParcela(parcela) {
+    let parcelaCriada = parcela.querySelector('input[name="parcela_criada"]');
+    if (!parcelaCriada) {
+        parcelaCriada = document.createElement('input');
+        parcelaCriada.type = 'checkbox';
+        parcelaCriada.name = 'parcela_criada';
+        parcelaCriada.classList.add('campo-datas', 'hidden');
+        parcela.appendChild(parcelaCriada);
+    }
+
+    let seletor = parcela.querySelector('input[name="parcela_selecionada"]');
+    if (!seletor) {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'selecao-parcela-wrapper hidden';
+        wrapper.title = 'Selecionar esta parcela para envio';
+        seletor = document.createElement('input');
+        seletor.type = 'checkbox';
+        seletor.name = 'parcela_selecionada';
+        seletor.classList.add('campo-datas', 'seletor-parcela');
+        const texto = document.createElement('span');
+        texto.textContent = 'Enviar';
+        wrapper.append(seletor, texto);
+        const remover = parcela.querySelector('.remover-parcela');
+        parcela.insertBefore(wrapper, remover || parcelaCriada);
+    }
+
+    let estado = parcela.querySelector('.estado-parcela');
+    if (!estado) {
+        estado = document.createElement('span');
+        estado.className = 'estado-parcela hidden';
+        const remover = parcela.querySelector('.remover-parcela');
+        parcela.insertBefore(estado, remover || parcelaCriada);
+    }
+
+    return { parcelaCriada, seletor, wrapper: seletor.closest('.selecao-parcela-wrapper'), estado };
+}
+
+function aplicarEstadoDaParcela(parcela, statusFilho = '') {
+    const controles = garantirControlesDaParcela(parcela);
+    const criada = controles.parcelaCriada.checked;
+    const emAjuste = criada && statusPermiteAjuste(statusFilho);
+    const naChecagemFinal = globais.pag === 'checagem_final';
+    const podeSelecionar = naChecagemFinal && (!criada || emAjuste);
+    const deveBloquear = criada && !emAjuste;
+
+    parcela.dataset.parcelaCriada = String(criada);
+    parcela.dataset.statusFilho = String(statusFilho || '');
+    parcela.classList.toggle('parcela-criada', criada && !emAjuste);
+    parcela.classList.toggle('parcela-em-ajuste', emAjuste);
+
+    controles.wrapper.classList.toggle('hidden', !podeSelecionar);
+    controles.seletor.checked = false;
+    controles.estado.classList.toggle('hidden', !criada);
+    controles.estado.classList.toggle('estado-parcela-ajuste', emAjuste);
+    controles.estado.classList.toggle('estado-parcela-criada', criada && !emAjuste);
+    controles.estado.textContent = emAjuste ? '⚠ Aguardando ajuste' : (criada ? '✓ Criada' : '');
+
+    parcela.querySelectorAll('input[name="Datas"], input[name="Valor"], input[name="Num_PDC_parcela"]').forEach(campo => {
+        campo.disabled = deveBloquear;
+        campo.readOnly = deveBloquear;
+        campo.style.cursor = deveBloquear ? 'not-allowed' : '';
+    });
+    const remover = parcela.querySelector('.remover-parcela');
+    if (remover) {
+        remover.disabled = deveBloquear;
+        remover.classList.toggle('hidden', deveBloquear);
+    }
+}
+
+/**
+ * Sincroniza as linhas do PDC pai com os filhotes já criados. Na checagem
+ * final, parcelas novas podem ser selecionadas e filhotes devolvidos para
+ * ajuste ficam editáveis; as demais parcelas criadas permanecem bloqueadas.
+ */
+export async function sincronizarEstadoParcelas() {
+    const parcelas = [...document.querySelectorAll('#camposData .parcela')];
+    if (parcelas.length === 0) return;
+    globais.temParcelaEmAjuste = false;
+    if (globais.pag === 'checagem_final' && globais.pdcEhParcela) return;
+
+    let filhosPorTemp = new Map();
+    if (globais.pag === 'checagem_final' && globais.numPDC_temp) {
+        const idsTemp = parcelas.map((_, index) => `${globais.numPDC_temp}/${String(index + 1).padStart(2, '0')}`);
+        const criterios = `(${idsTemp.map(id => `id_temp=="${id.replace(/"/g, '\\"')}"`).join(' || ')})`;
+        try {
+            const resposta = await executar_apiZoho({
+                tipo: 'busc_reg_recursivo',
+                criterios,
+                nomeR: globais.nomeRelPDC
+            });
+            const filhos = Array.isArray(resposta) ? resposta : [];
+            filhosPorTemp = new Map(filhos.map(filho => [String(filho.id_temp || ''), filho]));
+        } catch (erro) {
+            console.warn('Não foi possível confirmar o status atual dos filhotes das parcelas.', erro);
+        }
+    }
+
+    parcelas.forEach((parcela, index) => {
+        const tempFilho = `${globais.numPDC_temp}/${String(index + 1).padStart(2, '0')}`;
+        const filho = filhosPorTemp.get(tempFilho);
+        const controles = garantirControlesDaParcela(parcela);
+        if (filho?.ID) controles.parcelaCriada.checked = true;
+        if (statusPermiteAjuste(filho?.Status_geral)) globais.temParcelaEmAjuste = true;
+        aplicarEstadoDaParcela(parcela, filho?.Status_geral || '');
+    });
+
+    // Depois que um filhote existe, inserir/remover linhas mudaria o sufixo
+    // /01, /02... e poderia associar uma linha ao filhote errado.
+    const estruturaTravada = globais.pag === 'checagem_final' && parcelas.some(parcela =>
+        Boolean(parcela.querySelector('input[name="parcela_criada"]')?.checked)
+    );
+    if (estruturaTravada) {
+        const adicionar = document.querySelector('.add-parcela');
+        if (adicionar) {
+            adicionar.disabled = true;
+            adicionar.classList.add('hidden');
+        }
+        parcelas.forEach(parcela => {
+            const remover = parcela.querySelector('.remover-parcela');
+            if (remover) {
+                remover.disabled = true;
+                remover.classList.add('hidden');
+            }
+        });
+    }
+}
 
 /**
  * Mostra/oculta campos de pagamento com base na forma de pagamento selecionada
@@ -115,6 +251,7 @@ export async function preencherDadosPDC(data) {
     globais.cotacaoExiste = true;
     globais.idPDC = data.ID;
     globais.numPDC = data.Numero_do_PDC;
+    globais.statusPDC = data.Status_geral;
     globais.perfilResponsavel = data.Perfil_responsavel;
     globais.assinaturas = data.Assinaturas;
     globais.numSolicPDC = data.num_sol;
@@ -512,7 +649,7 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
     novoInputParcelaCriada.type = 'checkbox';
     novoInputParcelaCriada.name = 'parcela_criada';
     novoInputParcelaCriada.classList.add('campo-datas', 'hidden');
-    if(parcCriada == 'true') novoInputParcelaCriada.setAttribute('checked', 'checked');
+    novoInputParcelaCriada.checked = valorBooleano(parcCriada);
 
     //====================CRIA O BOTÃO DE REMOVER====================//
     const removerButton = document.createElement('button');
@@ -533,6 +670,7 @@ export function adicionarCampoVenc(data = null, valor = null, numPDC = null, par
 
     //====================ADICIONA O NOVO CAMPO AO CONTAINER DE CAMPOS====================//
     document.getElementById('camposData').appendChild(novoCampo);
+    aplicarEstadoDaParcela(novoCampo);
 
     //====================ATUALIZA OS RÓTULOS DE PARCELA PARA MANTER A SEQUÊNCIA CORRETA====================//
     atualizarLabels();

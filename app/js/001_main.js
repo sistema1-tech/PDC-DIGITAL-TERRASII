@@ -9,6 +9,7 @@ import {
     mostrarCamposRetencao,
     atualizarValorOrcado,
     preencherDadosPDC,
+    sincronizarEstadoParcelas,
 } from './002_forms_utils.js';
 import {
     atualizarOuvintesTabCot,
@@ -152,6 +153,7 @@ async function executarProcessosParalelos() {
             processarDadosCotacao()
         ];
         await Promise.all(tarefas);
+        await sincronizarEstadoParcelas();
 
         if (globais.pag.includes('editar_cotacao') || globais.pag.includes('ajustar_cotacao_DP')) {
             //=====Cria o botão Sol. Aprov. Síndico=====\\
@@ -359,6 +361,7 @@ async function searchPageParams() {
         console.log("Parâmetros da URL recebidos:", params);
         globais.numPDC = params.idPdc ?? globais.numPDC;
         globais.numPDC_temp = params.num_pdc_temp ?? globais.numPDC_temp;
+        globais.pdcEhParcela = /\/\d+$/.test(String(globais.numPDC_temp || ''));
         globais.pag = params.pag ?? globais.pag;
         globais.userIP = params.user_ip ?? globais.userIP;
         globais.novoPerfilResponsavel = params.perfil_resp ?? globais.novoPerfilResponsavel;
