@@ -1377,7 +1377,8 @@ async function prepararParaSalvar(acao, infoInserida = null) {
     
                 }
             } else if (acao === 'confirmar_compra') {
-                if (tipoSolicitacao === 'SERVIÇO' || globais.perfilResponsavel.includes("Controladoria")) {
+                if ((tipoSolicitacao === 'SERVIÇO' || globais.perfilResponsavel.includes("Controladoria")) &&
+                    ids_pdcs_criados.length > 0) {
                     await saveTableData_V3({ status: "Separado em parcelas" });
 
                 } else if (pgtoAnt) {
@@ -1396,7 +1397,11 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     window.open(link_layout, '_blank', 'noopener,noreferrer');
                 }
             } else if (acao === 'confirmar_recebimento') {
-                await saveTableData_V3({ status: "Separado em parcelas" });
+                // Sem IDs retornados, todas as parcelas já existiam e a própria
+                // operação sepPorParc concluiu o status do PDC original.
+                if (ids_pdcs_criados.length > 0) {
+                    await saveTableData_V3({ status: "Separado em parcelas" });
+                }
             }
             /*
             if(params.status == "Pag. aut.")

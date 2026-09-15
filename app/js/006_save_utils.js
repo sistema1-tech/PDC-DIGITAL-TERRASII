@@ -832,21 +832,40 @@ async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoApos
     const operationId = gerarIdOperacao();
     const tipoOriginal = globais.tipo;
     const pdcOriginalId = globais.idPDC ? String(globais.idPDC) : null;
-    const PDCsToSave = sepPorParc ? await splitDataByInstallments(status) : await meshData(status);
-    if (PDCsToSave.size === 0) throw new Error('Não há parcelas pendentes para salvar.');
+    let PDCsToSave = sepPorParc ? await splitDataByInstallments(status) : await meshData(status);
+    let concluirSomentePdcOriginal = false;
+
+    if (PDCsToSave.size === 0) {
+        if (!sepPorParc) throw new Error('Não há dados pendentes para salvar.');
+        if (!pdcOriginalId) {
+            throw new Error('Todas as parcelas já foram criadas, mas não foi possível identificar o PDC original.');
+        }
+
+        // A ausência de parcelas pendentes conclui a separação. Cria um item
+        // de atualização para o pai em vez de tratar esse estado como erro.
+        PDCsToSave = await meshData('Separado em parcelas');
+        concluirSomentePdcOriginal = true;
+    }
 
     let dadosOriginaisResolucao = null;
-    if (resolucaoAposSalvar?.tipo === 'enviar_p_ass_control' && resolucaoAposSalvar.salvarPdcOriginalSeparado) {
+    if (!concluirSomentePdcOriginal &&
+        resolucaoAposSalvar?.tipo === 'enviar_p_ass_control' &&
+        resolucaoAposSalvar.salvarPdcOriginalSeparado) {
         if (!pdcOriginalId) throw new Error('Não foi possível identificar o PDC original para concluir enviar_p_ass_control.');
         dadosOriginaisResolucao = await meshData('Separado em parcelas');
     }
 
     const novos = [...new Set(valoresDaColecao(globais.arquivosNovos))];
     const existentes = [...new Set(valoresDaColecao(globais.arquivosExistentes))];
-    const descritores = await criarDescritoresAnexos(operationId, novos, sepPorParc ? existentes : []);
+    const descritores = await criarDescritoresAnexos(
+        operationId,
+        novos,
+        sepPorParc && !concluirSomentePdcOriginal ? existentes : []
+    );
     const anexosPrincipais = [...descritores.novos, ...descritores.existentes];
 
-    const ehEnvioAssControl = resolucaoAposSalvar?.tipo === 'enviar_p_ass_control';
+    const ehEnvioAssControl = !concluirSomentePdcOriginal &&
+        resolucaoAposSalvar?.tipo === 'enviar_p_ass_control';
     const items = Array.from(PDCsToSave.entries()).map(([chave, pdcData], indice) => {
         const primeiroDestino = indice === 0;
         let extrasDoItem = paramsExtraPDC;
@@ -862,16 +881,20 @@ async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoApos
             pdcData,
             paramsExtraPDC: extrasDoItem,
             anexos: anexosPrincipais,
-            mode: sepPorParc ? 'criar_pdc' : tipoOriginal,
-            pdcId: !sepPorParc && tipoOriginal === 'editar_pdc' ? pdcOriginalId : null,
-            collectAsCreated: sepPorParc || tipoOriginal !== 'editar_pdc'
+            mode: concluirSomentePdcOriginal ? 'editar_pdc' : (sepPorParc ? 'criar_pdc' : tipoOriginal),
+            pdcId: concluirSomentePdcOriginal
+                ? pdcOriginalId
+                : (!sepPorParc && tipoOriginal === 'editar_pdc' ? pdcOriginalId : null),
+            collectAsCreated: concluirSomentePdcOriginal
+                ? false
+                : (sepPorParc || tipoOriginal !== 'editar_pdc')
         });
 
         return item;
     });
 
     let resolution = null;
-    if (resolucaoAposSalvar?.tipo === 'enviar_p_ass_control') {
+    if (!concluirSomentePdcOriginal && resolucaoAposSalvar?.tipo === 'enviar_p_ass_control') {
         let originalItem = null;
         if (resolucaoAposSalvar.salvarPdcOriginalSeparado) {
             const entradaOriginal = dadosOriginaisResolucao.entries().next().value;
@@ -906,10 +929,11 @@ async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoApos
             rootTempId: globais.numPDC_temp,
             originalType: tipoOriginal,
             originalPdcId: pdcOriginalId,
-            sepPorParc
+            sepPorParc,
+            concluirSomentePdcOriginal
         },
         oldQuotesDeactivated: false,
-        replaceActiveQuotes: !sepPorParc,
+        replaceActiveQuotes: !sepPorParc || concluirSomentePdcOriginal,
         removedAttachmentIds: idsArquivosRemovidos(globais.arquivosRemovidos || []),
         removedAttachmentsDone: false,
         resolution,
