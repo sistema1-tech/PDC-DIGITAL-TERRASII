@@ -1401,9 +1401,10 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
 
     if (log) console.log("++++++++++CRIANDO MINIATURA DE ARQUIVO++++++++++");
     //==========DESABILITANDO BOTÕES DURANTE O PROCESSAMENTO==========//
+    /*
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => button.classList.add('wait-file'));
-
+    */
     //==========CONTAINER PARA DADOS DO ARQUIVO==========//
     const file_container = document.createElement('div');
     file_container.classList.add('gallery-item');
@@ -1594,12 +1595,14 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
         }
 
         $('[data-fancybox="gallery"]').fancybox(elLibConfig);
+        /*
         setTimeout(() => {
             setTimeout(() => {
                 const disabledElements = document.querySelectorAll('.wait-file');
                 disabledElements.forEach(el => el.classList.remove('wait-file'));
             }, 1000);
         }, 0);
+        */
     }
 
     function getFileName(file, origin) {
@@ -1920,9 +1923,10 @@ export async function preencherListaAnexosV2(anexos) {
 
     // Evento para abrir o seletor de arquivos ao clicar no botão
     botaoAdicionar.addEventListener('click', () => {
+        /*
         const buttons = document.querySelectorAll('button');
         buttons.forEach(button => button.classList.add('wait-file'));
-
+        */
         inputFile.disabled = false;
         inputFile.readOnly = false;
         inputFile.click();
@@ -1991,12 +1995,14 @@ export async function preencherListaAnexosV2(anexos) {
             if (mensagemAnexos) {
                 mensagemAnexos.remove();
             }
+            /*
             setTimeout(() => {
                 setTimeout(() => {
                     const disabledElements = document.querySelectorAll('.wait-file');
                     disabledElements.forEach(el => el.classList.remove('wait-file'));
                 }, 1000);
             }, 0);
+            */
         }
     });
 
@@ -2007,13 +2013,15 @@ export async function preencherListaAnexosV2(anexos) {
     btnContainer.appendChild(inputFile);
     btnContainer.appendChild(botaoAdicionar);
     galleryElement.appendChild(btnContainer);
-
+    
+    /*
     setTimeout(() => {
         setTimeout(() => {
             const disabledElements = document.querySelectorAll('.wait-file');
             disabledElements.forEach(el => el.classList.remove('wait-file'));
         }, 1000);
     }, 0);
+    */
 }
 
 //=================================================//
