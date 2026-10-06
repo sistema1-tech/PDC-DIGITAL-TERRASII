@@ -480,7 +480,7 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
                     numero_de_PDC: currPDC ? currPDC : globais.numPDC,
                     num_pdc_temp: currTempPDC ? currTempPDC : globais.numPDC_temp,
                     Aprovado: fornecedorAprovado,
-                    Versao: 1,
+                    Versao: null,
                     Ativo: true
                 };
                 dados.push(dadosLinha);
@@ -493,7 +493,7 @@ function pegarDadostabPrecos(currTempPDC = null, currPDC = null, qtdParc = 1) {
                 Unidade: unidade,
                 numero_de_PDC: currPDC ? currPDC : globais.numPDC,
                 num_pdc_temp: currTempPDC ? currTempPDC : globais.numPDC_temp,
-                Versao: 1,
+                Versao: null,
                 Ativo: true,
             };
             dados.push(dadosLinha);
@@ -1050,11 +1050,34 @@ async function garantirCotacoes(operacao, item) {
         return;
     }
 
-    if (atuais.length > 0) {
-        await desativarCotacoes(criterioAtivas);
-        atuais = [];
-    }
     if (item.priceTableData.length === 0) {
+        if (atuais.length > 0) await desativarCotacoes(criterioAtivas);
+        item.quoteDone = true;
+        persistirOperacao(operacao);
+        return;
+    }
+
+    // Uma fotografia nova só recebe versão quando o conteúdo ativo realmente
+    // diverge. Registros legados sem Versao contam como versão zero.
+    const maiorVersao = atuais.reduce((maior, registro) => {
+        const versao = Number(registro.Versao);
+        return Number.isFinite(versao) ? Math.max(maior, versao) : maior;
+    }, 0);
+    const proximaVersao = maiorVersao + 1;
+    const novaFotografia = item.priceTableData.map(registro => ({ ...registro, Versao: proximaVersao }));
+
+    // Se uma tentativa anterior gravou a nova versão mas perdeu a resposta,
+    // reconcilia antes de inserir para não duplicar a mesma fotografia.
+    const existentesNovaVersao = atuais.filter(registro => Number(registro.Versao) === proximaVersao);
+    if (cotacoesConferem(existentesNovaVersao, novaFotografia)) {
+        const idsAntigos = atuais
+            .filter(registro => Number(registro.Versao) !== proximaVersao)
+            .map(registro => registro.ID)
+            .filter(Boolean);
+        for (const id of idsAntigos) {
+            const desativacao = await executar_apiZoho({ tipo: 'atualizar_reg', ID: String(id), corpo: { Ativo: false }, nomeR: globais.nomeRelCot });
+            if (!respostaBemSucedida(desativacao)) throw erroZoho(`Erro ao arquivar a cotação anterior ${id}`, desativacao);
+        }
         item.quoteDone = true;
         persistirOperacao(operacao);
         return;
@@ -1062,13 +1085,28 @@ async function garantirCotacoes(operacao, item) {
 
     const resp = await executar_apiZoho({
         tipo: 'add_reg',
-        corpo: item.priceTableData,
+        corpo: novaFotografia,
         nomeF: globais.nomeFormCot
     });
     if (!respostaBemSucedida(resp)) {
         const reconciliadas = await buscarRegistros({ criterios: criterioAtivas, nomeR: globais.nomeRelCot });
-        if (!cotacoesConferem(reconciliadas, item.priceTableData)) {
+        if (!cotacoesConferem(reconciliadas, novaFotografia)) {
             throw erroZoho('Erro ao salvar a cotação', resp);
+        }
+    }
+    // Publicada e conferida a nova fotografia, arquiva a versão anterior.
+    if (atuais.length > 0) {
+        const idsAnteriores = atuais.filter(registro => Number(registro.Versao) !== proximaVersao).map(registro => registro.ID).filter(Boolean);
+        for (const id of idsAnteriores) {
+            const desativacao = await executar_apiZoho({
+                tipo: 'atualizar_reg',
+                ID: String(id),
+                corpo: { Ativo: false },
+                nomeR: globais.nomeRelCot
+            });
+            if (!respostaBemSucedida(desativacao)) {
+                throw erroZoho(`Erro ao arquivar a cotação anterior ${id}`, desativacao);
+            }
         }
     }
     item.quoteDone = true;
@@ -1229,12 +1267,6 @@ async function executarResolucaoAposSalvar(operacao) {
     if (!resolucao || resolucao.done) return;
 
     if (resolucao.originalItem) {
-        if (!resolucao.originalQuotesDeactivated) {
-            const criterio = `(${QUOTE_TEMP_FIELD}=="${escaparCriterio(operacao.context.rootTempId)}" && Ativo==true)`;
-            await desativarCotacoes(criterio);
-            resolucao.originalQuotesDeactivated = true;
-            persistirOperacao(operacao);
-        }
         await processarItem(operacao, resolucao.originalItem);
     }
 
@@ -1257,13 +1289,6 @@ function idsPDCsCriados(operacao) {
 }
 
 async function processarOperacao(operacao) {
-    if (operacao.replaceActiveQuotes && !operacao.oldQuotesDeactivated) {
-        const criterio = `(${QUOTE_TEMP_FIELD}=="${escaparCriterio(operacao.context.rootTempId)}" && Ativo==true)`;
-        await desativarCotacoes(criterio);
-        operacao.oldQuotesDeactivated = true;
-        persistirOperacao(operacao);
-    }
-
     for (const item of operacao.items) await processarItem(operacao, item);
     await executarResolucaoAposSalvar(operacao);
     await removerAnexosDaOperacao(operacao);

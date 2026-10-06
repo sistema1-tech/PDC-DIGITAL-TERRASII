@@ -1140,14 +1140,22 @@ function filtrarCot(data) {
     if (log) console.log("++++++++++PREENCHENDO TAB DE COTAÇÕES COM DADOS DA API++++++++++");
 
     if (log) console.log("Data original => ", data);
-    const ids_forns = [...new Set(data.map(item => item.id_fornecedor))].filter(id => id !== "");
-    const itens_aprov = data.filter(item => item.Aprovado === "true" && item.Ativo === "true").map(item => item.id_produto);
+    // Restringe a leitura à fotografia ativa mais recente. Dados antigos sem
+    // versão continuam elegíveis enquanto não houver uma versão numerada.
+    const ativas = data.filter(item => item.Ativo === true || item.Ativo === "true");
+    const versoes = ativas.map(item => Number(item.Versao)).filter(Number.isFinite);
+    const maiorVersao = versoes.length ? Math.max(...versoes) : null;
+    data = maiorVersao === null ? ativas : ativas.filter(item => Number(item.Versao) === maiorVersao);
+    const ids_forns = [...new Set(data.map(item => item.id_fornecedor))]
+        .filter(id => id !== null && id !== undefined && String(id).trim() !== "");
+    const itens_aprov = data.filter(item => item.Aprovado === true || item.Aprovado === "true").map(item => item.id_produto);
     if (log) console.log("IDs dos fornecedores encontrados => ", ids_forns);
     if (log) console.log("IDs dos itens aprovados e ativos encontrados => ", itens_aprov);
     const filteredData = Array.from(
 
         data.reduce((map, item) => {
-            if (ids_forns.length > 0) {
+            const temFornecedor = item.id_fornecedor !== null && item.id_fornecedor !== undefined && String(item.id_fornecedor).trim() !== "";
+            if (ids_forns.length > 0 && temFornecedor) {
                 if (log) console.log("Tem fornecedores");
                 if (item.Valor_unitario == null || item.Quantidade == null || item.Quantidade <= 0 || item.id_fornecedor === "") {
                     if (log) console.log("Item com valor inválido => ", item);
@@ -1168,7 +1176,7 @@ function filtrarCot(data) {
                             map.set(key, item);
                         } else {
 
-                            if ((existing.Aprovado !== "true" || existing.Ativo !== "true") && (item.Aprovado === "true" && item.Ativo === "true")) {
+                            if ((existing.Aprovado !== true && existing.Aprovado !== "true") && (item.Aprovado === true || item.Aprovado === "true")) {
                                 map.set(key, item);
                             } else {
                                 const existingTime = new Date(existing.Added_time);
@@ -1274,8 +1282,10 @@ export async function prenchTabCot(data) {
         const idProdutos = [...new Set(filteredData.map(item => item.id_produto))].sort((a, b) => a - b);
         globais.idProduto = Math.max(...idProdutos) + 1;
 
-        const fornecedores = [...new Set(filteredData.map(item => JSON.stringify({
-            Fornecedor: item.Fornecedor.trim(),
+        const fornecedores = [...new Set(filteredData
+            .filter(item => item.id_fornecedor !== null && item.id_fornecedor !== undefined && String(item.id_fornecedor).trim() !== "")
+            .map(item => JSON.stringify({
+            Fornecedor: String(item.Fornecedor || '').trim(),
             id_fornecedor: item.id_fornecedor
         })))].map(item => JSON.parse(item));
 
