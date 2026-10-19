@@ -1938,6 +1938,7 @@ function criarBotaoAdicionar() {
     entrada.type = 'file';
     entrada.multiple = true;
     entrada.hidden = true;
+    entrada.className = 'input-adicionar-anexo';
     const adicionar = criarAcaoAnexo({
         classe: 'botao-adicionar add-btn add-icon',
         titulo: 'Adicionar anexos',

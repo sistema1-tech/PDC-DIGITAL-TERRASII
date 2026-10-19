@@ -1566,7 +1566,9 @@ export function desabilitarCampos() {
     const campos = document.querySelectorAll('input, textarea, select');
     campos.forEach(elemento => {
         // Verifica se o elemento deve ser mantido visível
-        if (!camposParaManterHabilitados.includes(elemento.name)) {
+        const manterHabilitado = camposParaManterHabilitados.includes(elemento.name)
+            || elemento.classList.contains('input-adicionar-anexo');
+        if (!manterHabilitado) {
             elemento.disabled = true;
             elemento.readOnly = true; // Adiciona o atributo readonly
             elemento.style.cursor = 'not-allowed';
