@@ -777,9 +777,56 @@ function normalizarOpcoes(opcoes, sepPorParcLegado = false, paramsExtraLegado = 
 }
 
 function idsArquivosRemovidos(arquivos) {
-    return arquivos
-        .map(arquivo => String(arquivo || '').match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/)?.[1])
-        .filter(Boolean);
+    return [...new Set(arquivos
+        .map(arquivo => {
+            const texto = String(arquivo || '').trim();
+            if (/^\d+$/.test(texto)) return texto;
+            return texto.match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/i)?.[1] || null;
+        })
+        .filter(Boolean))];
+}
+
+function arquivoDeDataUrlParaSalvar(dataUrl, nome) {
+    const correspondencia = String(dataUrl || '').match(/^data:([^;,]*)(?:;charset=[^;,]*)?;base64,(.*)$/s);
+    if (!correspondencia) throw new Error(`O Zoho não retornou dados válidos para o anexo "${nome}".`);
+    const binario = atob(correspondencia[2]);
+    const bytes = new Uint8Array(binario.length);
+    for (let indice = 0; indice < binario.length; indice++) bytes[indice] = binario.charCodeAt(indice);
+    return new File([bytes], nome, {
+        type: correspondencia[1] || 'application/octet-stream',
+        lastModified: Date.now()
+    });
+}
+
+async function materializarAnexoParaSalvar(anexo) {
+    if (anexo instanceof Blob) return anexo;
+    if (!anexo?.__anexoZoho || !anexo.referencia) {
+        throw new Error(`O anexo ${anexo?.nome || 'desconhecido'} não pôde ser preparado para salvar.`);
+    }
+    return new Promise((resolve, reject) => {
+        const elementoTemporario = document.createElement('img');
+        const concluir = resposta => {
+            if (String(resposta?.status) !== '200') {
+                reject(new Error(`Não foi possível recuperar o anexo "${anexo.nome}" no Zoho.`));
+                return;
+            }
+            try {
+                resolve(arquivoDeDataUrlParaSalvar(elementoTemporario.src, anexo.nome));
+            } catch (erro) {
+                reject(erro);
+            }
+        };
+        try {
+            const setImageData = globalThis.ZOHO?.CREATOR?.UTIL?.setImageData;
+            if (typeof setImageData !== 'function') {
+                reject(new Error('O utilitário de arquivos do Zoho não está disponível.'));
+                return;
+            }
+            setImageData(elementoTemporario, anexo.referencia, concluir);
+        } catch (erro) {
+            reject(erro);
+        }
+    });
 }
 
 async function criarDescritoresAnexos(operationId, novos, existentes) {
@@ -788,7 +835,7 @@ async function criarDescritoresAnexos(operationId, novos, existentes) {
     try {
         for (const [origem, arquivos] of Object.entries({ novos, existentes })) {
             for (let index = 0; index < arquivos.length; index++) {
-                const arquivo = arquivos[index];
+                const arquivo = await materializarAnexoParaSalvar(arquivos[index]);
                 const storageId = `${operationId}:${origem}:${index}`;
                 await guardarArquivo(storageId, arquivo);
                 const descritor = {

@@ -1618,7 +1618,7 @@ async function createFileMiniature({ galeria = null, file = null, origem = null,
     }
 }
 
-export async function preencherListaAnexos(anexos) {
+async function preencherListaAnexosLegado(anexos) {
     const log = true;
     if (log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
 
@@ -1715,7 +1715,421 @@ export async function preencherListaAnexos(anexos) {
     }
 }
 
+const PAGINAS_QUE_ALTERAM_ANEXOS = [
+    'criar_cotacao', 'editar_cotacao', 'criar_numero_de_PDC', 'confirmar_compra',
+    'receber_compra', 'checagem_final', 'lancamentos_provisionados',
+    'autorizar_pagamento_subsindico', 'confirmar_todas_as_assinaturas', 'ver_PDC_c_ret'
+];
+const EXTENSOES_IMAGEM = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg']);
+const EXTENSOES_TEXTO = new Set(['txt', 'csv', 'json', 'xml', 'log']);
+const EXTENSOES_VIDEO = new Set(['mp4', 'webm', 'ogv']);
+const EXTENSOES_AUDIO = new Set(['mp3', 'wav', 'ogg', 'm4a']);
+const estadoGaleriaAnexos = [];
+let itemVisualizado = null;
+let itensDoVisualizador = [];
+let indiceDoVisualizador = 0;
+let tokenRenderizacaoVisualizador = 0;
+
+function extensaoDoArquivo(nome) {
+    const nomeLimpo = String(nome || '').split(/[?#]/)[0];
+    const indicePonto = nomeLimpo.lastIndexOf('.');
+    return indicePonto >= 0 ? nomeLimpo.slice(indicePonto + 1).toLowerCase() : '';
+}
+
+function nomeDoArquivo(referencia, origem) {
+    if (origem === 'novo') return referencia?.name || 'anexo';
+    const caminho = String(referencia || '');
+    const nomeCodificado = caminho.includes('?filepath=') ? caminho.split('?filepath=')[1] : caminho.split('/').pop();
+    let nome = nomeCodificado || 'anexo';
+    try { nome = decodeURIComponent(nome); } catch (_) { /* O nome já está decodificado. */ }
+    return nome.replace(/^\d+_/, '') || 'anexo';
+}
+
+function idRegistroDoAnexo(anexo) {
+    if (anexo?.ID) return String(anexo.ID);
+    return String(anexo?.Arquivo || '').match(/Documentos\.Arquivo\/(\d+)\/download\?filepath/)?.[1] || null;
+}
+
+function tipoDeVisualizacao(item) {
+    const extensao = extensaoDoArquivo(item.nome);
+    const mime = String(item.arquivo?.type || item.mime || '').toLowerCase();
+    if (mime.startsWith('image/') || EXTENSOES_IMAGEM.has(extensao)) return 'imagem';
+    if (mime === 'application/pdf' || extensao === 'pdf') return 'pdf';
+    if (mime.startsWith('text/') || EXTENSOES_TEXTO.has(extensao)) return 'texto';
+    if (mime.startsWith('video/') || EXTENSOES_VIDEO.has(extensao)) return 'video';
+    if (mime.startsWith('audio/') || EXTENSOES_AUDIO.has(extensao)) return 'audio';
+    return 'download';
+}
+
+function arquivoDeDataUrl(dataUrl, nome) {
+    const correspondencia = String(dataUrl || '').match(/^data:([^;,]*)(?:;charset=[^;,]*)?;base64,(.*)$/s);
+    if (!correspondencia) throw new Error(`O Zoho não retornou dados válidos para "${nome}".`);
+    const binario = atob(correspondencia[2]);
+    const bytes = new Uint8Array(binario.length);
+    for (let indice = 0; indice < binario.length; indice++) bytes[indice] = binario.charCodeAt(indice);
+    return new File([bytes], nome, { type: correspondencia[1] || 'application/octet-stream', lastModified: Date.now() });
+}
+
+function obterArquivoDoZoho(item) {
+    if (item.promessaArquivo) return item.promessaArquivo;
+    item.promessaArquivo = new Promise((resolve, reject) => {
+        const elementoTemporario = document.createElement('img');
+        const concluir = resposta => {
+            if (String(resposta?.status) !== '200') {
+                reject(new Error(`Não foi possível carregar "${item.nome}" pelo Zoho.`));
+                return;
+            }
+            try {
+                const arquivo = arquivoDeDataUrl(elementoTemporario.src, item.nome);
+                item.arquivo = arquivo;
+                item.mime = arquivo.type;
+                resolve(arquivo);
+            } catch (erro) {
+                reject(erro);
+            }
+        };
+        try {
+            const setImageData = globalThis.ZOHO?.CREATOR?.UTIL?.setImageData;
+            if (typeof setImageData !== 'function') {
+                reject(new Error('O utilitário de arquivos do Zoho não está disponível.'));
+                return;
+            }
+            setImageData(elementoTemporario, item.referencia, concluir);
+        } catch (erro) {
+            reject(erro);
+        }
+    }).catch(erro => {
+        item.promessaArquivo = null;
+        throw erro;
+    });
+    return item.promessaArquivo;
+}
+
+async function obterArquivoDoItem(item) {
+    return item.origem === 'novo' ? item.arquivo : obterArquivoDoZoho(item);
+}
+
+async function obterUrlDoItem(item) {
+    if (item.objectUrl) return item.objectUrl;
+    item.objectUrl = URL.createObjectURL(await obterArquivoDoItem(item));
+    return item.objectUrl;
+}
+
+function limparColecao(colecao) {
+    if (colecao instanceof Map) colecao.clear();
+    else Object.keys(colecao || {}).forEach(chave => delete colecao[chave]);
+}
+
+function removerDaColecao(colecao, chave) {
+    if (colecao instanceof Map) colecao.delete(chave);
+    else delete colecao?.[chave];
+}
+
+function adicionarNaColecao(colecao, chave, valor) {
+    if (colecao instanceof Map) colecao.set(chave, valor);
+    else colecao[chave] = valor;
+}
+
+function sincronizarItemComSalvamento(item) {
+    if (item.origem === 'novo') {
+        adicionarNaColecao(globais.arquivosNovos, item.chave, item.arquivo);
+        return;
+    }
+    adicionarNaColecao(globais.arquivosExistentes, item.chave, {
+        __anexoZoho: true,
+        referencia: item.referencia,
+        nome: item.nome,
+        mime: item.mime,
+        recordId: item.recordId
+    });
+}
+
+function paginaPermiteAlterarAnexos() {
+    return PAGINAS_QUE_ALTERAM_ANEXOS.some(pagina => String(globais.pag || '').includes(pagina));
+}
+
+function criarAcaoAnexo({ classe, titulo, aoClicar }) {
+    const acao = document.createElement('a');
+    acao.href = '#';
+    acao.role = 'button';
+    acao.className = `gallery-item ${classe}`;
+    acao.title = titulo;
+    acao.setAttribute('aria-label', titulo);
+    acao.style.fontSize = '60px';
+    acao.style.textDecoration = 'none';
+    acao.addEventListener('click', evento => {
+        evento.preventDefault();
+        evento.stopPropagation();
+        aoClicar();
+    });
+    return acao;
+}
+
+function criarMiniaturaGenerica(item) {
+    const miniatura = document.createElement('div');
+    miniatura.className = 'anexo-item__placeholder';
+    miniatura.textContent = extensaoDoArquivo(item.nome).toUpperCase() || 'ARQ';
+    return miniatura;
+}
+
+async function preencherMiniatura(item, abertura) {
+    if (tipoDeVisualizacao(item) !== 'imagem') return;
+    try {
+        const url = await obterUrlDoItem(item);
+        if (!abertura.isConnected) return;
+        const imagem = document.createElement('img');
+        imagem.className = 'anexo-item__miniatura';
+        imagem.src = url;
+        imagem.alt = `Miniatura de ${item.nome}`;
+        abertura.querySelector('.anexo-item__placeholder')?.replaceWith(imagem);
+    } catch (erro) {
+        console.warn(`Não foi possível gerar a miniatura de ${item.nome}:`, erro);
+    }
+}
+
+function criarCartaoAnexo(item) {
+    const cartao = document.createElement('div');
+    cartao.className = 'gallery-item anexo-item';
+    const abertura = document.createElement('a');
+    abertura.href = '#';
+    abertura.className = 'gallery-item anexo-item__abrir';
+    abertura.appendChild(criarMiniaturaGenerica(item));
+    const nome = document.createElement('span');
+    nome.className = 'file-name';
+    nome.textContent = item.nome;
+    abertura.appendChild(nome);
+    abertura.addEventListener('click', evento => { evento.preventDefault(); abrirAnexo(item); });
+    cartao.appendChild(abertura);
+    // Arquivos já salvos no Zoho não devem ser materializados ao montar a
+    // galeria: o bloco com a extensão é a miniatura padrão inicial. Arquivos
+    // novos já estão na máquina do usuário, portanto sua miniatura não gera
+    // tráfego adicional.
+    if (item.origem === 'novo') void preencherMiniatura(item, abertura);
+    if (paginaPermiteAlterarAnexos()) {
+        const acoes = document.createElement('div');
+        acoes.className = 'anexo-item__acoes';
+        acoes.appendChild(criarAcaoAnexo({
+            classe: 'anexo-item__remover close-icon',
+            titulo: `Remover ${item.nome}`,
+            aoClicar: () => removerItemAnexo(item)
+        }));
+        cartao.appendChild(acoes);
+    }
+    return cartao;
+}
+
+function removerItemAnexo(item) {
+    const indice = estadoGaleriaAnexos.indexOf(item);
+    if (indice >= 0) estadoGaleriaAnexos.splice(indice, 1);
+    if (item.objectUrl) URL.revokeObjectURL(item.objectUrl);
+    if (item.origem === 'zoho') {
+        globais.arquivosRemovidos.push(item.recordId || item.referencia);
+        removerDaColecao(globais.arquivosExistentes, item.chave);
+    } else {
+        removerDaColecao(globais.arquivosNovos, item.chave);
+    }
+    renderizarGaleria();
+}
+
+function criarBotaoAdicionar() {
+    const container = document.createElement('div');
+    container.className = 'gallery-item add-btn-container-gallery';
+    const entrada = document.createElement('input');
+    entrada.type = 'file';
+    entrada.multiple = true;
+    entrada.hidden = true;
+    const adicionar = criarAcaoAnexo({
+        classe: 'botao-adicionar add-btn add-icon',
+        titulo: 'Adicionar anexos',
+        aoClicar: () => entrada.click()
+    });
+    entrada.addEventListener('change', () => {
+        Array.from(entrada.files || []).forEach(arquivo => {
+            indice_documentos++;
+            const item = {
+                chave: String(indice_documentos), origem: 'novo', arquivo,
+                nome: nomeDoArquivo(arquivo, 'novo'), mime: arquivo.type,
+                recordId: null, referencia: null, objectUrl: null, promessaArquivo: null
+            };
+            estadoGaleriaAnexos.push(item);
+            sincronizarItemComSalvamento(item);
+        });
+        entrada.value = '';
+        renderizarGaleria();
+    });
+    container.append(entrada, adicionar);
+    return container;
+}
+
+function renderizarGaleria() {
+    const galeria = document.getElementById('gallery');
+    if (!galeria) return;
+    galeria.replaceChildren();
+    if (estadoGaleriaAnexos.length === 0) {
+        const mensagem = document.createElement('p');
+        mensagem.className = 'mensagem-anexos';
+        mensagem.textContent = 'Não há anexos...';
+        galeria.appendChild(mensagem);
+    }
+    estadoGaleriaAnexos.forEach(item => galeria.appendChild(criarCartaoAnexo(item)));
+    if (paginaPermiteAlterarAnexos()) galeria.appendChild(criarBotaoAdicionar());
+}
+
+function garantirVisualizadorDeAnexos() {
+    let modal = document.getElementById('visualizador-anexos');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'visualizador-anexos';
+    modal.className = 'visualizador-anexos';
+    modal.hidden = true;
+    modal.innerHTML = '<div class="visualizador-anexos__barra"><strong class="visualizador-anexos__titulo"></strong><div class="visualizador-anexos__acoes"><a href="#" class="visualizador-anexos__download adjust-btn" role="button">Baixar arquivo</a><a href="#" class="visualizador-anexos__fechar close-icon" role="button" aria-label="Fechar"></a></div></div><a href="#" class="visualizador-anexos__anterior" role="button" aria-label="Arquivo anterior">‹</a><div class="visualizador-anexos__conteudo"></div><a href="#" class="visualizador-anexos__proximo" role="button" aria-label="Próximo arquivo">›</a><div class="visualizador-anexos__contador"></div>';
+    document.body.appendChild(modal);
+    modal.querySelector('.visualizador-anexos__fechar').addEventListener('click', evento => { evento.preventDefault(); fecharVisualizadorDeAnexos(); });
+    modal.querySelector('.visualizador-anexos__anterior').addEventListener('click', evento => { evento.preventDefault(); navegarNoVisualizador(-1); });
+    modal.querySelector('.visualizador-anexos__proximo').addEventListener('click', evento => { evento.preventDefault(); navegarNoVisualizador(1); });
+    modal.querySelector('.visualizador-anexos__download').addEventListener('click', evento => {
+        if (!itemVisualizado || evento.currentTarget.classList.contains('visualizador-anexos__download--aguardando')) evento.preventDefault();
+    });
+    modal.addEventListener('click', evento => { if (evento.target === modal) fecharVisualizadorDeAnexos(); });
+    return modal;
+}
+
+function fecharVisualizadorDeAnexos() {
+    const modal = document.getElementById('visualizador-anexos');
+    if (!modal) return;
+    tokenRenderizacaoVisualizador++;
+    modal.hidden = true;
+    modal.querySelector('.visualizador-anexos__conteudo').replaceChildren();
+    document.body.classList.remove('visualizador-anexos-aberto');
+    itemVisualizado = null;
+    if (document.fullscreenElement === modal) {
+        void document.exitFullscreen().catch(() => {});
+    }
+}
+
+async function ativarTelaCheiaDoVisualizador(modal) {
+    if (!modal.requestFullscreen || document.fullscreenElement) return;
+    try {
+        await modal.requestFullscreen();
+    } catch (_) {
+        // O Creator pode não conceder fullscreen ao iframe. Nesse caso, o
+        // visualizador continua aberto dentro do próprio PDC.
+    }
+}
+
+function navegarNoVisualizador(direcao) {
+    if (itensDoVisualizador.length < 2) return;
+    indiceDoVisualizador = (indiceDoVisualizador + direcao + itensDoVisualizador.length) % itensDoVisualizador.length;
+    void renderizarItemNoVisualizador();
+}
+
+function configurarLinkDownloadDoModal(modal, item, url = null) {
+    const link = modal.querySelector('.visualizador-anexos__download');
+    if (!url) {
+        link.href = '#';
+        link.removeAttribute('download');
+        link.classList.add('visualizador-anexos__download--aguardando');
+        return;
+    }
+    link.href = url;
+    link.download = item.nome;
+    link.classList.remove('visualizador-anexos__download--aguardando');
+}
+
+function obterUrlDownloadDireto(item) {
+    if (item.origem === 'zoho') return new URL(item.referencia, initUrl).href;
+    if (!item.objectUrl) item.objectUrl = URL.createObjectURL(item.arquivo);
+    return item.objectUrl;
+}
+
+async function renderizarItemNoVisualizador() {
+    const modal = garantirVisualizadorDeAnexos();
+    const conteudo = modal.querySelector('.visualizador-anexos__conteudo');
+    const token = ++tokenRenderizacaoVisualizador;
+    itemVisualizado = itensDoVisualizador[indiceDoVisualizador];
+    modal.querySelector('.visualizador-anexos__titulo').textContent = itemVisualizado.nome;
+    modal.querySelector('.visualizador-anexos__contador').textContent = `${indiceDoVisualizador + 1} / ${itensDoVisualizador.length}`;
+    modal.querySelector('.visualizador-anexos__anterior').hidden = itensDoVisualizador.length < 2;
+    modal.querySelector('.visualizador-anexos__proximo').hidden = itensDoVisualizador.length < 2;
+    configurarLinkDownloadDoModal(modal, itemVisualizado);
+    conteudo.replaceChildren(createLoadingSpinner('80px', '80px'));
+    try {
+        const url = await obterUrlDoItem(itemVisualizado);
+        if (token !== tokenRenderizacaoVisualizador) return;
+        configurarLinkDownloadDoModal(modal, itemVisualizado, url);
+        const tipo = tipoDeVisualizacao(itemVisualizado);
+        let elemento;
+        if (tipo === 'imagem') { elemento = document.createElement('img'); elemento.alt = itemVisualizado.nome; }
+        else if (tipo === 'pdf' || tipo === 'texto') { elemento = document.createElement('iframe'); elemento.title = itemVisualizado.nome; }
+        else if (tipo === 'video') { elemento = document.createElement('video'); elemento.controls = true; }
+        else { elemento = document.createElement('audio'); elemento.controls = true; }
+        elemento.src = tipo === 'pdf' ? `${url}#view=FitH&zoom=page-width` : url;
+        conteudo.replaceChildren(elemento);
+    } catch (erro) {
+        if (token !== tokenRenderizacaoVisualizador) return;
+        const mensagem = document.createElement('div');
+        mensagem.className = 'visualizador-anexos__erro';
+        mensagem.textContent = `Não foi possível exibir este arquivo. Você ainda pode tentar baixá-lo. ${erro.message || erro}`;
+        conteudo.replaceChildren(mensagem);
+    }
+}
+
+function abrirAnexo(item) {
+    if (tipoDeVisualizacao(item) === 'download') {
+        const link = document.createElement('a');
+        link.href = obterUrlDownloadDireto(item);
+        link.download = item.nome;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+    }
+    itensDoVisualizador = estadoGaleriaAnexos.filter(candidato => tipoDeVisualizacao(candidato) !== 'download');
+    indiceDoVisualizador = Math.max(0, itensDoVisualizador.indexOf(item));
+    const modal = garantirVisualizadorDeAnexos();
+    modal.hidden = false;
+    document.body.classList.add('visualizador-anexos-aberto');
+    void ativarTelaCheiaDoVisualizador(modal);
+    void renderizarItemNoVisualizador();
+}
+
+document.addEventListener('keydown', evento => {
+    const modal = document.getElementById('visualizador-anexos');
+    if (!modal || modal.hidden) return;
+    if (evento.key === 'Escape') fecharVisualizadorDeAnexos();
+    if (evento.key === 'ArrowLeft') navegarNoVisualizador(-1);
+    if (evento.key === 'ArrowRight') navegarNoVisualizador(1);
+});
+
+document.addEventListener('fullscreenchange', () => {
+    const modal = document.getElementById('visualizador-anexos');
+    if (modal && !modal.hidden && !document.fullscreenElement) {
+        fecharVisualizadorDeAnexos();
+    }
+});
+
+export async function preencherListaAnexos(anexos = []) {
+    estadoGaleriaAnexos.forEach(item => item.objectUrl && URL.revokeObjectURL(item.objectUrl));
+    estadoGaleriaAnexos.length = 0;
+    limparColecao(globais.arquivosNovos);
+    limparColecao(globais.arquivosExistentes);
+    for (const anexo of anexos || []) {
+        if (!anexo?.Arquivo) continue;
+        indice_documentos++;
+        const item = {
+            chave: String(indice_documentos), origem: 'zoho', referencia: anexo.Arquivo,
+            arquivo: null, nome: nomeDoArquivo(anexo.Arquivo, 'zoho'), mime: '',
+            recordId: idRegistroDoAnexo(anexo), objectUrl: null, promessaArquivo: null
+        };
+        estadoGaleriaAnexos.push(item);
+        sincronizarItemComSalvamento(item);
+    }
+    renderizarGaleria();
+}
+
 export async function preencherListaAnexosV2(anexos) {
+    return preencherListaAnexos(anexos);
+
     const log = false;
     if(log) console.log("++++++++++PREENCHENDO LISTA DE ANEXOS++++++++++");
     
