@@ -1,5 +1,6 @@
 import { saveTableData_V3, enviarParaPaybox, registrarLogNoZoho} from './006_save_utils.js';
 import {globais, eventConfig} from './999_config.js';
+import { prepararArquivoParaUploadZoho } from './010_anexos_utils.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
 //   //========================================\\
@@ -207,7 +208,7 @@ export async function executar_apiZoho({
                     report_name: nomeR,
                     id: ID,
                     field_name: 'Arquivo',
-                    file: corpo
+                    file: prepararArquivoParaUploadZoho(corpo)
                 }
                 console.log("Configuração para upload => ", JSON.stringify(config));
                 console.log("Arquivo:", corpo);

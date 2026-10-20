@@ -1,5 +1,6 @@
 import { globais } from './999_config.js';
 import { formatToBRL_V2, converterStringParaDecimal, base64Size, formatDate, executar_apiZoho} from './007_utils.js';
+import { prepararArquivoParaUploadZoho } from './010_anexos_utils.js';
 let numeroParcela = 1;
 let numParcelaInicial = null;
 let indice_documentos = 0;
@@ -1945,7 +1946,8 @@ function criarBotaoAdicionar() {
         aoClicar: () => entrada.click()
     });
     entrada.addEventListener('change', () => {
-        Array.from(entrada.files || []).forEach(arquivo => {
+        Array.from(entrada.files || []).forEach(arquivoOriginal => {
+            const arquivo = prepararArquivoParaUploadZoho(arquivoOriginal);
             indice_documentos++;
             const item = {
                 chave: String(indice_documentos), origem: 'novo', arquivo,

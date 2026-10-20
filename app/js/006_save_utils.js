@@ -1,5 +1,6 @@
 import { converterStringParaDecimal, executar_apiZoho, customModal_V2, formatDate} from './007_utils.js';
 import { globais } from './999_config.js'
+import { prepararArquivoParaUploadZoho } from './010_anexos_utils.js';
 const qlt = 4; //Total de linhas de totalizadores, considerando linha com botão de adicionar produto
 const ipcv = 3; //Indice da primeira coluna de valores (Valor unitário do primeiro fornecedor)
 const qtdCssDecimais = 2; //Quantidade de casas decimais dos campos decimais (Atualmente o campo do zoho suporta apenas 2, para alterar precisa MEXER NO ZOHO)
@@ -835,7 +836,9 @@ async function criarDescritoresAnexos(operationId, novos, existentes) {
     try {
         for (const [origem, arquivos] of Object.entries({ novos, existentes })) {
             for (let index = 0; index < arquivos.length; index++) {
-                const arquivo = await materializarAnexoParaSalvar(arquivos[index]);
+                const arquivo = prepararArquivoParaUploadZoho(
+                    await materializarAnexoParaSalvar(arquivos[index])
+                );
                 const storageId = `${operationId}:${origem}:${index}`;
                 await guardarArquivo(storageId, arquivo);
                 const descritor = {
