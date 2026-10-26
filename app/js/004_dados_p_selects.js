@@ -131,7 +131,7 @@ export async function buscarCentrosCusto() {
  * Em caso de erro na busca, retorna null e registra o erro no console.
  */
 export async function buscarClassesOperacionais() {
-    let crit = "(ID!=0)";
+    let crit = "(ID!=0 && Inativo==false)";
     
     try {
         // Aguarda a resposta da API
