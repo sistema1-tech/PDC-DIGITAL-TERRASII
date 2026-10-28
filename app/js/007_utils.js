@@ -3,6 +3,7 @@ import {globais, eventConfig} from './999_config.js';
 import { prepararArquivoParaUploadZoho } from './010_anexos_utils.js';
 
 const url = 'https://terrasii.zohocreatorportal.com/';
+const alcada_mario = 800;
 //   //========================================\\
 //   ||===========ABERTURA DA PÁGINA===========||
 //   \\========================================//
@@ -1161,7 +1162,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                 Assinado: true
             }
             
-            if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= 800)
+            if(converterStringParaDecimal(document.querySelector('.valor-parcela').dataset.valor_original) >= alcada_mario)
             {
                 apoio_assin_inic["Mario"]={
                     Cargo: "Administrativo",

@@ -203,19 +203,17 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
     const elementosDetalhes = formDdsDetalhes.elements;
     for (let elemento of elementosDetalhes) {
         if (!elemento.classList.contains("campo-datas")) {
-            if (elemento.type !== 'radio') {
-                if (elemento.checked) {
-                    dadosIniciaisPdc[elemento.name] = elemento.checked;
-                } else {
-                    dadosIniciaisPdc[elemento.name] = elemento.value;
-                }
-                if(log) console.log("Nome: " + elemento.name + ", Valor: " + elemento.value);
+            if (elemento.type === 'checkbox') {
+                // O value padrão de uma checkbox é "on" mesmo quando ela está
+                // desmarcada. O estado real deve vir sempre de checked.
+                dadosIniciaisPdc[elemento.name] = elemento.checked;
+                if(log) console.log("Nome: " + elemento.name + ", Marcado: " + elemento.checked);
 
-            } else if (elemento.checked) {
+            } else if (elemento.type !== 'radio' || elemento.checked) {
                 dadosIniciaisPdc[elemento.name] = elemento.value;
                 if(log) console.log("Nome: " + elemento.name + ", Valor: " + elemento.value);
 
-            }
+            } 
         }
     }
 
