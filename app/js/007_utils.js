@@ -1168,7 +1168,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
                     Cargo: "Administrativo",
                     Funcao: "Síndico",
                     Usuario: "Mario",
-                    E_mail_usuario: "sindico@tsj2.com.br",
+                    E_mail_usuario: "mariocletogiugni@gmail.com",
                     IP: "",
                     Data_da_assinatura: "",
                     Assinado: false
