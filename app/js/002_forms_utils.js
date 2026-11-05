@@ -119,6 +119,7 @@ export async function preencherDadosPDC(data) {
     globais.perfilResponsavel = data.Perfil_responsavel;
     globais.assinaturas = data.Assinaturas;
     globais.numSolicPDC = data.num_sol;
+    globais.status_geral = data.Status_geral;
     if (data.Perfil_responsavel) {
         globais.perfilResponsavel = data.Perfil_responsavel;
     }

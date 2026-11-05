@@ -61,6 +61,7 @@ const CONFIG = {
         id_usuario_logado: null,
         acao: null,
         macroEtapa: null,
+        status_geral: null,
     },
     OTHER:
     {
