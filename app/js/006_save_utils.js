@@ -1,4 +1,4 @@
-import { converterStringParaDecimal, executar_apiZoho, customModal_V2, formatDate} from './007_utils.js';
+import { converterStringParaDecimal, executar_apiZoho, customModal_V2, formatDate } from './007_utils.js';
 import { globais } from './999_config.js'
 import { prepararArquivoParaUploadZoho } from './010_anexos_utils.js';
 const qlt = 4; //Total de linhas de totalizadores, considerando linha com botão de adicionar produto
@@ -13,79 +13,78 @@ async function splitDataByInstallments(status = null) {
     const reqType = document.querySelector('select[name="Tipo_de_solicitacao"]').options[document.querySelector('select[name="Tipo_de_solicitacao"]').selectedIndex].text;
     const pgtoAnt = document.getElementById('pag_antecipado').checked;
 
-    if(log) console.log("++++++++++CRIANDO DADOS DE CADA UMA DAS PARCELAS NÃO CRIADAS++++++++++");
-    if(log) console.log("status => ", status);
-    if(log) console.log("reqType => ", reqType);
-    if(log) console.log("pgtoAnt => ", pgtoAnt);
+    if (log) console.log("++++++++++CRIANDO DADOS DE CADA UMA DAS PARCELAS NÃO CRIADAS++++++++++");
+    if (log) console.log("status => ", status);
+    if (log) console.log("reqType => ", reqType);
+    if (log) console.log("pgtoAnt => ", pgtoAnt);
 
     const advInstallment = document.getElementById('pag_antecipado').checked;
-    if(log) console.log("advInstallment => ", advInstallment);
+    if (log) console.log("advInstallment => ", advInstallment);
 
     let installments = [];
     console.log("pag => ", globais.pag);
     console.log("reqType => ", reqType);
     console.log("advInstallment => ", advInstallment);
 
-    if((
+    if ((
         !globais.perfilResponsavel.includes("Controladoria")) &&
         advInstallment === true &&
         (
             (
                 ["confirmar_compra"].includes(globais.pag) &&
                 reqType !== "SERVIÇO"
-            ) || 
+            ) ||
             (
                 ["criar_numero_de_PDC"].includes(globais.pag) &&
                 globais.perfilResponsavel.includes("Depto. Pessoal")
             )
         )
-    )
-    {
+    ) {
         installments = [document.querySelectorAll('.parcela')[0]];
 
     } else {
         installments = document.querySelectorAll('.parcela');
-        
+
     }
 
     const numInstallments = installments.length;
-    if(log) console.log("numInstallments => ", numInstallments);
+    if (log) console.log("numInstallments => ", numInstallments);
 
     const newPDCs = new Map();
-    if(log) console.log("=> PEGANDO DADOS DA NF <=");
+    if (log) console.log("=> PEGANDO DADOS DA NF <=");
     const NFData = pegarDadosNF_V2();
-    
-    if(log) console.log("=> PEGANDO DADOS DE PARCELAS <=");
+
+    if (log) console.log("=> PEGANDO DADOS DE PARCELAS <=");
     installments.forEach((installment, index) => {
 
-        if(log) console.log("indexInstallment => ", index);
+        if (log) console.log("indexInstallment => ", index);
         const isCreated = installment.querySelector('input[name="parcela_criada"]').hasAttribute('checked');
-        if(log) console.log("isCreated => ", isCreated);
+        if (log) console.log("isCreated => ", isCreated);
 
         if (!isCreated) {
 
-            if(log) console.log("=> PARCELA AINDA NÃO CRIADA, PEGANDO DADOS <=");
+            if (log) console.log("=> PARCELA AINDA NÃO CRIADA, PEGANDO DADOS <=");
             // Esta função sempre prepara filhotes (sepPorParc=true). Mesmo com
             // uma parcela, a chave deve ser distinta da do pai; do contrário a
             // reconciliação por id_temp reutiliza o original em vez de criar.
             const currTempPDC = `${globais.numPDC_temp}/${(index + 1).toString().padStart(2, '0')}`;
-            if(log) console.log("currTempPDC => ", currTempPDC);
+            if (log) console.log("currTempPDC => ", currTempPDC);
 
             const initialDataPDC = pegarDadosPDC_V2(index, currTempPDC);
 
             const currPDCInstallment = initialDataPDC.Datas[0].Num_PDC_parcela ? initialDataPDC.Datas[0].Num_PDC_parcela : globais.numPDC;
-            if(log) console.log("initialDataPDC.Num_PDC_parcela => ", initialDataPDC.Datas[0].Num_PDC_parcela);
-            if(log) console.log("currPDCInstallment => ", currPDCInstallment);
+            if (log) console.log("initialDataPDC.Num_PDC_parcela => ", initialDataPDC.Datas[0].Num_PDC_parcela);
+            if (log) console.log("currPDCInstallment => ", currPDCInstallment);
 
             const [priceTableData, extraDataPDC] = pegarDadostabPrecos(currTempPDC, currPDCInstallment, numInstallments);
-            if(log) console.log("priceTableData => ", priceTableData);
-            if(log) console.log("extraDataPDC => ", extraDataPDC);
+            if (log) console.log("priceTableData => ", priceTableData);
+            if (log) console.log("extraDataPDC => ", extraDataPDC);
 
             const classData = pegarDadosClassificacao_V2(numInstallments);
 
             const allDataPDC = { ...initialDataPDC, ...extraDataPDC, ...classData, ...NFData };
             if (status !== null) allDataPDC.Status_geral = status;
-            newPDCs.set(index, { 'priceTableData': priceTableData, 'PDCsData': allDataPDC});
+            newPDCs.set(index, { 'priceTableData': priceTableData, 'PDCsData': allDataPDC });
             //
             const parcelaCriadaInput = installment.querySelector('input[name="parcela_criada"]');
             if (parcelaCriadaInput) {
@@ -93,7 +92,7 @@ async function splitDataByInstallments(status = null) {
             }
         }
     });
-    if(log) console.log("----------DADOS CRIADOS, RETORNANDO MAPA----------");
+    if (log) console.log("----------DADOS CRIADOS, RETORNANDO MAPA----------");
     return newPDCs
 }
 
@@ -131,13 +130,13 @@ async function meshData(status = null) {
  * - Se indiceParc for informado, a função busca os dados apenas da parcela com o índice especificado.
  */
 function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
-    
+
     const log = false;
 
-    if(log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
+    if (log) console.log("++++++++++BUSCANDO DADOS DO PDC++++++++++");
 
     //====================BUSCA OS DADOS INICIAIS DO PDC====================\\
-    if(log) console.log("=> BUSCANDO DADOS INICIAIS DO PDC <=");
+    if (log) console.log("=> BUSCANDO DADOS INICIAIS DO PDC <=");
     const formDdsInicais = document.querySelector('#dados-PDC');
     const dadosIniciaisPdc = {};
 
@@ -147,15 +146,15 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         // Verifica se o campo tem um valor e se está visível (caso de campos ocultos)
         if (elemento.name && (elemento.type !== 'radio' || elemento.checked)) {
             dadosIniciaisPdc[elemento.name] = elemento.value;
-            if(log) console.log("Nome: " + elemento.name + ", Valor: " + elemento.value);
+            if (log) console.log("Nome: " + elemento.name + ", Valor: " + elemento.value);
         }
     }
     dadosIniciaisPdc["id_temp"] = currTempPDC ? currTempPDC : globais.numPDC_temp;
-    if(log) console.log("Nome: " + "id_temp" + ", Valor: " + JSON.stringify(dadosIniciaisPdc.id_temp));
+    if (log) console.log("Nome: " + "id_temp" + ", Valor: " + JSON.stringify(dadosIniciaisPdc.id_temp));
 
 
     //====================BUSCA OS DADOS DETALHES DO PDC====================\\
-    if(log) console.log("=> BUSCANDO DETALHES DO PDC <=");
+    if (log) console.log("=> BUSCANDO DETALHES DO PDC <=");
     const formDdsDetalhes = document.querySelector('#form-pagamento');
 
     // Obter todos os elementos do formulário
@@ -168,7 +167,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         const valorInput = parcela.querySelector('input[name="Valor"]');
         const numPDC = parcela.querySelector('input[name="Num_PDC_parcela"]');
         const parcCriada = parcela.querySelector('input[name="parcela_criada"]');
-        
+
         const vencimentoObj = {};
         if (numParc?.textContent) {
             vencimentoObj["Numero_da_parcela"] = parseInt(numParc.textContent.match(/\d+/)[0]);
@@ -183,20 +182,20 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
         }
         if (numPDC?.value) {
             vencimentoObj["Num_PDC_parcela"] = numPDC.value;
-            
+
         }
-        vencimentoObj["parcela_criada"] = indiceParc !== null || parcCriada?.checked?true:false;
+        vencimentoObj["parcela_criada"] = indiceParc !== null || parcCriada?.checked ? true : false;
 
         // Adiciona o objeto ao array apenas se tiver pelo menos uma propriedade
         if (Object.keys(vencimentoObj).length > 0) {
             vencimentos.push(vencimentoObj);
         }
 
-        if(log) console.log("Nome: " + "Numero_da_parcela" + ", Valor: " + vencimentoObj["Numero_da_parcela"]);
-        if(log) console.log("Nome: " + "Vencimento_previsto" + ", Valor: " + vencimentoObj["Vencimento_previsto"]);
-        if(log) console.log("Nome: " + "Valor" + ", Valor: " + vencimentoObj["Valor"]);
-        if(log) console.log("Nome: " + "Num_PDC_parcela" + ", Valor: " + vencimentoObj["Num_PDC_parcela"]);
-        if(log) console.log("Nome: " + "parcela_criada" + ", Valor: " + vencimentoObj["parcela_criada"]);
+        if (log) console.log("Nome: " + "Numero_da_parcela" + ", Valor: " + vencimentoObj["Numero_da_parcela"]);
+        if (log) console.log("Nome: " + "Vencimento_previsto" + ", Valor: " + vencimentoObj["Vencimento_previsto"]);
+        if (log) console.log("Nome: " + "Valor" + ", Valor: " + vencimentoObj["Valor"]);
+        if (log) console.log("Nome: " + "Num_PDC_parcela" + ", Valor: " + vencimentoObj["Num_PDC_parcela"]);
+        if (log) console.log("Nome: " + "parcela_criada" + ", Valor: " + vencimentoObj["parcela_criada"]);
     });
 
     // Adiciona outros campos do formulário
@@ -207,17 +206,17 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
                 // O value padrão de uma checkbox é "on" mesmo quando ela está
                 // desmarcada. O estado real deve vir sempre de checked.
                 dadosIniciaisPdc[elemento.name] = elemento.checked;
-                if(log) console.log("Nome: " + elemento.name + ", Marcado: " + elemento.checked);
+                if (log) console.log("Nome: " + elemento.name + ", Marcado: " + elemento.checked);
 
             } else if (elemento.type !== 'radio' || elemento.checked) {
                 dadosIniciaisPdc[elemento.name] = elemento.value;
-                if(log) console.log("Nome: " + elemento.name + ", Valor: " + elemento.value);
+                if (log) console.log("Nome: " + elemento.name + ", Valor: " + elemento.value);
 
-            } 
+            }
         }
     }
 
-    if(log) console.log("=> BUSCANDO DETALHES DA PARCELA <=");
+    if (log) console.log("=> BUSCANDO DETALHES DA PARCELA <=");
     if (vencimentos.length > 0) {
         dadosIniciaisPdc["Datas"] = vencimentos;
         // Adiciona o primeiro vencimento em um campo separado para referência
@@ -226,19 +225,19 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
 
         }
         if (vencimentos[0].Num_PDC_parcela) {
-            dadosIniciaisPdc["Numero_do_PDC"] = indiceParc == null && vencimentos[0].Num_PDC_parcela.includes("/")?globais.numPDC:vencimentos[0].Num_PDC_parcela;
+            dadosIniciaisPdc["Numero_do_PDC"] = indiceParc == null && vencimentos[0].Num_PDC_parcela.includes("/") ? globais.numPDC : vencimentos[0].Num_PDC_parcela;
             dadosIniciaisPdc["Num_princ_PDC"] = (typeof globais.numPDC === 'string' && globais.numPDC.split) ? globais.numPDC.split("/")[0] : globais.numPDC;
         }
 
-        if(log) console.log("Nome: " + "Vencimento_previsto" + ", Valor: " + vencimentos[0].Vencimento_previsto);
-        if(log) console.log("Nome: " + "Num_PDC_parcela" + ", Valor: " + vencimentos[0].Num_PDC_parcela);
+        if (log) console.log("Nome: " + "Vencimento_previsto" + ", Valor: " + vencimentos[0].Vencimento_previsto);
+        if (log) console.log("Nome: " + "Num_PDC_parcela" + ", Valor: " + vencimentos[0].Num_PDC_parcela);
 
     }
     if (globais.perfilResponsavel != null && globais.pag != "checagem_final") {
         dadosIniciaisPdc["Perfil_responsavel"] = globais.perfilResponsavel;
     }
 
-    if(log) console.log("----------RETORNANDO DADOS DO PDC----------");
+    if (log) console.log("----------RETORNANDO DADOS DO PDC----------");
     return dadosIniciaisPdc;
 }
 
@@ -257,7 +256,7 @@ function pegarDadosPDC_V2(indiceParc = null, currTempPDC = null) {
 function pegarDadosClassificacao_V2(qtdParc = 1) {
     const log = false;
 
-    if(log) console.log("++++++++++BUSCANDO DADOS DE CLASSIFICAÇÃO CONTÁBIL++++++++++");
+    if (log) console.log("++++++++++BUSCANDO DADOS DE CLASSIFICAÇÃO CONTÁBIL++++++++++");
 
     // Busca o formulário de classificação
     const formClassificacao = document.getElementById('form-classificacao');
@@ -280,7 +279,7 @@ function pegarDadosClassificacao_V2(qtdParc = 1) {
             } else {
                 classificacao[select.name] = select.value;
             }
-            if(log) console.log("Nome: " + select.name + ", Valor: " + classificacao[select.name]);
+            if (log) console.log("Nome: " + select.name + ", Valor: " + classificacao[select.name]);
         });
 
         // Adiciona os valores dos inputs ao objeto da classificação
@@ -292,7 +291,7 @@ function pegarDadosClassificacao_V2(qtdParc = 1) {
                 } else {
                     classificacao[input.name] = input.value;
                 }
-                if(log) console.log("Nome: " + input.name + ", Valor: " + classificacao[input.name]);
+                if (log) console.log("Nome: " + input.name + ", Valor: " + classificacao[input.name]);
             }
 
         });
@@ -307,7 +306,7 @@ function pegarDadosClassificacao_V2(qtdParc = 1) {
     if (classificacoes.length > 0) {
         dadosClassificacao["Classificacao_contabil"] = classificacoes;
     }
-    if(log) console.log("----------RETORNANDO DADOS DE CLASSIFICAÇÃO CONTÁBIL----------");
+    if (log) console.log("----------RETORNANDO DADOS DE CLASSIFICAÇÃO CONTÁBIL----------");
     return dadosClassificacao;
 }
 
@@ -325,7 +324,7 @@ function pegarDadosClassificacao_V2(qtdParc = 1) {
  */
 function pegarDadosNF_V2() {
     const log = false;
-    if(log) console.log("++++++++++BUSCANDO DADOS DA NOTA FISCAL++++++++++");
+    if (log) console.log("++++++++++BUSCANDO DADOS DA NOTA FISCAL++++++++++");
     const formDdsNF = document.querySelector('#dados-nf');
     const dadosNF = {};
 
@@ -372,7 +371,7 @@ function pegarDadosNF_V2() {
     if (valorTotalPagar && valorTotalPagar.hasAttribute('name')) {
         dadosNF[valorTotalPagar.getAttribute('name')] = converterStringParaDecimal(valorTotalPagar.textContent || '', qtdCssDecimais);
     }
-    if(log) console.log("dadosNF => ", JSON.stringify(dadosNF));
+    if (log) console.log("dadosNF => ", JSON.stringify(dadosNF));
 
     return dadosNF;
 }
@@ -542,7 +541,223 @@ const ATTACHMENT_REPORT = 'Documentos_API';
 const ATTACHMENT_FIELD = 'Arquivo';
 const ATTACHMENT_PDC_FIELD = 'PDC_Digital';
 const QUOTE_TEMP_FIELD = 'num_pdc_temp';
+// Estrutura do comparativo inspirada no PDC Vila Real. No Terras, porém,
+// o destino é exclusivamente o relatório já existente Logs_PDC_Digital.
+const MACRO_ETAPA_POR_STATUS = new Map([
+    ['Sol. criada', 'SOLICITAÇÃO'], ['Aguard. aprov. sol', 'SOLICITAÇÃO'],
+    ['Prop. criada', 'COMPRA'], ['Aguard. aprov. prop.', 'COMPRA'], ['Prop. aprov.', 'COMPRA'], ['Aguard. compra', 'COMPRA'],
+    ['Chec. final', 'PAGAMENTO'], ['Ass. control.', 'PAGAMENTO'], ['Pag. aut.', 'PAGAMENTO'],
+    ['Ass. subsindico', 'PAGAMENTO'], ['Separado em parcelas', 'PAGAMENTO'], ['Pag. real.', 'PAGAMENTO']
+]);
+const CAMPOS_SISTEMA_HISTORICO = new Set(['ID', 'Added_Time', 'Modified_Time', 'Added_User', 'Modified_User', 'Owner', 'Created_By', 'Modified_By', 'Record_Status', 'zc_display_value']);
 let salvamentoEmAndamento = null;
+let subformulario = ["Datas", "Classificacao Contabil"]
+
+function registrarComparativoPDC(operacao, item, registroAntes) {
+    const normalizar = (valor, caminho = '') => {
+        if (valor === undefined || valor === null || valor === '') return null;
+        if (Array.isArray(valor)) return valor.map((item, indice) => normalizar(item, `${caminho}[${indice}]`));
+        if (typeof valor === 'object') {
+            const normalizado = Object.keys(valor)
+                .filter(chave => !CAMPOS_SISTEMA_HISTORICO.has(chave)).sort()
+                .reduce((objeto, chave) => {
+                    const valorNormalizado = normalizar(valor[chave], caminho ? `${caminho}.${chave}` : chave);
+                    return valorNormalizado === null ? objeto : { ...objeto, [chave]: valorNormalizado };
+                }, {});
+            if (caminho.endsWith('Classe_operacional')) {
+                return normalizado.Codigo ?? normalizado.codigoClasse ?? normalizado.ID ?? normalizado;
+            }
+            return Object.keys(normalizado).length ? normalizado : null;
+        }
+        if (caminho.endsWith('Classe_operacional') && /^\d+$/.test(String(valor))) {
+            const classe = globais.baseClassesOperacionais instanceof Map
+                ? globais.baseClassesOperacionais.get(String(valor))
+                : globais.baseClassesOperacionais?.[String(valor)];
+            return String(classe?.Codigo ?? classe?.codigoClasse ?? valor);
+        } else if (/^\d{16,}$/.test(valor)) {
+            return String(valor);
+
+        }
+
+        const texto = String(valor).trim();
+        if (['true', 'on', 'sim'].includes(texto.toLowerCase())) return true;
+        if (['false', 'off', 'não', 'nao'].includes(texto.toLowerCase())) return false;
+        const numero = texto.replace(',', '.');
+        return /^-?\d+(?:\.\d+)?$/.test(numero) ? String(Number(numero)) : texto;
+    };
+    const obterListaJson = texto => {
+        try {
+            const valor = JSON.parse(texto);
+            return Array.isArray(valor) ? valor : [];
+        } catch {
+            return [];
+        }
+    };
+    const paraTexto = (valor, caminho) => {
+        const normalizado = normalizar(valor, caminho);
+        return normalizado === null ? '—' : typeof normalizado === 'object' ? JSON.stringify(normalizado) : String(normalizado);
+    };
+    const adicionarLinha = linha => {
+        if (!Array.isArray(globais.logs)) return;
+        const tamanhoMaximo = 420;
+        const totalPartes = Math.ceil(linha.length / tamanhoMaximo) || 1;
+        for (let indice = 0; indice < totalPartes; indice++) {
+            const sufixo = totalPartes > 1 ? ` (${indice + 1}/${totalPartes})` : '';
+            globais.logs.push(`${linha.slice(indice * tamanhoMaximo, (indice + 1) * tamanhoMaximo)}${sufixo}`);
+        }
+    };
+    const rotulo = campo => String(campo).replace(/_/g, ' ').replace(/\b\w/g, letra => letra.toUpperCase());
+    const escaparHtml = valor => String(valor ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const obterAnterior = campo => {
+        if (!registroAntes) return { existe: false, valor: undefined };
+        if (Object.prototype.hasOwnProperty.call(registroAntes, campo)) {
+            return { existe: true, valor: registroAntes[campo] };
+        }
+        // O relatório do Zoho devolve alguns lookups achatados, por exemplo
+        // Tipo_de_solicitacao.ID, embora o formulário envie Tipo_de_solicitacao.
+        const campoId = `${campo}.ID`;
+        if (Object.prototype.hasOwnProperty.call(registroAntes, campoId)) {
+            return { existe: true, valor: registroAntes[campoId] };
+        }
+        return { existe: false, valor: undefined };
+    };
+    const campos = Object.keys(item.pdcData || {})
+        .filter(campo => String(campo).trim() && !CAMPOS_SISTEMA_HISTORICO.has(campo))
+        .map(campo => {
+            const anterior = obterAnterior(campo);
+            return {
+                campo,
+                antes: paraTexto(anterior.valor, campo),
+                depois: paraTexto(item.pdcData[campo], campo),
+                comparavel: !registroAntes || anterior.existe,
+                anteriorAusente: Boolean(registroAntes) && !anterior.existe,
+                valorAnterior: anterior.valor,
+                alterado: false
+            };
+        });
+    campos.forEach(itemCampo => {
+        const antesBruto = itemCampo.valorAnterior;
+        const depoisBruto = item.pdcData[itemCampo.campo];
+        const lookupSemIdAnterior = antesBruto && typeof antesBruto === 'object' && /^\d+$/.test(String(depoisBruto ?? ''));
+        itemCampo.comparavel = itemCampo.comparavel && !lookupSemIdAnterior;
+        const diferente = JSON.stringify(normalizar(antesBruto, itemCampo.campo)) !==
+            JSON.stringify(normalizar(depoisBruto, itemCampo.campo));
+        // Alguns campos de lookup, como Tipo_de_solicitacao, podem não vir
+        // no retorno do relatório. Não escondemos a mudança: sinalizamos que
+        // o valor anterior não foi informado pelo Zoho.
+        itemCampo.alterado = (itemCampo.comparavel) && diferente;
+        if (itemCampo.anteriorAusente) itemCampo.antes = 'Não informado pelo Zoho';
+    });
+    const status = String(item.pdcData?.Status_geral || registroAntes?.Status_geral || '').trim();
+    const macroEtapa = MACRO_ETAPA_POR_STATUS.get(status) || null;
+    const ehEdicao = Boolean(registroAntes);
+    const quantidadeAlteracoes = campos.filter(campo => campo.alterado).length;
+    const linhas = [
+        '<section style="font-family:Arial,sans-serif;border:1px solid #d7e3f4;border-radius:8px;overflow:hidden;margin:8px 0;background:#fff">',
+        `<div style="background:#1f4e78;color:#fff;padding:10px 14px;font-size:16px;font-weight:700">PDC · ${ehEdicao ? 'ALTERAÇÃO' : 'CRIAÇÃO'}</div>`,
+        `<div style="padding:10px 14px;color:#27364a;line-height:1.6"><strong>Status:</strong> ${escaparHtml(status || '—')}</div>`,
+        `<div style="padding:10px 14px;color:#27364a;line-height:1.6"><strong>Pagina:</strong> ${escaparHtml(globais.pag || '—')}</div>`,
+        `<div style="padding:10px 14px;color:#27364a;line-height:1.6"><strong>Botão clicado:</strong> ${escaparHtml(globais.acao || '—')}</div>`
+    ];
+
+    if (!ehEdicao) {
+        const parcelas = Array.isArray(item.pdcData?.Datas) ? item.pdcData.Datas : [];
+        linhas.push('<div style="padding:8px 14px;background:#edf7ef;color:#1d6b38;font-weight:700">✓ Criação do PDC</div>');
+        if (parcelas.length) {
+            linhas.push(`<div style="padding:8px 14px;font-weight:700;color:#1f4e78">Parcelas (${parcelas.length})</div>`);
+            parcelas.forEach(parcela => linhas.push(`<div style="padding:4px 14px;color:#465a70">${escaparHtml(parcela.Numero_da_parcela || '?')}ª parcela &nbsp;|&nbsp; Vencimento: ${escaparHtml(parcela.Vencimento_previsto || '—')} &nbsp;|&nbsp; Valor: <strong>R$ ${escaparHtml(parcela.Valor ?? '—')}</strong></div>`));
+        }
+    } else {
+        linhas.push(`<div style="padding:8px 14px;background:#fff4df;color:#9a5a00;font-weight:700">↻ Alteração · ${quantidadeAlteracoes} campo(s) alterado(s) · ${campos.length} campo(s) informado(s)</div>`);
+    }
+    const adicionarCampos = lista => lista.forEach(({ campo, antes, depois }) => {
+        const tipoSolicitação = {
+            "3938561000104974031": "SERVIÇO", "3938561000104974027": "PRODUTO"
+        }
+        linhas.push(`<div style="padding:8px 14px 2px;font-weight:700">${escaparHtml(rotulo(campo))}</div>`);
+        if (antes !== depois) {
+            if (subformulario.includes(rotulo(campo))) {
+                const listaAntes = obterListaJson(antes).map(item =>
+                    Object.entries(item)
+                        .map(([chave, valor]) => `${chave}: "${valor}"`)
+                        .join(", ")
+                );
+                const listaDepois = obterListaJson(depois).map(item =>
+                    Object.entries(item)
+                        .map(([chave, valor]) => `${chave}: "${valor}"`)
+                        .join(", ")
+                );
+                if (ehEdicao) {
+                    linhas.push(`<div style="padding:2px 14px"><strong>Antes:</strong> \n`);
+                    for (let item of listaAntes) {
+                        linhas.push(`${escaparHtml(item).replace(/false/g, "Não").replace(/true/g, "Sim")}\n`);
+                    }
+                    linhas.push(`</div>`);
+                }
+                linhas.push(`<div style="padding:2px 14px 8px;color:#1f4e78"><strong>Depois:</strong> \n`);
+                for (let item of listaDepois) {
+                    linhas.push(`${escaparHtml(item).replace(/false/g, "Não").replace(/true/g, "Sim")}\n`);
+                }
+                linhas.push(`</div>`);
+
+
+            } else {
+                if (campo == "Tipo_de_solicitacao") {
+                    antes = tipoSolicitação[antes] || antes;
+                    depois = tipoSolicitação[depois] || depois;
+                }
+                if (ehEdicao) linhas.push(`<div style="padding:2px 14px"><strong>Antes:</strong> ${escaparHtml(antes)}</div>`);
+                linhas.push(`<div style="padding:2px 14px 8px;color:#1f4e78"><strong>Depois:</strong> ${escaparHtml(depois)}</div>`);
+            }
+
+        } else {
+            linhas.push(`<div style="padding:2px 14px 8px;color:#465a70"><strong>Valor:</strong> ${escaparHtml(depois)}</div>`);
+        }
+
+
+    });
+    if (ehEdicao) {
+        const alterados = campos.filter(campo => campo.alterado);
+
+
+        linhas.push(`<div style="margin-top:6px;padding:8px 14px;background:#eaf2fb;color:#1f4e78;font-weight:700">Campos alterados (${alterados.length})</div>`);
+        adicionarCampos(alterados);
+        // linhas.push(`<div style="margin-top:6px;padding:8px 14px;background:#f4f6f8;color:#536273;font-weight:700">Campos sem alteração (${semAlteracao.length})</div>`);
+        // adicionarCampos(semAlteracao);
+        // if (semComparacao.length) {
+        //     linhas.push("----------------------------------------------------");
+        //     linhas.push(`Campos sem comparação confiável (${semComparacao.length}):`);
+        //     adicionarCampos(semComparacao);
+        // }
+    } else {
+        linhas.push('<div style="margin-top:6px;padding:8px 14px;background:#eaf2fb;color:#1f4e78;font-weight:700">Dados informados</div>');
+        adicionarCampos(campos);
+    }
+    linhas.push(`<div style="margin-top:8px;padding:8px 14px;background:#f4f6f8;color:#6b7785;font-size:11px">Operação: ${escaparHtml(operacao.id)}:${escaparHtml(item.key)}</div>`, '</section>');
+    linhas.forEach(adicionarLinha);
+    return { macroEtapa, quantidadeAlteracoes };
+}
+
+function prepararHistoricoItem(operacao, item, registroAntes) {
+    if (item.history?.prepared) return;
+    const comparativo = registrarComparativoPDC(operacao, item, registroAntes);
+    const entryId = `${operacao.id}:${item.key}`;
+    globais.macroEtapa = comparativo.macroEtapa;
+    item.history = {
+        prepared: true, done: !comparativo.macroEtapa || comparativo.quantidadeAlteracoes === 0,
+        macroEtapa: comparativo.macroEtapa, entryId,
+        quantidadeAlteracoes: comparativo.quantidadeAlteracoes
+    };
+    persistirOperacao(operacao);
+}
+
+async function garantirHistorico(operacao, item) {
+    const historico = item.history;
+    if (!historico?.prepared || historico.done) return;
+    historico.done = true;
+    persistirOperacao(operacao);
+}
 
 function valoresDaColecao(colecao) {
     if (!colecao) return [];
@@ -868,6 +1083,7 @@ function criarItem({ chave, pdcData, paramsExtraPDC, anexos, mode, pdcId = null,
         pdcId: pdcId ? String(pdcId) : null,
         pdcDone: false,
         quoteDone: false,
+        history: null,
         pdcData: { ...pdcData.PDCsData, ...paramsExtraPDC },
         priceTableData: pdcData.priceTableData,
         attachments: anexos.map(anexo => ({ ...anexo }))
@@ -977,6 +1193,7 @@ async function criarOperacao({ status, sepPorParc, paramsExtraPDC, resolucaoApos
             rootTempId: globais.numPDC_temp,
             originalType: tipoOriginal,
             originalPdcId: pdcOriginalId,
+            pagina: globais.pag,
             sepPorParc,
             concluirSomentePdcOriginal
         },
@@ -1011,19 +1228,30 @@ async function desativarCotacoes(criterio) {
 
 async function garantirPDC(operacao, item) {
     if (item.pdcDone && item.pdcId) {
+        // Operações iniciadas antes deste recurso podem ser retomadas sem o
+        // checkpoint do histórico. Ainda assim, registra a fotografia atual.
+        if (!item.history?.prepared) {
+            const atuais = await buscarRegistros({ criterios: `(ID==${item.pdcId})`, nomeR: globais.nomeRelPDC });
+            prepararHistoricoItem(operacao, item, atuais[0] || null);
+        }
         if (!globais.idPDC) globais.idPDC = item.pdcId;
         return;
     }
 
     let pdcId = item.pdcId;
     const criterioTemp = `(id_temp=="${escaparCriterio(item.tempId)}")`;
+    let existentes = [];
     if (!pdcId) {
-        const existentes = await buscarRegistros({ criterios: criterioTemp, nomeR: globais.nomeRelPDC });
+        existentes = await buscarRegistros({ criterios: criterioTemp, nomeR: globais.nomeRelPDC });
         pdcId = existentes[0]?.ID ? String(existentes[0].ID) : null;
         if (existentes.length > 1) {
             console.warn(`Foram encontrados ${existentes.length} PDCs com id_temp ${item.tempId}. O primeiro será reutilizado.`);
         }
     }
+    if (!item.history?.prepared && pdcId && existentes.length === 0) {
+        existentes = await buscarRegistros({ criterios: `(ID==${pdcId})`, nomeR: globais.nomeRelPDC });
+    }
+    prepararHistoricoItem(operacao, item, existentes[0] || null);
 
     if (pdcId) {
         const resp = await executar_apiZoho({
@@ -1266,6 +1494,7 @@ async function removerAnexosDaOperacao(operacao) {
 
 async function processarItem(operacao, item) {
     await garantirPDC(operacao, item);
+    await garantirHistorico(operacao, item);
     await garantirAnexos(operacao, item);
     await garantirCotacoes(operacao, item);
 }
@@ -1508,8 +1737,8 @@ export async function tratarSalvamentoPDC({ acao = null }) {
 
 }
 
-export async function enviarParaPaybox(){
-    try{
+export async function enviarParaPaybox() {
+    try {
 
         //==========VARIÁVEIS DE APOIO==========\\
         const corpo = new Array();
@@ -1518,66 +1747,63 @@ export async function enviarParaPaybox(){
         const formDdsDetalhes = document.querySelector('#form-pagamento');
         const parcelas = formDdsDetalhes ? formDdsDetalhes.querySelectorAll('.parcela') : [];
         const cpf_cnpj_forn_ajust = fornAprov[2].replace(/\D/g, '');
-        const ap_tipo_forn = cpf_cnpj_forn_ajust.length == 11?"F":"J";
+        const ap_tipo_forn = cpf_cnpj_forn_ajust.length == 11 ? "F" : "J";
         const descr_compra = document.getElementById("descricao").value
         let descricao_curta = "";
         let descr_compra_temp = descr_compra;
-    
-        if(typeof descr_compra_temp === "undefined")
-        {
+
+        if (typeof descr_compra_temp === "undefined") {
             descr_compra_temp = "";
         }
-        
-        if(descr_compra_temp.length > 120)
-        {
+
+        if (descr_compra_temp.length > 120) {
             descricao_curta = descr_compra_temp.toUpperCase().slice(0, 120) + "...";
         }
-        else
-        {
+        else {
             descricao_curta = descr_compra_temp.toUpperCase();
         }
-    
+
         const entidade = document.getElementById("entidade");
         const selectedOption = entidade.options[entidade.selectedIndex];
-    
+
         const dds_pgto = document.getElementById("dados-nf");
         const dds_impostos = dds_pgto.getElementsByClassName("campos-retencao-nf")[0].getElementsByTagName("tbody");
         const dds_nf = dds_pgto.getElementsByClassName("campos-iniciais-nf")[0].getElementsByClassName("linha-nf")[0];
         //==========POPULANDO CORPO DA REQUISIÇÃO==========\\
-        lancamento["cnpj_administradora"]= 58109067000149;
-        lancamento["cnpj_remetente"]= 58109067000149;
-        lancamento["cnpj_fornecedor"]= cpf_cnpj_forn_ajust;
-        lancamento["cnpj_condominio"]= selectedOption.dataset.cnpj_ent;
-        lancamento["condominio"]= selectedOption.dataset.cod_cond_ahreas;
-        lancamento["tipo_inscr_condo"]= "J";
-        lancamento["tipo_inscr_fornec"]= ap_tipo_forn;
-    
-        lancamento["valor_total_nf"]= converterStringParaDecimal(dds_impostos[0].rows[0].cells[1].innerText||0.00);
-        lancamento["vr_inss"]= converterStringParaDecimal(dds_impostos[0].rows[1].cells[1].innerText || 0.00);
-        lancamento["vr_iss"]= converterStringParaDecimal(dds_impostos[0].rows[2].cells[1].innerText || 0.00);
-        lancamento["vr_csll_pis_cofins"]= converterStringParaDecimal(dds_impostos[0].rows[3].cells[1].innerText || 0.00);
-        lancamento["vr_irrf"]= 0.00;
-    
-        lancamento["data_emissao_nf"]= formatDate(dds_nf.querySelector("input[name='Data_emissao_N_Fiscal']").value, "DD/MM/YYYY");
-        lancamento["nro_nf"]= dds_nf.querySelector("input[name='Numero_N_Fiscal']").value;
+        lancamento["cnpj_administradora"] = 58109067000149;
+        lancamento["cnpj_remetente"] = 58109067000149;
+        lancamento["cnpj_fornecedor"] = cpf_cnpj_forn_ajust;
+        lancamento["cnpj_condominio"] = selectedOption.dataset.cnpj_ent;
+        lancamento["condominio"] = selectedOption.dataset.cod_cond_ahreas;
+        lancamento["tipo_inscr_condo"] = "J";
+        lancamento["tipo_inscr_fornec"] = ap_tipo_forn;
+
+        lancamento["valor_total_nf"] = converterStringParaDecimal(dds_impostos[0].rows[0].cells[1].innerText || 0.00);
+        lancamento["vr_inss"] = converterStringParaDecimal(dds_impostos[0].rows[1].cells[1].innerText || 0.00);
+        lancamento["vr_iss"] = converterStringParaDecimal(dds_impostos[0].rows[2].cells[1].innerText || 0.00);
+        lancamento["vr_csll_pis_cofins"] = converterStringParaDecimal(dds_impostos[0].rows[3].cells[1].innerText || 0.00);
+        lancamento["vr_irrf"] = 0.00;
+
+        lancamento["data_emissao_nf"] = formatDate(dds_nf.querySelector("input[name='Data_emissao_N_Fiscal']").value, "DD/MM/YYYY");
+        lancamento["nro_nf"] = dds_nf.querySelector("input[name='Numero_N_Fiscal']").value;
         //
         let urls = new Array();
-    
-        globais.arquivospPaybox.forEach((arquivo)=>{
+
+        globais.arquivospPaybox.forEach((arquivo) => {
             const filepathIndex = arquivo.display_value.indexOf("filepath=");
             const filepathValue = arquivo.display_value.substring(filepathIndex + "filepath=".length);
             const url = `https://creatorexport.zoho.com/guillaumon/app-envio-de-notas-boletos-guillaumon/Documentos_API/Arquivos/image/FQtZbOGWVpPX4WD9Q0Qb8jwGtz8380Mx4QB70JMazOQh5r7PbHPUBs6WZOX1jf2mFP3bODn97z0tAQphFnfAYsHy2ZjZqMU36a4y/${filepathValue}`
-            urls.push({url: url});
-    
-        } );
-        lancamento["url"]= urls;
+            urls.push({ url: url });
+
+        });
+        lancamento["url"] = urls;
         //
         parcelas.forEach((parcela) => {
-    
+
             const dataInput = parcela.querySelector('input[type="date"]');
             const valorInput = converterStringParaDecimal(parcela.querySelector('input[name="Valor"]').value);
             const numPDC = parcela.querySelector('input[name="Num_PDC_parcela"]').value;
-    
+
             lancamento["ano"] = dataInput.value.split("-")[0];
             lancamento["mes"] = dataInput.value.split("-")[1];
             lancamento["vencimento"] = dataInput.value;
@@ -1585,14 +1811,14 @@ export async function enviarParaPaybox(){
             lancamento["desc_produto"] = globais.numSolicPDC + "|" + descricao_curta + " | PDC: " + numPDC;
             corpo.push(lancamento);
         });
-    
+
         let header_data = new Map();
-        header_data = {"Content-Type":"application/json","Authorization":"Bearer NTgxMDkwNjcwMDAxNDl8Kys4TmNBKy1zLW0tSDhDdF8tLTQrYmgrOWk9X0RNdU1NM195K2pfLStWY2E7dF5hcGheXzY9V15xLV9Yb1E9My09eF5EeQ=="};
+        header_data = { "Content-Type": "application/json", "Authorization": "Bearer NTgxMDkwNjcwMDAxNDl8Kys4TmNBKy1zLW0tSDhDdF8tLTQrYmgrOWk9X0RNdU1NM195K2pfLStWY2E7dF5hcGheXzY9V15xLV9Yb1E9My09eF5EeQ==" };
         //
         const url = "https://api.ahreas.net/producao/paybox/inserecontas";
         const raw_data = JSON.stringify(corpo);
         console.log("raw_data => ", raw_data);
-        
+
         const response = await fetch(url, {
             method: 'POST',
             headers: header_data,
@@ -1600,17 +1826,16 @@ export async function enviarParaPaybox(){
             responseType: 'full'
         })
         console.log("response => ", response);
-        
-    }catch(e){
+
+    } catch (e) {
         console.log(e);
     }
 }
 
-export async function registrarLogNoZoho(numPDC)
-{
+export async function registrarLogNoZoho(numPDC) {
     // Filtra e sanitiza os logs para evitar problemas com caracteres especiais
     let logText = '';
-    
+
     if (globais.logs && globais.logs.length > 0) {
         // Processa cada log, removendo JSON objects muito grandes
         const filteredLogs = globais.logs
@@ -1622,9 +1847,9 @@ export async function registrarLogNoZoho(numPDC)
                 return log;
             })
             .filter(log => log && log.trim().length > 0);
-        
+
         logText = filteredLogs.join('\n');
-        
+
         // Limita o tamanho total do log para evitar rejeição do Zoho
         if (logText.length > 40000) {
             logText = logText.substring(0, 40000) + '\n[Log truncado - tamanho máximo atingido]';
@@ -1632,18 +1857,18 @@ export async function registrarLogNoZoho(numPDC)
     } else {
         logText = 'Nenhum log registrado';
     }
-    
+
     const body = {
         "Numero_do_PDC": numPDC,
-        "Log": logText
+        "Log": logText,
+        "Etapa": globais.macroEtapa || 'Desconhecida'
     };
     console.log("body => ", body);
     const respFilesRec = await executar_apiZoho({ tipo: "add_reg", corpo: body, nomeF: "Logs_PDC_Digital" });
 
 }
 
-export async function removerArquivosZoho()
-{
+export async function removerArquivosZoho() {
     console.log("Removendo arquivos marcados para remoção no Zoho...");
     console.log("Arquivos marcados para remoção => ", globais.arquivosRemovidos);
     //"/api/v2.1/guillaumon/terras-de-sao-jose-ii/report/PDC_Digital_API/3938561000116768677/Documentos.Arquivo/3938561000116768681/download?filepath=1773148141768840_arquivo.pdf"

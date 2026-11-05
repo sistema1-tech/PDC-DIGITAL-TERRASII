@@ -39,19 +39,40 @@ __INIT__().catch(error => {
 async function __INIT__() {
     try {
         
-        const originalConsoleLog = console.log;
-        console.log = (...args) => {
-            const logText = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
-            globais.logs.push(logText);
-            originalConsoleLog(...args);
-        }
+        const consolesOriginais = {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console)
+        };
+        ['log', 'warn', 'error'].forEach(nivel => {
+            console[nivel] = (...args) => {
+                const texto = args.map(arg => {
+                    if (arg instanceof Error) return `${arg.name}: ${arg.message}`;
+                    if (typeof arg === 'object') {
+                        try { return JSON.stringify(arg); } catch (_) { return String(arg); }
+                    }
+                    return String(arg);
+                }).join(' ');
+                // Logs comuns continuam disponíveis no console do navegador,
+                // mas não poluem Logs_PDC_Digital. O relatório recebe apenas
+                // o bloco estruturado do PDC (inserido diretamente em
+                // globais.logs) e avisos/erros relevantes.
+                if (nivel !== 'log') {
+                    const cor = nivel === 'error' ? '#b42318' : '#9a6700';
+                    const fundo = nivel === 'error' ? '#fef3f2' : '#fffaeb';
+                    const titulo = nivel === 'error' ? 'ERRO' : 'AVISO';
+                    const seguro = texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    globais.logs.push(`<div style="margin:8px 0;padding:10px 14px;border-left:4px solid ${cor};background:${fundo};color:${cor};font-family:Arial,sans-serif"><strong>⚠ ${titulo}</strong><br>${seguro}</div>`);
+                }
+                consolesOriginais[nivel](...args);
+            };
+        });
 
         const log = false;
         if (log) console.log("++++++++++INICIANDO APLICAÇÃO++++++++++");
         // 1. Executa searchPageParams e espera seu resultado
         await searchPageParams();
         console.log("page => ", globais.pag);
-        console.log("globais => ", globais)
 
         // Conclui primeiro qualquer operação interrompida. Assim, uma consulta
         // logo após o F5 não consegue sobrescrever a tela com o estado antigo.

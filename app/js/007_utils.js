@@ -1003,15 +1003,17 @@ export async function customModal_V2({
             confirmButton.addEventListener('click', () => {
                 if (tipoAcao === 'confirm') {
                     alternVisibEl(false);
-                    tratarRespModal({ acao: acao, infoInserida: inputElement ? inputElement.value : null }).then(result => {
+                    tratarRespModal({ acao: acao, infoInserida: inputElement ? inputElement.value : null }).then(async result => {
                         overlay.remove();
                         if(result != true){
+                            await GravarErroLog({erro: result.message, stack: result.stack});
                             customModal_V2({
                                 tipoAcao:'alert', 
                                 titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
                                 mensagem:`<p>${result.message}</p><p style="max-width: 500px; word-wrap: break-word;">${result.stack}</p>`,
                                 confirmText: 'Ok!'
                             });
+
                         }
                         resolve(result);
 
@@ -1032,12 +1034,20 @@ export async function customModal_V2({
         });
 
     } catch (error) {
+        console.error('[SALVAMENTO] Erro ao executar ação', error);
+        try {
+            // await registrarLogNoZoho(globais.numPDC_temp || globais.numPDC);
+            await GravarErroLog({erro: error.message, stack: error.stack});
+        } catch (erroAoRegistrarLog) {
+            console.error('[SALVAMENTO] Não foi possível enviar o log de erro ao Zoho', erroAoRegistrarLog);
+        }
         customModal_V2({
             tipoAcao:'alert', 
             titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
             mensagem:`<p>${error.message}</p><p style="max-width: 500px; word-wrap: break-word;">${error.stack}</p>`,
             confirmText: 'Ok!'
         });
+        
 
     }
 }
@@ -1094,6 +1104,7 @@ export async function tratarRespModal({ acao, infoInserida = null }) {
 async function prepararParaSalvar(acao, infoInserida = null) {
     try {
         const log = false;
+        globais.acao = acao;
     
         if (log) console.log("++++++++++PREPARANDO PARA SALVAR++++++++++");
         if (log) console.log("acao => ", acao);
@@ -1323,7 +1334,12 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             {
                 await gerar_num_pdc();
             }
-            console.log(`params: ${JSON.stringify(params, null, 2)}`);
+            console.log('[SALVAMENTO] Iniciando', {
+                pagina: globais.pag,
+                status: params.status,
+                separarPorParcela: Boolean(params.sepPorParc),
+                camposExtras: Object.keys(params.paramsExtraPDC || {})
+            });
             const ids_pdcs_criados = await saveTableData_V3(params);
             console.log('IDs de PDC retornados pelo salvamento resiliente => ', ids_pdcs_criados);
             /*
@@ -1414,7 +1430,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
             var config = {
                 action: "reload"
             };
-            const res =await registrarLogNoZoho(globais.numPDC_temp);
+            const res = await registrarLogNoZoho(globais.numPDC_temp);
             console.log("res do log => ", JSON.stringify(res));
             if (log) console.log("----------PROCESSO DE SALVAMENTO CONCLUÍDO----------");
                 
@@ -1495,6 +1511,7 @@ async function prepararParaSalvar(acao, infoInserida = null) {
         if (log) console.log("----------PROCESSO DE SALVAMENTO CONCLUÍDO----------");
         */
     } catch (error) {
+        GravarErroLog({erro: error.message, stack: error.stack});
         customModal_V2({
             tipoAcao:'alert', 
             titulo: "Erro ao executar ação!, envie esse erro ao desenvolvedor!", 
@@ -1843,4 +1860,14 @@ async function gerar_num_pdc()
             parcela.appendChild(inputPDC);
         }
     });
+}
+
+async function GravarErroLog({erro,stack }){
+    let logText = `<strong>Usuario: ${globais.usuario_logado} - Pagina: ${globais.pag} - Ação: ${globais.acao}</strong><br><br><h2 style="margin: auto;">Erro:</h2> ${erro}<br><h2 style="margin: auto;">Stack:</h2> ${stack}<br>`;
+    const body = {
+        "Numero_do_PDC": globais.numPDC_temp|| 'Desconhecida',
+        "Etapa": "Erro",
+        "Log": logText || 'Desconhecida'
+    };
+    await executar_apiZoho({ tipo:'add_reg', nomeF: 'Logs_PDC_Digital', corpo: body});
 }
