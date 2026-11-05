@@ -544,9 +544,8 @@ const QUOTE_TEMP_FIELD = 'num_pdc_temp';
 // Estrutura do comparativo inspirada no PDC Vila Real. No Terras, porém,
 // o destino é exclusivamente o relatório já existente Logs_PDC_Digital.
 const MACRO_ETAPA_POR_STATUS = new Map([
-    ['Sol. criada', 'SOLICITAÇÃO'], ['Aguard. aprov. sol', 'SOLICITAÇÃO'],
-    ['Prop. criada', 'COMPRA'], ['Aguard. aprov. prop.', 'COMPRA'], ['Prop. aprov.', 'COMPRA'], ['Aguard. compra', 'COMPRA'],
-    ['Chec. final', 'PAGAMENTO'], ['Ass. control.', 'PAGAMENTO'], ['Pag. aut.', 'PAGAMENTO'],
+    ['Prop. criada', 'COMPRA'], ['Aguard. aprov. prop.', 'COMPRA'], ['Ajuste sol.', 'COMPRA'], ['Prop. aprov.', 'COMPRA'], ['Aguard. compra', 'COMPRA'], ['Compra real.', 'COMPRA'],
+    ['Chec. final', 'PAGAMENTO'], ['Ajuste sol. control.', 'PAGAMENTO'], ['Ass. control.', 'PAGAMENTO'], ['Pag. aut.', 'PAGAMENTO'],
     ['Ass. subsindico', 'PAGAMENTO'], ['Separado em parcelas', 'PAGAMENTO'], ['Pag. real.', 'PAGAMENTO']
 ]);
 const CAMPOS_SISTEMA_HISTORICO = new Set(['ID', 'Added_Time', 'Modified_Time', 'Added_User', 'Modified_User', 'Owner', 'Created_By', 'Modified_By', 'Record_Status', 'zc_display_value']);
