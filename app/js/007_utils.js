@@ -1866,9 +1866,10 @@ async function gerar_num_pdc()
 }
 
 async function GravarErroLog({erro,stack }){
-    let logText = `<strong>Usuario: ${globais.usuario_logado} - Pagina: ${globais.pag} - Ação: ${globais.acao}</strong><br><br><h2 style="margin: auto;">Erro:</h2> ${erro}<br><h2 style="margin: auto;">Stack:</h2> ${stack}<br>`;
+    let logText = `<strong>Usuario: ${globais.usuario_logado} - Pagina: ${globais.pag} - Ação: ${globais.acao}</strong><br><br><h2 style="margin: auto;">Erro:</h2> ${erro}<br><br><h2 style="margin: auto;">Stack:</h2><br> ${stack}<br>`;
     const body = {
         "Numero_do_PDC": globais.numPDC_temp|| 'Desconhecida',
+        "Numero PDC": globais.numPDC || 'Desconhecida',
         "Etapa": "Erro",
         "Log": logText || 'Desconhecida'
     };

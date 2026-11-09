@@ -592,6 +592,12 @@ function registrarComparativoPDC(operacao, item, registroAntes) {
             return [];
         }
     };
+    const formatarItensSubformulario = valor => obterListaJson(valor)
+        .filter(item => item !== undefined && item !== null && typeof item === 'object' && !Array.isArray(item))
+        .map(item => Object.entries(item)
+            .map(([chave, valorCampo]) => `${chave}: "${valorCampo}"`)
+            .join(", "));
+            
     const paraTexto = (valor, caminho) => {
         const normalizado = normalizar(valor, caminho);
         return normalizado === null ? '—' : typeof normalizado === 'object' ? JSON.stringify(normalizado) : String(normalizado);
@@ -677,16 +683,8 @@ function registrarComparativoPDC(operacao, item, registroAntes) {
         linhas.push(`<div style="padding:8px 14px 2px;font-weight:700">${escaparHtml(rotulo(campo))}</div>`);
         if (antes !== depois) {
             if (subformulario.includes(rotulo(campo))) {
-                const listaAntes = obterListaJson(antes).map(item =>
-                    Object.entries(item)
-                        .map(([chave, valor]) => `${chave}: "${valor}"`)
-                        .join(", ")
-                );
-                const listaDepois = obterListaJson(depois).map(item =>
-                    Object.entries(item)
-                        .map(([chave, valor]) => `${chave}: "${valor}"`)
-                        .join(", ")
-                );
+                const listaAntes = formatarItensSubformulario(antes);
+                const listaDepois = formatarItensSubformulario(depois);
                 if (ehEdicao) {
                     linhas.push(`<div style="padding:2px 14px"><strong>Antes:</strong> \n`);
                     for (let item of listaAntes) {
